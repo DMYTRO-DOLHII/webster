@@ -11,6 +11,7 @@ import Register from './pages/Register/Register';
 import Header from './components/Header';
 import LoadingSpinner from './components/LoadingSpinner'
 import ScrollToTop from './components/ScrollToTop';
+import Editor from './pages/Test/Editor'
 
 import './App.css'
 
@@ -19,17 +20,18 @@ function AppContent() {
     const [count, setCount] = useState(0)
 
     return (
-        <div className='flex flex-col h-screen'>
-            <main>
-                {location.pathname !== '/login' && location.pathname !== '/register' && <Header />}
-                <Routes>
-                    <Route path='/' element={<Main />} />
-                    <Route path='/login' element={<Login />} />
-                    <Route path='/register' element={<Register />} />
-                </Routes>
-            </main>
-        </div>
-    )
+		<div className='flex flex-col h-screen'>
+			<main>
+				{location.pathname !== '/login' && location.pathname !== '/register' && <Header />}
+				<Routes>
+					<Route path='/' element={<Main />} />
+					<Route path='/login' element={<Login />} />
+					<Route path='/register' element={<Register />} />
+					<Route path='/editor' element={<Editor />} />
+				</Routes>
+			</main>
+		</div>
+	);
 }
 
 function App() {
