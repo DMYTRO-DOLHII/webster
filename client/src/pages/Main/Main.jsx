@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react'
 import Button from '@mui/material/Button'
 import Title from './components/Title'
 import Pricing from './components/Pricing'
+import Reviews from './components/Reviews'
+import FAQs from './components/FAQs'
 import { Link } from 'react-router-dom'
 
 const DraggableEditable = ({ id, content, position, onUpdate, centered = false }) => {
@@ -93,7 +95,7 @@ const Main = () => {
                     className="absolute rounded-full pointer-events-none"
                     style={{
                         top: '-150px',
-                        right: '-150px',
+                        right: '0px',
                         width: 400,
                         height: 400,
                         backgroundColor: '#5A873A',
@@ -139,16 +141,31 @@ const Main = () => {
                 {/* Static buttons below slogan */}
                 <div className="absolute left-1/2 top-[62%] transform -translate-x-1/2 flex gap-4">
                     <Link>
-                        <Button variant="contained" color="primary" style={{ backgroundColor: '#B52478' }}>
+                        <Button
+                            className="font-code-pro"
+                            variant="contained"
+                            color="primary"
+                            style={{ backgroundColor: '#9b34ba', padding: '10px  25px', fontFamily: '"Source Code Pro", monospace', fontWeight: '300' }}>
+
                             Get Started
                         </Button>
                     </Link>
                 </div>
             </section>
-            
-            <section className="w-full">
+
+            <section id="pricing" className="w-full">
                 <Pricing />
             </section>
+
+            <section id="testimonials" className="w-full">
+                <Reviews />
+            </section>
+
+            <section id="faqs" className="w-full">
+                <FAQs />
+            </section>
+
+
 
             {/* Add more sections as needed */}
         </div>

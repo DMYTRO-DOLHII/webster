@@ -9,6 +9,7 @@ module.exports = {
                 'spin-slow': 'spin 30s linear infinite',
                 'float-y': 'floatY 6s ease-in-out infinite',
                 'float-x': 'floatX 10s ease-in-out infinite',
+                'animate-marquee': 'marquee 60s linear infinite'
             },
             keyframes: {
                 'pulse-slow': {
@@ -27,6 +28,10 @@ module.exports = {
                     '0%, 100%': { transform: 'translateX(0px)' },
                     '50%': { transform: 'translateX(20px)' },
                 },
+                marquee: {
+                    '0%': { transform: 'translateX(0)' },
+                    '100%': { transform: 'translateX(-50%)' }
+                },
             },
             backgroundSize: { // ✨ added
                 'gradient': '200% 200%',
@@ -39,4 +44,7 @@ module.exports = {
         },
     },
     plugins: [],
+    corePlugins: {
+        preflight: true,
+    },
 };

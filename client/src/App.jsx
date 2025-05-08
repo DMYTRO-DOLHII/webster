@@ -9,6 +9,7 @@ import Register from './pages/Register/Register';
 
 // Components import
 import Header from './components/Header';
+import Footer from './components/Footer'
 import LoadingSpinner from './components/LoadingSpinner'
 import ScrollToTop from './components/ScrollToTop';
 
@@ -19,9 +20,10 @@ function AppContent() {
     const location = useLocation();
 
     return (
-        <div className='flex flex-col h-screen'>
+        <div className='flex flex-col h-screen scroll-smooth'>
             {location.pathname !== '/login' &&
                 location.pathname !== '/register' && <Header />}
+
             <main className='flex flex-col flex-grow'>
                 <Routes>
                     <Route path='/' element={<Main />} />
@@ -29,6 +31,9 @@ function AppContent() {
                     <Route path='/register' element={<Register />} />
                 </Routes>
             </main>
+
+            {location.pathname !== '/login' &&
+                location.pathname !== '/register' && <Footer />}
         </div>
     )
 }

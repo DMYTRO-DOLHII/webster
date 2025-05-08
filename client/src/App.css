@@ -41,7 +41,7 @@ h6 {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    box-shadow: 0 0 15px 4px rgba(160, 32, 240, 0.266);
+    box-shadow: 0 0 15px 4px #a020f044;
     /* Purple glow */
     border-top: 1px solid rgba(160, 32, 240, 0.289);
 }
@@ -131,4 +131,33 @@ h6 {
     to {
         width: 100%
     }
+}
+
+/* Slide */
+@keyframes marquee {
+    0% {
+        transform: translateX(0%);
+    }
+
+    100% {
+        transform: translateX(-33.333%);
+    }
+}
+
+@keyframes marquee-reverse {
+    0% {
+        transform: translateX(-33.333%);
+    }
+
+    100% {
+        transform: translateX(0%);
+    }
+}
+
+.animate-marquee {
+    animation: marquee linear infinite;
+}
+
+.animate-marquee-reverse {
+    animation: marquee-reverse linear infinite;
 }

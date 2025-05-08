@@ -45,7 +45,7 @@ const Pricing = () => {
             </div>
 
 
-            <h2 className="text-4xl font-bold mb-10 text-center relative z-10">Pricing</h2>
+            <h2 className="text-4xl mb-10 text-center relative z-10">Pricing</h2>
 
             {/* Toggle */}
             <div className="flex justify-center mb-12 relative z-10">
@@ -95,9 +95,9 @@ const Pricing = () => {
                                 )}
                                 <span className="text-2xl textBlackGradient">{plan.price}/mo</span>
                             </div>
-                            <ul className="text-left space-y-3">
+                            <ul className="text-left divide-y divide-white/40">
                                 {plan.features.map((feature, i) => (
-                                    <li key={i} className="flex items-center gap-2">
+                                    <li key={i} className="flex items-center gap-2 py-2">
                                         <RxRadiobutton /> <span className="font-code-pro">{feature}</span>
                                     </li>
                                 ))}
