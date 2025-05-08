@@ -1,6 +1,7 @@
 import { FaGithub, FaGoogle, FaDiscord } from 'react-icons/fa';
+import { LuBrainCircuit } from 'react-icons/lu';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Login = () => {
     const [login, setLogin] = useState('');
@@ -17,9 +18,41 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center">
-            <div className="w-full max-w-md p-8 rounded-2xl bg-white border border-gray-300 shadow-xl">
-                <h2 className="text-3xl font-bold text-center text-black mb-6">Login to <span className='text-[#B52478]'>McOkster</span></h2>
+        <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+
+            {/* 🔹 Background Floating Blobs */}
+            <div className="absolute inset-0 flex items-center justify-center z-0">
+                {/* Blob Container with pulse */}
+                <div className="relative w-[600px] h-[600px] animate-slow-pulse">
+
+                    {/* Top Left Blob — Float Y */}
+                    <div className="absolute w-[400px] h-[400px] bg-gradient-to-tr from-blue-400 via-orange-400 to-pink-400 rounded-full blur-[200px] opacity-30 top-0 left-0 animate-float-y" />
+
+                    {/* Bottom Right Blob — Float X */}
+                    <div className="absolute w-[300px] h-[300px] bg-gradient-to-tr from-blue-400 via-purple-500 to-indigo-500 rounded-full blur-[200px] opacity-30 bottom-0 right-0 animate-float-x" />
+
+                    {/* Optional: Center Blob — Float Y & Spin Slow */}
+                    <div className="absolute w-[350px] h-[350px] bg-gradient-to-tr from-cyan-300 via-pink-400 to-indigo-400 rounded-full blur-[160px] opacity-20 top-1/3 left-1/3 animate-float-y animate-spin-slow" />
+
+                </div>
+            </div>
+
+
+
+            {/* 🔹 Logo Section */}
+            <div className="absolute top-16 flex flex-col items-center z-10 animation-gradientBlur">
+                <Link to="/" className="flex items-center gap-2 text-black font-bold text-2xl hover:opacity-80 transition">
+                    <LuBrainCircuit className="text-[#B52478]" />
+                    <span className='text-white'>McOkster</span>
+                </Link>
+            </div>
+
+
+            {/* 🔹 Login Box */}
+            <div className="w-full max-w-md p-8 rounded-2xl bg-white border border-gray-300 shadow-xl z-10">
+                <h2 className="text-3xl font-normal text-center text-black mb-6">
+                    Welcome back
+                </h2>
                 <form onSubmit={handleLogin} className="space-y-4">
                     <input
                         type="text"
@@ -27,7 +60,7 @@ const Login = () => {
                         value={login}
                         onChange={(e) => setLogin(e.target.value)}
                         required
-                        className="w-full px-4 py-2 rounded-xl bg-gray-100 border border-gray-300 text-black placeholder-gray-500 focus:outline-none"
+                        className="w-full px-4 py-2 rounded-md bg-gray-100 border border-gray-300 text-black placeholder-gray-500 focus:outline-none"
                     />
                     <input
                         type="password"
@@ -35,11 +68,11 @@ const Login = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        className="w-full px-4 py-2 rounded-xl bg-gray-100 border border-gray-300 text-black placeholder-gray-500 focus:outline-none"
+                        className="w-full px-4 py-2 rounded-md bg-gray-100 border border-gray-300 text-black placeholder-gray-500 focus:outline-none"
                     />
                     <button
                         type="submit"
-                        className="w-full py-2 rounded-xl bg-[#B52478] text-white font-semibold hover:bg-[#a11e69] transition"
+                        className="w-full py-2 rounded-md bg-[#B52478] text-white font-semibold hover:bg-[#a11e69] transition"
                     >
                         Login
                     </button>
