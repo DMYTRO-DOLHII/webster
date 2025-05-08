@@ -23,7 +23,7 @@ const Header = () => {
                 </nav>
 
                 {/* Right: Login Button */}
-                <Link to={'/login'}>
+                <Link to="/login">
                     <Button
                         variant="outlined"
                         style={{ color: 'white', borderColor: 'white' }}
