@@ -17,12 +17,12 @@ import './App.css'
 
 
 function AppContent() {
-    const [count, setCount] = useState(0)
+    const location = useLocation();
 
     return (
 		<div className='flex flex-col h-screen'>
-			<main>
-				{location.pathname !== '/login' && location.pathname !== '/register' && <Header />}
+			{location.pathname !== '/login' && location.pathname !== '/register' && <Header />}
+			<main className='flex flex-col flex-grow'>
 				<Routes>
 					<Route path='/' element={<Main />} />
 					<Route path='/login' element={<Login />} />
