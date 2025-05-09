@@ -12,8 +12,13 @@ const Footer = () => {
     };
 
     return (
-        <footer className="bg-[#0e0e0e] text-white text-sm pt-10 pb-6 px-4 md:px-10 mt-20 border-t border-white/10">
+        <footer className=" overflow-clip relative bg-[#0e0e0e] text-white text-sm pt-10 pb-6 px-4 md:px-10 mt-20 border-t border-white/10">
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+
+                {/* Background shapes */}
+                <div className="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 w-72 h-72 bg-gradient-to-br from-[#9B34BA] to-[#4ab021] rounded-full blur-3xl opacity-30 pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 -translate-x-1/2 translate-y-1/2 w-72 h-72 bg-gradient-to-bl from-[#4ab021] to-[#9B34BA] rounded-full blur-3xl opacity-30 pointer-events-none"></div>
+
                 {/* Branding */}
                 <div className="flex flex-col gap-2">
                     <div onClick={handleLogoClick} className="flex items-center gap-2 text-white font-bold text-xl cursor-pointer">

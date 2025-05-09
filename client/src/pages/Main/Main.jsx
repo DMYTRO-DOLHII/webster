@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import Button from '@mui/material/Button'
 import Title from './components/Title'
+import OurServices from './components/OurServices'
 import Pricing from './components/Pricing'
 import Reviews from './components/Reviews'
 import FAQs from './components/FAQs'
@@ -77,10 +78,10 @@ const Main = () => {
     return (
         <div className="w-full h-full select-none">
             {/* Section 1: Hero Section */}
-            <section className="w-full h-screen relative">
+            <section className="w-full h-screen relative overflow-clip">
                 {/* Blurred shapes */}
                 <div
-                    className="absolute rounded-full pointer-events-none"
+                    className="absolute rounded-full pointer-events-none bg-gradient-to-br from-[#9B34BA] to-[#4ab021]"
                     style={{
                         top: '-150px',
                         left: '-150px',
@@ -92,10 +93,10 @@ const Main = () => {
                     }}
                 />
                 <div
-                    className="absolute rounded-full pointer-events-none"
+                    className="absolute rounded-full pointer-events-none bg-gradient-to-bl from-[#4ab021] to-[#9B34BA]"
                     style={{
                         top: '-150px',
-                        right: '0px',
+                        right: '-150px',
                         width: 400,
                         height: 400,
                         backgroundColor: '#5A873A',
@@ -151,6 +152,10 @@ const Main = () => {
                         </Button>
                     </Link>
                 </div>
+            </section>
+
+            <section id='services' className='w-full'>
+                <OurServices />
             </section>
 
             <section id="pricing" className="w-full">
