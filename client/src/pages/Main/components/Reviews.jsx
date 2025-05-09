@@ -131,13 +131,13 @@ const Reviews = () => {
             <h4 className="text-md text-white/50 mb-10 text-center relative z-10 font-code-pro">Discover what our community has to say about their McOkster experience.</h4>
 
             {/* Vignette (bottom) */}
-            <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-280 bg-gradient-to-t from-[#1A1A1A] via-transparent to-transparent z-10" />
+            <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-380 bg-gradient-to-t from-[#0f0f0f] via-transparent to-transparent z-10" />
 
             <div className="max-w-screen-xl mx-auto grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-auto">
                 {testimonials.map((t, i) => (
                     <div
                         key={i}
-                        className="bg-[#2A2A2A] rounded-xl shadow-lg p-5 text-white flex flex-col gap-4"
+                        className={`bg-[#2A2A2A] rounded-xl shadow-lg p-5 text-white flex flex-col gap-4 ${i % 2 == 0 ? 'purpleGlow' : 'greenGlow'} transform transition duration-300 hover:scale-[1.05]`}
                     >
                         <p className="text-sm leading-relaxed italic">"{t.feedback}"</p>
                         <div className="flex items-center gap-4 mt-auto">

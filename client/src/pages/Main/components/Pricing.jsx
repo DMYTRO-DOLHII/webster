@@ -50,31 +50,38 @@ const Pricing = () => {
             {/* Toggle */}
             <div className="flex justify-center mb-12 relative z-10">
                 {/* Toggle */}
-                <div className="flex justify-center mb-12">
-                    <ToggleButtonGroup
-                        value={billing}
-                        exclusive
-                        onChange={(e, newBilling) => newBilling && setBilling(newBilling)}
-                        sx={{
-                            backgroundColor: "transperent", // Tailwind gray-800
-                            borderRadius: "9999px",
-                            "& .MuiToggleButton-root": {
-                                color: "#fff",
-                                border: "none",
-                                padding: "0.5rem 1.5rem",
-                                borderRadius: "5px",
-                                transition: "background 0.3s",
-                                "&.Mui-selected": {
-                                    backgroundColor: "white", // Tailwind pink-500
+                <ToggleButtonGroup
+                    value={billing}
+                    exclusive
+                    onChange={(e, newBilling) => newBilling && setBilling(newBilling)}
+                    sx={{
+                        backgroundColor: "transparent",
+                        borderRadius: "9999px",
+                        "& .MuiToggleButton-root": {
+                            color: "#fff",
+                            border: "none",
+                            padding: "0.5rem 1.5rem",
+                            borderRadius: "5px",
+                            transition: "background 0.3s, color 0.3s",
+                            "&:hover": {
+                                backgroundColor: "transparent",
+                                color: "#9b34ba",
+                            },
+                            "&.Mui-selected": {
+                                backgroundColor: "white",
+                                color: "#000",
+                                "&:hover": {
+                                    backgroundColor: "white", // keep same as selected
                                     color: "#000",
                                 },
                             },
-                        }}
-                    >
-                        <ToggleButton value="monthly">Monthly</ToggleButton>
-                        <ToggleButton value="annually">Annually</ToggleButton>
-                    </ToggleButtonGroup>
-                </div>
+                        },
+                    }}
+                >
+                    <ToggleButton value="monthly">Monthly</ToggleButton>
+                    <ToggleButton value="annually">Annually</ToggleButton>
+                </ToggleButtonGroup>
+
             </div>
 
             {/* Cards */}

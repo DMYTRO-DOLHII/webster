@@ -43,7 +43,17 @@ const Header = () => {
                 <Link to="/login">
                     <Button
                         variant="outlined"
-                        style={{ color: 'white', borderColor: 'white', fontFamily: '"Source Code Pro", monospace', fontWeight: '300' }}
+                        sx={{
+                            color: 'white',
+                            borderColor: 'white',
+                            fontFamily: '"Source Code Pro", monospace',
+                            fontWeight: 300,
+                            '&:hover': {
+                                backgroundColor: 'white',
+                                color: '#50813c',
+                                borderColor: 'white',
+                            },
+                        }}
                     >
                         Login
                     </Button>

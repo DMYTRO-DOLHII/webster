@@ -43,7 +43,7 @@ const FAQSection = () => {
                         <div
                             key={index}
                             className="rounded-xl overflow-hidden"
-                            style={{ border: "1px solid rgba(224, 173, 255, 0.69)" }}
+                            style={{ border: "1px solid rgba(255, 255, 255, 0.69)" }}
                         >
                             <button
                                 onClick={() => toggle(index)}
