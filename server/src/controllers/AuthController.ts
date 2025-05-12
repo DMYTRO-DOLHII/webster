@@ -37,7 +37,7 @@ export const AuthController = {
             await newUser.save();
 
             const token = jwt.sign({ email: newUser.email }, process.env.SECRET_KEY!, { expiresIn: '1d' });
-            await sendConfirmationEmail(newUser.email, token);
+            // await sendConfirmationEmail(newUser.email, token);
 
             return res.status(201).json({ message: 'User registered successfully. Please confirm your email.' });
         } catch (error) {

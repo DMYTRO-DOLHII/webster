@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import { AxiosInterceptor } from './services/api';
+import { Toaster } from 'react-hot-toast';
 
 // Pages import
 import Main from './pages/Main/Main'
@@ -23,6 +24,10 @@ function AppContent() {
         <div className='flex flex-col h-screen scroll-smooth'>
             {location.pathname !== '/login' &&
                 location.pathname !== '/register' && <Header />}
+
+            <div>
+                <Toaster position='top-right' />
+            </div>
 
             <main className='flex flex-col flex-grow'>
                 <Routes>

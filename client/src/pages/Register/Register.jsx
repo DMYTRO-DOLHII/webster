@@ -1,51 +1,72 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { userStore } from '../../store/userStore';
 import { FaGoogle, FaGithub, FaDiscord } from 'react-icons/fa';
 import { LuBrainCircuit } from 'react-icons/lu';
+import toast from 'react-hot-toast';
+import { useOAuth, useOAuthCallback } from '../../utils/oauth';
+import { LoaderIcon } from 'react-hot-toast';
+import LoadingSpinner from '../../components/LoadingSpinner'
 
 const Register = () => {
-    const [fullName, setFullName] = useState('');
-    const [login, setLogin] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [form, setForm] = useState({
+        fullName: '',
+        login: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+    });
+
     const [errors, setErrors] = useState({});
+    const [serverError, setServerError] = useState('');
+    const [loading, setLoading] = useState(false);
+    const { googleLogin, loginWithGitHub, loginWithDiscord } = useOAuth();
     const navigate = useNavigate();
 
+    useOAuthCallback('github');
+    useOAuthCallback('discord');
+
     const validate = () => {
-        const newErrors = {};
-
-        if (!fullName.trim()) newErrors.fullName = 'Full name is required';
-        if (!login.trim()) newErrors.login = 'Login name is required';
-
-        if (!email.trim()) {
-            newErrors.email = 'Email is required';
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            newErrors.email = 'Invalid email format';
-        }
-
-        if (!password) {
-            newErrors.password = 'Password is required';
-        } else if (
-            password.length < 8 ||
-            !/[A-Z]/.test(password) ||
-            !/[a-z]/.test(password) ||
-            !/[0-9]/.test(password) ||
-            !/[!@#$%^&*]/.test(password)
-        ) {
-            newErrors.password =
-                'Password must be 8+ chars and include upper, lower, number, and symbol';
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+        const errors = {};
+        if (!form.fullName) errors.fullName = "Full name is required";
+        if (!form.login) errors.login = "Full name is required";
+        // if (!username) errors.username = "Username is required";
+        if (form.fullName.length < 2) errors.fullName = "Full name must be at least 2 characters";
+        if (form.login.length < 2) errors.login = "Full name must be at least 2 characters";
+        // if (username.length < 2) errors.username = "Username must be at least 2 characters";
+        if (!form.email || !/\S+@\S+\.\S+/.test(form.email)) errors.email = "Valid Email is required";
+        if (form.password.length < 6) errors.password = "Password must be at least 6 characters";
+        if (form.password !== form.confirmPassword) errors.confirmPassword = "Passwords must match";
+        return errors;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!validate()) return;
+        const validationErrors = validate();
+        setErrors(validationErrors);
+        setLoading(true);
 
-        // TODO: Send data to backend
-        console.log({ fullName, login, email, password });
+        if (Object.keys(validationErrors).length === 0) {
+            try {
+                const message = await userStore.register(form.fullName, form.email, form.password, form.login);
+                if (message) {
+                    toast('Confirm your email!');
+                    navigate('/login');
+                }
+            } catch (error) {
+                toast(error.response?.data?.message || 'Registration failed')
+                // setServerError(error.response?.data?.message || 'Registration failed');
+            } finally {
+                setLoading(false);
+            }
+        } else {
+            setLoading(false);
+        }
+    };
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setForm({ ...form, [name]: value });
     };
 
     const handleOAuth = (provider) => {
@@ -53,7 +74,7 @@ const Register = () => {
         window.location.href = `/auth/${provider}`;
     };
 
-    return (
+    return loading ? (<LoadingSpinner />) : (
         <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
             {/* 🔹 Background Floating Blobs */}
             <div className="absolute inset-0 flex items-center justify-center z-0">
@@ -87,10 +108,11 @@ const Register = () => {
 
                     <div>
                         <input
+                            name='fullName'
                             type="text"
                             placeholder="Full Name"
-                            value={fullName}
-                            onChange={(e) => setFullName(e.target.value)}
+                            value={form.fullName}
+                            onChange={handleChange}
                             className="w-full px-4 py-2 rounded-md bg-gray-100 border border-gray-300 text-black placeholder-gray-500 focus:outline-none"
                         />
                         {errors.fullName && <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>}
@@ -98,10 +120,11 @@ const Register = () => {
 
                     <div>
                         <input
+                            name='login'
                             type="text"
                             placeholder="Login Name"
-                            value={login}
-                            onChange={(e) => setLogin(e.target.value)}
+                            value={form.login}
+                            onChange={handleChange}
                             className="w-full px-4 py-2 rounded-md bg-gray-100 border border-gray-300 text-black placeholder-gray-500 focus:outline-none"
                         />
                         {errors.login && <p className="text-red-500 text-sm mt-1">{errors.login}</p>}
@@ -109,10 +132,11 @@ const Register = () => {
 
                     <div>
                         <input
+                            name='email'
                             type="email"
                             placeholder="Email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            value={form.email}
+                            onChange={handleChange}
                             className="w-full px-4 py-2 rounded-md bg-gray-100 border border-gray-300 text-black placeholder-gray-500 focus:outline-none"
                         />
                         {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
@@ -120,13 +144,25 @@ const Register = () => {
 
                     <div>
                         <input
+                            name='password'
                             type="password"
                             placeholder="Password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            value={form.password}
+                            onChange={handleChange}
                             className="w-full px-4 py-2 rounded-md bg-gray-100 border border-gray-300 text-black placeholder-gray-500 focus:outline-none"
                         />
                         {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+                    </div>
+                    <div>
+                        <input
+                            name='confirmPassword'
+                            type="password"
+                            placeholder='Confirm Password'
+                            value={form.confirmPassword}
+                            onChange={handleChange}
+                            className="w-full px-4 py-2 rounded-md bg-gray-100 border border-gray-300 text-black placeholder-gray-500 focus:outline-none"
+                        />
+                        {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
                     </div>
 
                     <button
@@ -141,19 +177,19 @@ const Register = () => {
 
                 <div className="flex justify-center gap-4 mt-6">
                     <button
-                        onClick={() => handleOAuth('google')}
+                        onClick={googleLogin}
                         className="cursor-pointer w-full p-3 bg-white text-gray-800 rounded-lg transition duration-200 flex justify-center items-center hover:bg-gray-100 hover:shadow-[0_2px_5px_rgba(234,67,53,0.5)]"
                     >
                         <FaGoogle size={25} />
                     </button>
                     <button
-                        onClick={() => handleOAuth('github')}
+                        onClick={loginWithGitHub}
                         className="cursor-pointer w-full p-3 bg-white text-gray-800 rounded-lg transition duration-200 flex justify-center items-center hover:bg-gray-100 hover:shadow-[0_2px_5px_rgba(51,51,51,0.5)]"
                     >
                         <FaGithub size={25} />
                     </button>
                     <button
-                        onClick={() => handleOAuth('discord')}
+                        onClick={loginWithDiscord}
                         className="cursor-pointer w-full p-3 bg-white text-gray-800 rounded-lg transition duration-200 flex justify-center items-center hover:bg-gray-100 hover:shadow-[0_2px_5px_rgba(88,101,242,0.5)]"
                     >
                         <FaDiscord size={25} />

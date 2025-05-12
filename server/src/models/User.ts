@@ -7,6 +7,8 @@ import {
 } from 'typeorm';
 import bcrypt from 'bcrypt'
 
+export type SubscriptionType = 'free' | 'advanced' | 'pro';
+
 @Entity()
 export class User extends BaseEntity {
     @PrimaryGeneratedColumn('uuid')
@@ -27,9 +29,15 @@ export class User extends BaseEntity {
     @Column({ nullable: true })
     profilePicture: string;
 
-    @Column({ default: false })
-	isEmailConfirmed: boolean;
+    @Column({ default: true })
+    isEmailConfirmed: boolean;
 
+    @Column({
+        type: 'enum',
+        enum: ['free', 'advanced', 'pro'],
+        default: 'free',
+    })
+    subscription: SubscriptionType;
 
     @BeforeInsert()
     async initUser() {

@@ -34,6 +34,7 @@ const Header = () => {
 
                 {/* Center: Navigation */}
                 <nav className="hidden md:flex gap-8 text-white/80 text-sm font-medium">
+                    <a onClick={() => scrollToId("services")} className="hover:text-white transition cursor-pointer">Our Services</a>
                     <a onClick={() => scrollToId("pricing")} className="hover:text-white transition cursor-pointer">Pricing</a>
                     <a onClick={() => scrollToId("testimonials")} className="hover:text-white transition cursor-pointer">Testimonials</a>
                     <a onClick={() => scrollToId("faqs")} className="hover:text-white transition cursor-pointer">FAQs</a>

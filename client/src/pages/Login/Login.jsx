@@ -2,25 +2,53 @@ import { FaGithub, FaGoogle, FaDiscord } from 'react-icons/fa';
 import { LuBrainCircuit } from 'react-icons/lu';
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useOAuth, useOAuthCallback } from '../../utils/oauth';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 const Login = () => {
     const [login, setLogin] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
+    const [serverError, setServerError] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    const handleLogin = (e) => {
+    const { googleLogin, loginWithGitHub, loginWithDiscord } = useOAuth();
+
+    useOAuthCallback('github');
+    useOAuthCallback('discord');
+
+    const handleLogin = async (e) => {
         e.preventDefault();
-        console.log('Logging in with:', login, password);
+        setLoading(true);
+
+        const email = emailValue.includes('@') ? emailValue : '';
+        const login = email ? '' : emailValue;
+
+        try {
+            const message = await userStore.login(email, passwordValue, login);
+            if (message) {
+                navigate('/');
+            }
+        } catch (error) {
+            console.log(error);
+            setServerError(error.response?.data?.message || 'Login failed');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleForgot = () => {
+        navigate('/password-reset');
     };
 
     const handleOAuth = (provider) => {
         window.location.href = `/auth/${provider}`;
     };
 
-    return (
+    return loading ? (<LoadingSpinner />) : (
         <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
 
-            {/* 🔹 Background Floating Blobs */}
+            {/* Background Floating Blobs */}
             <div className="absolute inset-0 flex items-center justify-center z-0">
                 {/* Blob Container with pulse */}
                 <div className="relative w-[600px] h-[600px] animate-slow-pulse">
@@ -39,7 +67,7 @@ const Login = () => {
 
 
 
-            {/* 🔹 Logo Section */}
+            {/* Logo Section */}
             <div className="absolute top-16 flex flex-col items-center z-10 animation-gradientBlur">
                 <Link to="/" className="flex items-center gap-2 text-black font-bold text-2xl hover:opacity-80 transition">
                     <LuBrainCircuit className="text-[#B52478]" />
@@ -48,7 +76,7 @@ const Login = () => {
             </div>
 
 
-            {/* 🔹 Login Box */}
+            {/* Login Box */}
             <div className="w-full max-w-md p-8 rounded-2xl bg-white border border-gray-300 shadow-xl z-10">
                 <h2 className="text-3xl font-normal text-center text-black mb-6">
                     Welcome back
