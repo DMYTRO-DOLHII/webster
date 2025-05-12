@@ -14,7 +14,7 @@ const Recents = () => {
     ];
 
     return (
-        <section aria-label="Recent templates" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <section aria-label="Recent templates" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 overflow-cli[">
             {[...Array(7)].map((_, i) => (
                 <DesignCard key={i} design={recentDesigns[0]} />
             ))}
