@@ -1,14 +1,27 @@
-// components/Sidebar.jsx
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FaClock, FaFileAlt, FaTrashAlt, FaFolder } from "react-icons/fa";
 import ProfileDropdown from "./ProfileDropdown";
 import { MdKeyboardArrowDown } from "react-icons/md";
 
 const Sidebar = ({ activeTab, setActiveTab }) => {
     const [isDropdownOpen, setDropdownOpen] = useState(false);
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
 
     return (
-        <aside className="flex flex-col bg-[#121212] border-r border-[#222222] w-64 min-h-screen select-none">
+        <aside className="flex flex-col bg-[#121212] border-r border-[#222222] w-64 min-h-screen select-none relative">
             <div
                 className="flex items-center gap-2 px-4 py-3 border-b border-[#222222] cursor-pointer relative"
                 onClick={() => setDropdownOpen(!isDropdownOpen)}
@@ -19,8 +32,14 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
                 <span className="text-white text-sm font-normal flex items-center gap-1">
                     Dmytro Dolhii <MdKeyboardArrowDown />
                 </span>
-                {isDropdownOpen && <ProfileDropdown />}
             </div>
+
+            {/* Dropdown with ref wrapper */}
+            {isDropdownOpen && (
+                <div ref={dropdownRef}>
+                    <ProfileDropdown />
+                </div>
+            )}
 
             <div className="px-4 py-2">
                 <input
