@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { FaClock, FaFileAlt, FaTrashAlt, FaFolder } from "react-icons/fa";
 import ProfileDropdown from "./ProfileDropdown";
+import { MdKeyboardArrowDown } from "react-icons/md";
 
 const Sidebar = ({ activeTab, setActiveTab }) => {
     const [isDropdownOpen, setDropdownOpen] = useState(false);
@@ -16,7 +17,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
                     D
                 </div>
                 <span className="text-white text-sm font-normal flex items-center gap-1">
-                    Dmytro Dolhii
+                    Dmytro Dolhii <MdKeyboardArrowDown />
                 </span>
                 {isDropdownOpen && <ProfileDropdown />}
             </div>
@@ -29,7 +30,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
                 />
             </div>
 
-            <nav className="flex flex-col mt-2 text-xs font-normal text-[#b3b3b3]">
+            <nav className="flex flex-col mt-2 text-[14px] font-normal text-[#b3b3b3]">
                 <button onClick={() => setActiveTab("recents")} className={`flex items-center gap-2 px-4 py-3 ${activeTab === 'recents' ? 'bg-[#3a1a5a] text-white' : 'hover:bg-[#222222]'} transition-colors`}>
                     <FaClock className="text-[10px]" />
                     Recents
