@@ -7,6 +7,7 @@ import { Toaster } from 'react-hot-toast';
 import Main from './pages/Main/Main'
 import Login from './pages/Login/Login';
 import Register from './pages/Register/Register';
+import Workspace from './pages/Workspace/Workspace';
 
 // Components import
 import Header from './components/Header';
@@ -23,7 +24,8 @@ function AppContent() {
     return (
         <div className='flex flex-col h-screen scroll-smooth'>
             {location.pathname !== '/login' &&
-                location.pathname !== '/register' && <Header />}
+                location.pathname !== '/register'  &&
+                location.pathname !== '/workspace' && <Header />}
 
             <div>
                 <Toaster position='top-right' />
@@ -34,11 +36,13 @@ function AppContent() {
                     <Route path='/' element={<Main />} />
                     <Route path='/login' element={<Login />} />
                     <Route path='/register' element={<Register />} />
+                    <Route path='/workspace' element={<Workspace />} />
                 </Routes>
             </main>
 
             {location.pathname !== '/login' &&
-                location.pathname !== '/register' && <Footer />}
+                location.pathname !== '/register' &&
+                location.pathname !== '/workspace' && <Footer />}
         </div>
     )
 }
