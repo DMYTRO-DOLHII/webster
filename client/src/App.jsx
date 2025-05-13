@@ -14,6 +14,7 @@ import Header from './components/Header';
 import Footer from './components/Footer'
 import LoadingSpinner from './components/LoadingSpinner'
 import ScrollToTop from './components/ScrollToTop';
+import Editor from './pages/Test/Editor'
 
 import './App.css'
 

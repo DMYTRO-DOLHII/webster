@@ -3,10 +3,10 @@ import express from 'express'
 import { createUserAndDatabase } from './src/database/db.create'
 import { AppDataSource } from './src/database/data-source'
 import cors from 'cors'
-import authRouter from './src/routes/route.auth'
+import authRouter from './src/routes/auth.route'
 
-export const app = express()
-const PORT = process.env.PORT || 8000;
+export const app = express();
+const PORT = process.env.PORT;
 
 const allowedOrigins = [
     'http://localhost:3000',
