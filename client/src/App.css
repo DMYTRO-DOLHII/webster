@@ -184,3 +184,19 @@ h6 {
     background: #fff;
     color: #0f0f0f;
 }
+
+/* Canvas Sidebar */
+.sidebar {
+    width: 80px;
+    /* Adjust based on your design */
+    background-color: #1a1a1a;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+.main-content {
+    flex-grow: 1;
+    background-color: white;
+}

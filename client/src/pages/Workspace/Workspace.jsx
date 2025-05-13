@@ -24,10 +24,10 @@ const Workspace = () => {
             <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
             <main className="flex-1 p-4 relative overflow-clip">
                 {/* Fade overlay from bottom to transparent top */}
-                {/* <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-t from-transparent to-black" /> */}
+                <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-t from-transparent to-black" />
 
                 {/* Blurred gradient shapes */}
-                <div className="absolute bottom-0 left-[-150px] w-500 h-50 bg-gradient-to-r from-[#9B34BA] to-[#4ab021] blur-[150px] opacity-20 pointer-events-none z-0 animate-shape"></div>
+                <div className="absolute bottom-0 left-[-150px] w-500 h-50 bg-gradient-to-r from-[#9B34BA] to-[#4ab021] blur-[150px] opacity-20 pointer-events-none z-0"></div>
 
                 {/* Content */}
                 <div className="relative z-20">
