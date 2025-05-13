@@ -3,7 +3,7 @@ import { FaClock, FaFileAlt, FaTrashAlt, FaFolder } from "react-icons/fa";
 import ProfileDropdown from "./ProfileDropdown";
 import { MdKeyboardArrowDown } from "react-icons/md";
 
-const Sidebar = ({ activeTab, setActiveTab }) => {
+const Sidebar = ({ activeTab, setActiveTab, onOpenSettings }) => {
     const [isDropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
 
@@ -37,7 +37,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
             {/* Dropdown with ref wrapper */}
             {isDropdownOpen && (
                 <div ref={dropdownRef}>
-                    <ProfileDropdown />
+                    <ProfileDropdown onOpenSettings={onOpenSettings} />
                 </div>
             )}
 
