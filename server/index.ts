@@ -1,9 +1,12 @@
-// server/src/index.ts
-import express from 'express'
-import cors from 'cors'
+import express from 'express';
+import { AppDataSource } from './src/database/data-source'
+import { createUserAndDatabase } from "./src/database/db.create";
+// import userRoutes from './src/routes/user.routes';
+import cors from 'cors';
+import path from 'path';
 
-export const app = express()
-const PORT = process.env.PORT || 8000;
+export const app = express();
+const PORT = process.env.PORT;
 
 const allowedOrigins = [
 	'http://localhost:3000',
@@ -25,10 +28,52 @@ app.use(cors(corsOptions));
 
 app.use(express.json());
 
-app.get('/api/hello', (_req, res) => {
-	res.json({ message: 'Hello from backend!' })
-})
+// // Connect routes
+// app.use('/api/users', userRoutes);
+// app.use('/api/payment', paymentRoutes);
+// app.use('/api/events', eventRoutes);
+// app.use('/api/companies', companyRoutes);
+// app.use('/api/themes', themeRoutes);
+// app.use('/api/formats', formatRoutes);
+// app.use('/api/comments', commentRoutes);
+// app.use('/api/tickets', ticketRoutes);
+// app.use('/api/promocodes', promocodeRoutes);
+// app.use('/api/subscriptions', subscriptionRoutes);
+// // app.use('/api/calendars', calendarRoutes);
+// app.use('/api/auth', authRoutes);
+// app.use('/avatars', express.static(path.join(__dirname, 'uploads')));
+// app.use('/auth', callBackRoutes);
 
-app.listen(PORT, () => {
-	console.log(`Server is running on http://localhost:${PORT}`)
-})
+// Create the database if it doesn't exist, then initialize the data source and start the server
+createUserAndDatabase()
+	.then(() => {
+		AppDataSource.initialize()
+			.then(async () => {
+
+				// await checkAndRunKostilSQL();
+
+				// console.log('Data Source has been initialized!');
+				//await createAdmin();
+
+
+				// await localEventsBackup();
+
+				//await seedDatabase();
+
+				// await getAllEventsFromDB();
+
+
+				// createLocalEventDump();
+				// restoreLocalEventDump();
+
+				app.listen(PORT, () => {
+					console.log(`Server is running on http://localhost:${PORT}`);
+				});
+			})
+			.catch(error => {
+				console.error('Error during Data Source initialization:', error);
+			});
+	})
+	.catch(error => {
+		console.error('Error during database creation:', error);
+	});
