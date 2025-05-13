@@ -39,7 +39,7 @@ const UserDropdown = () => {
       <button
         id="dropdownAvatarNameButton"
         onClick={toggleDropdown}
-        className="flex items-center text-sm pe-1 p-1 pr-3 font-medium text-gray-900 bg-pink-400 rounded-full hover:text-white focus:text-white md:me-0 focus:ring-2 focus:ring-gray-100"
+        className="flex items-center text-sm pe-1 p-1 pr-3 font-medium text-gray-900 bg-gray-400 rounded-full hover:text-white focus:text-white md:me-0 focus:ring-2 focus:ring-gray-100"
         type="button"
       >
         {!imgLoaded && (
@@ -89,7 +89,7 @@ const UserDropdown = () => {
                 Account
               </a>
             </li>
-            {
+            {/* {
               userStore?.user?.isAdmin && (
                 <li>
                   <a
@@ -100,21 +100,21 @@ const UserDropdown = () => {
                   </a>
                 </li>
               )
-            }
+            } */}
             <li>
               <a
-                href='/account?section=tickets'
+                href='/account?section=settings'
                 className="block px-4 py-2 hover:bg-gray-100"
               >
-                Tickets
+                Settings
               </a>
             </li>
             <li>
               <a
-                href="/subscriptions"
+                href="/workspace"
                 className="block px-4 py-2 hover:bg-gray-100"
               >
-                Subscriptions
+                Workspace
               </a>
             </li>
           </ul>
