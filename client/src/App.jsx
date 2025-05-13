@@ -16,11 +16,42 @@ import LoadingSpinner from './components/LoadingSpinner'
 import ScrollToTop from './components/ScrollToTop';
 import Editor from './pages/Test/Editor'
 
+import { userStore } from './store/userStore';
+
+import { fetchCurrentUser } from './services/userService';
+
 import './App.css'
 
 
 function AppContent() {
     const location = useLocation();
+    const [loading, setLoading] = useState(true); // Loading state
+    useEffect(() => {
+        const loadUser = async () => {
+            try {
+                const currentUser = await fetchCurrentUser();
+                if (!currentUser) {
+                    userStore.logout();
+                    return;
+                }
+                userStore.setUser(currentUser);
+
+                // const subs = await getSubscribedEvents(currentUser.id);
+                // userStore.setSubscriptions(subs);
+
+            } catch (error) {
+                console.error('Failed to fetch user:', error);
+                userStore.logout();
+            } finally {
+                setLoading(false); // Завершаем загрузку
+            }
+        };
+        // if (localStorage.getItem('token')) loadUser();
+        loadUser();
+    }, []);
+    if (loading) {
+        return <LoadingSpinner />;
+    }
 
     return (
         <div className='flex flex-col h-screen scroll-smooth'>
