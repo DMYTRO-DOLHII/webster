@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useOAuth, useOAuthCallback } from '../../utils/oauth';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import { userStore } from '../../store/userStore';
 
 const Login = () => {
     const [login, setLogin] = useState('');
@@ -21,11 +22,11 @@ const Login = () => {
         e.preventDefault();
         setLoading(true);
 
-        const email = emailValue.includes('@') ? emailValue : '';
-        const login = email ? '' : emailValue;
+        const email = login.includes('@') ? login : '';
+        setLogin(email ? '' : login);
 
         try {
-            const message = await userStore.login(email, passwordValue, login);
+            const message = await userStore.login(email, password, login);
             if (message) {
                 navigate('/');
             }

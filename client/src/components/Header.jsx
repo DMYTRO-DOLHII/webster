@@ -3,6 +3,8 @@ import { useEffect } from 'react'
 import Button from '@mui/material/Button'
 import { FaBolt } from 'react-icons/fa'
 import { LuBrainCircuit } from "react-icons/lu";
+import { userStore } from '../store/userStore';
+import UserDropdown from './UserDropdown';
 
 const scrollToId = (id) => {
     const el = document.getElementById(id);
@@ -10,7 +12,6 @@ const scrollToId = (id) => {
         el.scrollIntoView({ behavior: 'smooth' });
     }
 };
-
 const Header = () => {
     const location = useLocation();
     const navigate = useNavigate();
@@ -41,7 +42,7 @@ const Header = () => {
                 </nav>
 
                 {/* Right: Login Button */}
-                <Link to="/login">
+                {!userStore?.user ? <Link to="/login">
                     <Button
                         variant="outlined"
                         sx={{
@@ -58,7 +59,7 @@ const Header = () => {
                     >
                         Login
                     </Button>
-                </Link>
+                </Link> : <UserDropdown />}
             </div>
         </header>
     )
