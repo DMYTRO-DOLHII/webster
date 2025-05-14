@@ -1,8 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ToggleButtonGroup, ToggleButton } from "@mui/material";
 import { RxRadiobutton } from "react-icons/rx";
 import clsx from "clsx";
 import { Button } from "@mui/material";
+import { userStore } from '../../../store/userStore'
+import { api } from "../../../services/api";
+import { redirectToStripeCheckout } from '../../../utils/stripe'
 
 const pricingData = {
     monthly: [
@@ -23,8 +27,24 @@ const cardStyles = [
     "purpleGradient"
 ];
 
+
+
 const Pricing = () => {
     const [billing, setBilling] = useState("monthly");
+    const navigate = useNavigate();
+
+    const handlePlanSelect = (planTitle) => {
+        // Save the selected plan in localStorage
+        localStorage.setItem("selectedPlan", planTitle)
+
+        if (!userStore?.user) {
+            // Not logged in — redirect to login
+            navigate('/login')
+        } else {
+            // Logged in — go directly to checkout
+            redirectToStripeCheckout(planTitle, userStore?.user?.id);
+        }
+    };
 
     return (
         <section className="relative w-full py-24 px-6 text-white backdrop-blur">
@@ -111,6 +131,7 @@ const Pricing = () => {
                             </ul>
                         </div>
                         <Button
+                            onClick={() => handlePlanSelect(plan.title)}
                             variant="outlined"
                             sx={{
                                 color: "#fff",
