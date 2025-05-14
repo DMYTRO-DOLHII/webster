@@ -111,6 +111,14 @@ const UserDropdown = () => {
             </li>
             <li>
               <a
+                href='/canvas'
+                className="block px-4 py-2 hover:bg-gray-100"
+              >
+                Canvas
+              </a>
+            </li>
+            <li>
+              <a
                 href="/workspace"
                 className="block px-4 py-2 hover:bg-gray-100"
               >

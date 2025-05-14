@@ -8,19 +8,22 @@ import Main from './pages/Main/Main'
 import Login from './pages/Login/Login';
 import Register from './pages/Register/Register';
 import Workspace from './pages/Workspace/Workspace';
+import Editor from './pages/Canvas/Canvas'
 
 // Components import
 import Header from './components/Header';
 import Footer from './components/Footer'
 import LoadingSpinner from './components/LoadingSpinner'
 import ScrollToTop from './components/ScrollToTop';
-import Editor from './pages/Test/Editor'
+import Canvas from './pages/Canvas/Canvas'
 
 import { userStore } from './store/userStore';
 
 import { fetchCurrentUser } from './services/userService';
 
 import './App.css'
+
+import { Excalidraw } from "@excalidraw/excalidraw";
 
 
 function AppContent() {
@@ -56,8 +59,9 @@ function AppContent() {
     return (
         <div className='flex flex-col h-screen scroll-smooth'>
             {location.pathname !== '/login' &&
-                location.pathname !== '/register'  &&
-                location.pathname !== '/workspace' && <Header />}
+                location.pathname !== '/register' &&
+                location.pathname !== '/workspace' &&
+                location.pathname !== '/canvas' && <Header />}
 
             <div>
                 <Toaster position='top-right' />
@@ -69,13 +73,25 @@ function AppContent() {
                     <Route path='/login' element={<Login />} />
                     <Route path='/register' element={<Register />} />
                     <Route path='/workspace' element={<Workspace />} />
+                    <Route path='/canvas' element={<Canvas />} />
                 </Routes>
             </main>
 
             {location.pathname !== '/login' &&
                 location.pathname !== '/register' &&
-                location.pathname !== '/workspace' && <Footer />}
+                location.pathname !== '/workspace' &&
+                location.pathname !== '/canvas' && <Footer />}
         </div>
+    )
+}
+function AppEditor() {
+    return (
+        <>
+            <h1 style={{ textAlign: "center" }}>Excalidraw Example</h1>
+            <div style={{ height: "100vh", width: "500px" }}>
+                <Excalidraw />
+            </div>
+        </>
     )
 }
 
@@ -85,7 +101,9 @@ function App() {
             <AxiosInterceptor />
             <ScrollToTop />
             <AppContent />
+            {/* <AppEditor /> */}
         </Router>
+        // <AppEditor />
     )
 }
 

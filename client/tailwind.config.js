@@ -10,7 +10,6 @@ module.exports = {
                 'float-y': 'floatY 6s ease-in-out infinite',
                 'float-x': 'floatX 10s ease-in-out infinite',
                 'animate-marquee': 'marquee 60s linear infinite',
-                'shape': 'moveShape 8s ease-in-out infinite, scaleShape 10s ease-in-out infinite, changeGradient 15s linear infinite',
             },
             keyframes: {
                 'pulse-slow': {
@@ -32,21 +31,6 @@ module.exports = {
                 marquee: {
                     '0%': { transform: 'translateX(0)' },
                     '100%': { transform: 'translateX(-50%)' }
-                },
-                moveShape: {
-                    '0%': { transform: 'translateX(-150px)' },
-                    '50%': { transform: 'translateX(200px)' },
-                    '100%': { transform: 'translateX(-150px)' },
-                },
-                scaleShape: {
-                    '0%': { transform: 'scale(1)' },
-                    '50%': { transform: 'scale(1.1)' },
-                    '100%': { transform: 'scale(1)' },
-                },
-                changeGradient: {
-                    '0%': { background: 'linear-gradient(to right, #9B34BA, #4ab021)' },
-                    '50%': { background: 'linear-gradient(to right, #4ab021, #9B34BA)' },
-                    '100%': { background: 'linear-gradient(to right, #9B34BA, #4ab021)' },
                 },
             },
             backgroundSize: { // ✨ added

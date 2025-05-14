@@ -91,7 +91,6 @@ export const fetchCurrentUser = async () => {
 
     try {
         const response = await api.post(`${API_URL}/auth/me`, { token });
-        console.log(response.data);
         return response.data.user;
     } catch (error) {
         if (error.response?.status === 401) {

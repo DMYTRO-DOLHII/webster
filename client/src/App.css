@@ -1,6 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap');
 @import "tailwindcss";
 
+  
+  .custom-styles .excalidraw.theme--dark {
+    --color-primary: #d494aa;
+    --color-primary-darker: #d64c7e;
+    --color-primary-darkest: #e86e99;
+    --color-primary-light: #dcbec9;
+  }
 body {
     background: #0f0f0f;
 }
@@ -183,4 +190,20 @@ h6 {
 .buttonBg:hover {
     background: #fff;
     color: #0f0f0f;
+}
+
+/* Canvas Sidebar */
+.sidebar {
+    width: 80px;
+    /* Adjust based on your design */
+    background-color: #1a1a1a;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+.main-content {
+    flex-grow: 1;
+    background-color: white;
 }
