@@ -1,3 +1,5 @@
+import { userStore } from "../../../store/userStore";
+
 const projectCard = ({ project }) => {
     return (
         <article className="flex gap-4 p-3 border border-[#222222] rounded-md cursor-pointer">
@@ -12,9 +14,7 @@ const projectCard = ({ project }) => {
                     <p className="text-[9px] text-[#666666] mt-1">{project.editedText}</p>
                 </div>
                 <div>
-                    <div className={`w-7 h-7 rounded-full ${project.userBgColor} ${project.userTextColor} text-xs font-semibold flex items-center justify-center ml-auto`}>
-                        {project.userInitial}
-                    </div>
+                    <img src={userStore?.user?.profilePicture} className={`w-7 h-7 rounded-full ${project.userBgColor} ${project.userTextColor} text-xs font-semibold flex items-center justify-center ml-auto`} alt="" />
                 </div>
             </div>
         </article>

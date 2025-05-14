@@ -1,11 +1,15 @@
 import { FaCog, FaUserPlus, FaSignOutAlt } from "react-icons/fa";
+import { userStore } from "../../../store/userStore";
 
 const ProfileDropdown = ({ onOpenSettings }) => {
+    const fullName = userStore?.user?.fullName;
+    const profilePicture = userStore?.user?.profilePicture;
+
     return (
         <div className="absolute top-13 left-4 backdrop-blur-md border border-[#333] rounded-md text-xs p-3 w-56 z-10 text-white">
             <div className="flex flex-col items-center justify-center gap-2 mb-3">
-                <div className="w-14 h-14 rounded-full bg-pink-600 flex items-center justify-center text-white text-sm font-semibold">D</div>
-                <span className="text-14 font-medium">Dmytro Dolhii</span>
+                <img src={profilePicture} className="w-14 h-14 rounded-full bg-pink-600 flex items-center justify-center text-white text-sm font-semibold"></img>
+                <span className="text-14 font-medium">{fullName}</span>
             </div>
             <div className="flex flex-col gap-1 text-[14px]">
                 <button
