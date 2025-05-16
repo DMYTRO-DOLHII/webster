@@ -24,7 +24,7 @@ const Title = () => {
         // </h2>
         <div className='typewriter'>
             <h2 className="text-6xl font-bold text-center text-white">
-                <span className="text-[#B52478]">McOkster</span>
+                <span className="text-[#9b34ba]">McOkster</span>
                 <span className="text-white"> - Build visuals 10× faster</span>
             </h2>
         </div>

@@ -108,6 +108,17 @@ export const confirmEmail = async token => {
         throw error;
     }
 };
+
+export const getUserProjects = async userId => {
+	try {
+		const response = await api.get(`${API_URL}/users/${encodeURIComponent(userId)}/projects`);
+		return response.data;
+	} catch (error) {
+		console.error('Error fetching user projects:', error);
+		throw error;
+	}
+};
+
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
