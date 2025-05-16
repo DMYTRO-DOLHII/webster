@@ -4,6 +4,8 @@ import LeftSidebar from "./components/Sidebar/LeftSidebar";
 import RightSidebar from "./components/Sidebar/RightSidebar";
 import Header from "./components/Header";
 import Design from "./components/Design/Design";
+import { editorStore } from '../../store/editorStore';
+
 
 const Canvas = () => {
     const getDesignJsonRef = useRef(null);
@@ -11,10 +13,10 @@ const Canvas = () => {
     const handleSaveClick = () => {
         if (getDesignJsonRef.current) {
             const json = getDesignJsonRef.current();
-            console.log("Saved Design JSON:", json);
             localStorage.setItem("designData", json);
         }
     };
+
 
     return (
         <div className="flex flex-col h-screen">
@@ -25,6 +27,7 @@ const Canvas = () => {
                 <div className="flex-grow bg-[#121212] flex items-center justify-center">
                     <Design onSaveRef={(fn) => (getDesignJsonRef.current = fn)} />
                 </div>
+                {/* <Design onSaveRef={(fn) => (getDesignJsonRef.current = fn)} /> */}
 
                 <RightSidebar />
             </div>

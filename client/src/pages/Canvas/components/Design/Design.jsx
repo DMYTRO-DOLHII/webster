@@ -1,69 +1,92 @@
-import { useRef, useEffect, useState } from 'react';
-import { Stage, Layer, Rect, Circle } from 'react-konva';
-import Konva from 'konva';
+import { editorStore } from '../../../../store/editorStore';
+import { userStore } from '../../../../store/userStore';
+import { Stage, Layer, Circle, Rect, Line, Text } from 'react-konva';
+import { useEffect, useState, useRef } from 'react';
 
 const Design = ({ onSaveRef }) => {
     const stageRef = useRef(null);
-    const [isStageReady, setIsStageReady] = useState(false);
+    const [konvaJson, setKonvaJson] = useState(null);
 
-    // Save JSON function
+    const COMPONENT_MAP = {
+        Stage,
+        Layer,
+        Circle,
+        Rect,
+        Line,
+        Text,
+    };
+
+    function renderNode(node, index, parentNode) {
+        const Component = COMPONENT_MAP[node.className];
+        if (!Component) return null;
+
+        // Handle Circle click
+        const handleClick = () => {
+            if (node.className === 'Circle') {
+                // Generate random color
+                const randomColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                node.attrs.fill = randomColor;
+
+                // Force update
+                setKonvaJson({ ...konvaJson }); // trigger re-render
+                localStorage.setItem("designData", JSON.stringify(konvaJson));
+            }
+        };
+
+        const children = node.children?.map((child, i) => renderNode(child, i, node));
+
+        return (
+            <Component
+                key={index}
+                {...node.attrs}
+                onClick={node.className === 'Circle' ? handleClick : undefined}
+            >
+                {children}
+            </Component>
+        );
+    }
+
+
+    const getDesignJson = () => {
+        if (stageRef.current) {
+            return stageRef.current.toJSON();
+        }
+        return null;
+    };
+
+    useEffect(() => {
+        const jsonString = localStorage.getItem("designData");
+
+        const data = JSON.parse(jsonString);
+        setKonvaJson(data);
+    }, []);
+
     useEffect(() => {
         if (onSaveRef) {
-            onSaveRef(() => {
-                if (stageRef.current) {
-                    return stageRef.current.toJSON();
-                }
-                return null;
-            });
+            onSaveRef(getDesignJson); // allow parent to call save
         }
     }, [onSaveRef]);
 
-    // Wait for stage to be ready
     useEffect(() => {
-        if (!isStageReady || !stageRef.current) return;
-
-        const savedJson = localStorage.getItem("designData");
-
-        if (savedJson) {
-            try {
-                const node = Konva.Node.create(savedJson); // ← removed 2nd arg
-                stageRef.current.destroyChildren();
-
-                // If top node is a Stage, add its children
-                if (node.getClassName() === "Stage") {
-                    const children = node.getChildren();
-                    children.forEach(child => stageRef.current.add(child));
-                } else {
-                    // Otherwise just add the node
-                    stageRef.current.add(node);
-                }
-
-                stageRef.current.draw();
-            } catch (err) {
-                console.error("Error loading saved design:", err);
+        // Autosave on changes
+        const interval = setInterval(() => {
+            const json = getDesignJson();
+            if (json) {
+                localStorage.setItem("designData", json);
             }
-        }
+        }, 1000); // every 1s
 
-        const json = stageRef.current.toJSON();
-        localStorage.setItem("designData", json);
-    }, [isStageReady]);
+        return () => clearInterval(interval);
+    }, []);
 
+    if (!konvaJson) return <div>Loading...</div>;
 
     return (
-        <Stage
-            width={500}
-            height={500}
-            ref={(node) => {
-                stageRef.current = node;
-                if (node) setIsStageReady(true);
-            }}
-        >
-            <Layer>
-                <Rect x={0} y={0} width={500} height={500} fill="white" listening={false} />
-                <Circle x={250} y={250} radius={100} fill="red" />
-            </Layer>
+        <Stage ref={stageRef} width={konvaJson.attrs.width} height={konvaJson.attrs.height}>
+            {konvaJson.children.map((child, i) => renderNode(child, i))}
         </Stage>
     );
 };
+
 
 export default Design;
