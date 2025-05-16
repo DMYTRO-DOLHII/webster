@@ -4,6 +4,7 @@ import { getUserProjects } from '../../../services/userService';
 import { userStore } from '../../../store/userStore';
 import NewProjectModal from './NewProjectModal'; 
 import { useNavigate } from 'react-router-dom';
+import { editorStore } from '../../../store/editorStore';
 
 const Recents = () => {
 	const [projects, setProjects] = useState([]);
@@ -40,6 +41,8 @@ const Recents = () => {
 	};
 
 	const handleCreate = newProjectData => {
+		editorStore.setProject(newProjectData);
+		console.log(newProjectData)
 		navigate('/canvas');
 	};
 

@@ -1,5 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { Stage, Layer, Rect, Circle } from 'react-konva';
+import { editorStore } from '../../../../store/editorStore';
+import { userStore } from '../../../../store/userStore';
 
 const Design = ({ onSaveRef }) => {
     const stageRef = useRef(null);
@@ -15,27 +17,17 @@ const Design = ({ onSaveRef }) => {
         }
     }, [onSaveRef]);
 
+    if (!editorStore.project) {
+		return <div className='text-white'>No project.</div>;
+	}
+
     return (
         <Stage
-            width={500}
-            height={500}
+            width={editorStore.project.width}
+            height={editorStore.project.height}
             ref={stageRef}
         >
             <Layer>
-                <Rect
-                    x={0}
-                    y={0}
-                    width={500}
-                    height={500}
-                    fill="white"
-                    listening={false}
-                />
-                <Circle
-                    x={250}
-                    y={250}
-                    radius={100}
-                    fill="red"
-                />
             </Layer>
         </Stage>
     );
