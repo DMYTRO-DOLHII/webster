@@ -20,26 +20,12 @@ const Design = ({ onSaveRef }) => {
         const Component = COMPONENT_MAP[node.className];
         if (!Component) return null;
 
-        // Handle Circle click
-        const handleClick = () => {
-            if (node.className === 'Circle') {
-                // Generate random color
-                const randomColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
-                node.attrs.fill = randomColor;
-
-                // Force update
-                setKonvaJson({ ...konvaJson }); // trigger re-render
-                localStorage.setItem("designData", JSON.stringify(konvaJson));
-            }
-        };
-
         const children = node.children?.map((child, i) => renderNode(child, i, node));
 
         return (
             <Component
                 key={index}
                 {...node.attrs}
-                onClick={node.className === 'Circle' ? handleClick : undefined}
             >
                 {children}
             </Component>

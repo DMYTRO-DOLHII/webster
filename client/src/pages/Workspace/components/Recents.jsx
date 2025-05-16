@@ -42,7 +42,33 @@ const Recents = () => {
 
 	const handleCreate = newProjectData => {
 		editorStore.setProject(newProjectData);
-		console.log(newProjectData)
+		const designObject = {
+			attrs: {
+				width: newProjectData.width,
+				height: newProjectData.height,
+			},
+			className: 'Stage',
+			children: [
+				{
+					attrs: {},
+					className: 'Layer',
+					children: [
+						{
+							attrs: {
+								width: newProjectData.width,
+								height: newProjectData.height,
+								fill: newProjectData.background.toLowerCase(),
+								listening: false,
+							},
+							className: 'Rect',
+						},
+					],
+				},
+			],
+		};
+
+		const designData = JSON.stringify(designObject);
+		localStorage.setItem('designData', designData);
 		navigate('/canvas');
 	};
 
