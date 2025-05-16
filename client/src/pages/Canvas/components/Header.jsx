@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom';
 import { LuBrainCircuit } from "react-icons/lu";
+import { AsciiToHexadecimal } from "@ilihub/ascii-to-hexadecimal";
 
 const menuStructure = {
     File: ["New", "Open", "---", "Save as McOkster", "Export as"],
@@ -21,10 +22,9 @@ const menuStructure = {
     Help: [],
 };
 
-const Header = () => {
+const Header = ({ onSave }) => {
     const [openMenu, setOpenMenu] = useState(null);
     const menuRef = useRef(null);
-
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -39,11 +39,56 @@ const Header = () => {
 
     const handleLogoClick = () => {
         navigate('/workspace');
-    }
+    };
+
+    const handleSaveAsMcOksterClick = async () => {
+        try {
+            if (onSave) onSave();
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            const designJson = localStorage.getItem("designData");
+            if (!designJson) {
+                alert("No design data to save!");
+                return;
+            }
+
+            const hex = AsciiToHexadecimal(designJson);
+            // const hex = converter.convert(designJson);
+
+            const options = {
+                suggestedName: "design.mcokster",
+                types: [{
+                    description: "McOkster File",
+                    accept: { "application/octet-stream": [".mcokster"] },
+                }],
+            };
+
+            const handle = await window.showSaveFilePicker(options);
+            const writable = await handle.createWritable();
+            await writable.write(hex);
+            await writable.close();
+
+        } catch (err) {
+            console.error("Save as McOkster failed:", err);
+            alert("Failed to save file.");
+        }
+    };
+
+
+
+    const handleMenuItemClick = (item, entry) => {
+        console.log(`${item} → ${entry}`);
+        setOpenMenu(null);
+
+        if (item === "File" && entry === "Save as McOkster") {
+            handleSaveAsMcOksterClick();
+        }
+
+        // Handle other items if needed
+    };
 
     return (
         <header className="flex justify-between items-center px-4 h-12 bg-[#1c1c1c] text-white border-b border-[#2a2a2a] relative">
-            {/* Left Side: Icon + Menu Items */}
             <div className="flex items-center space-x-6 relative" ref={menuRef}>
                 <LuBrainCircuit className="text-[#9b34ba] text-xl cursor-pointer" onClick={handleLogoClick} />
 
@@ -58,23 +103,17 @@ const Header = () => {
                             </div>
 
                             {openMenu === item && (
-                                <div className="absolute mt-1 min-w-[160px] z-999 bg-[#363636] backgrop-blur-md border border-[#444] text-sm rounded py-1 shadow-lg">
+                                <div className="absolute mt-1 min-w-[160px] z-999 bg-[#363636] backdrop-blur-md border border-[#444] text-sm rounded py-1 shadow-lg">
                                     {entries.length === 0 ? (
                                         <div className="px-3 py-1 text-gray-400">Coming Soon</div>
                                     ) : (
                                         entries.map((entry, idx) =>
                                             entry === "---" ? (
-                                                <div
-                                                    key={`sep-${idx}`}
-                                                    className="border-t border-[#444] my-1"
-                                                ></div>
+                                                <div key={`sep-${idx}`} className="border-t border-[#444] my-1"></div>
                                             ) : (
                                                 <div
                                                     key={entry}
-                                                    onClick={() => {
-                                                        console.log(`${item} → ${entry}`);
-                                                        setOpenMenu(null);
-                                                    }}
+                                                    onClick={() => handleMenuItemClick(item, entry)}
                                                     className="px-3 py-1 hover:bg-[#3a3a3a] cursor-pointer"
                                                 >
                                                     {entry}
@@ -89,7 +128,6 @@ const Header = () => {
                 </nav>
             </div>
 
-            {/* Right Side: Share Button */}
             <div>
                 <button className="bg-purple-600 hover:bg-purple-700 text-white text-sm px-3 py-1 rounded">
                     Share

@@ -12,6 +12,7 @@ const Canvas = () => {
         if (getDesignJsonRef.current) {
             const json = getDesignJsonRef.current();
             console.log("Saved Design JSON:", json);
+            localStorage.setItem("designData", json);
         }
     };
 
