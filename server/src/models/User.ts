@@ -9,46 +9,52 @@ import {
 import { Project } from './Project';
 import bcrypt from 'bcrypt'
 
-export type SubscriptionType = 'free' | 'advanced' | 'pro';
+export enum SubscriptionType {
+    BASIC = 'basic',
+    ADVANCED = 'advanced',
+    PREMIUM = 'premium',
+}
+
 
 @Entity()
 export class User extends BaseEntity {
-	@PrimaryGeneratedColumn('uuid')
-	id: string;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
-	@Column({ length: 255 })
-	fullName: string;
+    @Column({ length: 255 })
+    fullName: string;
 
-	@Column({ length: 255, unique: true })
-	email: string;
+    @Column({ length: 255, unique: true })
+    email: string;
 
-	@Column({ length: 255, unique: true })
-	login: string;
+    @Column({ length: 255, unique: true })
+    login: string;
 
-	@Column()
-	password: string;
+    @Column()
+    password: string;
 
-	@Column({ nullable: true })
-	profilePicture: string;
+    @Column({ nullable: true })
+    profilePicture: string;
 
     @Column({ default: true })
     isEmailConfirmed: boolean;
 
     @Column({
         type: 'enum',
-        enum: ['free', 'advanced', 'pro'],
-        default: 'free',
+        enum: SubscriptionType,
+        default: SubscriptionType.BASIC,
     })
     subscription: SubscriptionType;
 
-	@OneToMany(() => Project, project => project.user)
-	projects: Project[];
 
-	@BeforeInsert()
-	async initUser() {
-		this.password = await bcrypt.hash(this.password, 10);
-		if (!this.profilePicture) {
-			this.profilePicture = `https://avatars.githubusercontent.com/u/411583?s=80&v=4`;
-		}
-	}
+    @OneToMany(() => Project, project => project.user)
+    projects: Project[];
+
+    @BeforeInsert()
+    async initUser() {
+        this.password = await bcrypt.hash(this.password, 10);
+        if (!this.profilePicture) {
+            this.profilePicture = `https://avatars.githubusercontent.com/u/411583?s=80&v=4`;
+        }
+    }
 }

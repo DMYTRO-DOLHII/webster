@@ -8,13 +8,16 @@ import Main from './pages/Main/Main'
 import Login from './pages/Login/Login';
 import Register from './pages/Register/Register';
 import Workspace from './pages/Workspace/Workspace';
+import Editor from './pages/Canvas/Canvas'
+import Canvas from './pages/Canvas/Canvas'
+import Error404 from './pages/404/404';
 
 // Components import
 import Header from './components/Header';
 import Footer from './components/Footer'
 import LoadingSpinner from './components/LoadingSpinner'
 import ScrollToTop from './components/ScrollToTop';
-import Editor from './pages/Test/Editor'
+import WithLayout from './components/WithLayout'
 
 import { userStore } from './store/userStore';
 
@@ -55,26 +58,21 @@ function AppContent() {
 
     return (
         <div className='flex flex-col h-screen scroll-smooth'>
-            {location.pathname !== '/login' &&
-                location.pathname !== '/register'  &&
-                location.pathname !== '/workspace' && <Header />}
-
-            <div>
-                <Toaster position='top-right' />
-            </div>
-
-            <main className='flex flex-col flex-grow'>
-                <Routes>
+            <Routes>
+                <Route element={<WithLayout />}>
                     <Route path='/' element={<Main />} />
-                    <Route path='/login' element={<Login />} />
-                    <Route path='/register' element={<Register />} />
-                    <Route path='/workspace' element={<Workspace />} />
-                </Routes>
-            </main>
+                    {/* Add other pages here that need Header/Footer */}
+                </Route>
 
-            {location.pathname !== '/login' &&
-                location.pathname !== '/register' &&
-                location.pathname !== '/workspace' && <Footer />}
+                <Route path='/login' element={<Login />} />
+                <Route path='/register' element={<Register />} />
+                <Route path='/workspace' element={<Workspace />} />
+                <Route path='/canvas' element={<Canvas />} />
+
+                {/* Catch-all for 404 */}
+                <Route path="*" element={<Error404 />} />
+            </Routes>
+
         </div>
     )
 }

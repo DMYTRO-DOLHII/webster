@@ -5,6 +5,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useOAuth, useOAuthCallback } from '../../utils/oauth';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { userStore } from '../../store/userStore';
+import { redirectToStripeCheckout } from '../../utils/stripe';
 
 const Login = () => {
     const [login, setLogin] = useState('');
@@ -28,7 +29,13 @@ const Login = () => {
         try {
             const message = await userStore.login(email, password, login);
             if (message) {
-                navigate('/');
+                const selectedPlan = localStorage.getItem("selectedPlan");
+
+                if (selectedPlan) {
+                    localStorage.removeItem("selectedPlan");
+                    redirectToStripeCheckout(selectedPlan, userStore?.user?.id);
+                }
+                else navigate('/');
             }
         } catch (error) {
             console.log(error);

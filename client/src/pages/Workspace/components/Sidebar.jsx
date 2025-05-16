@@ -2,10 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { FaClock, FaFileAlt, FaTrashAlt, FaFolder } from "react-icons/fa";
 import ProfileDropdown from "./ProfileDropdown";
 import { MdKeyboardArrowDown } from "react-icons/md";
+import { userStore } from "../../../store/userStore";
 
-const Sidebar = ({ activeTab, setActiveTab }) => {
+const Sidebar = ({ activeTab, setActiveTab, onOpenSettings }) => {
     const [isDropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
+
+    const userName = userStore?.user?.fullName;
+    const profilePicture = userStore?.user?.profilePicture;
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -26,18 +30,16 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
                 className="flex items-center gap-2 px-4 py-3 border-b border-[#222222] cursor-pointer relative"
                 onClick={() => setDropdownOpen(!isDropdownOpen)}
             >
-                <div className="w-8 h-8 rounded-full bg-pink-600 flex items-center justify-center text-white font-semibold text-sm">
-                    D
-                </div>
+                <img className="w-8 h-8 rounded-full bg-pink-600 flex items-center justify-center text-white font-semibold text-sm"  src={profilePicture} alt="" />
                 <span className="text-white text-sm font-normal flex items-center gap-1">
-                    Dmytro Dolhii <MdKeyboardArrowDown />
+                    {userName} <MdKeyboardArrowDown />
                 </span>
             </div>
 
             {/* Dropdown with ref wrapper */}
             {isDropdownOpen && (
                 <div ref={dropdownRef}>
-                    <ProfileDropdown />
+                    <ProfileDropdown onOpenSettings={onOpenSettings} />
                 </div>
             )}
 
