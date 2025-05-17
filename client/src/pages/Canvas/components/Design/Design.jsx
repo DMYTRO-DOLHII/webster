@@ -1,6 +1,8 @@
 import { editorStore } from '../../../../store/editorStore';
 import { Stage, Layer, Circle, Rect, Line, Text, RegularPolygon, Star, Arrow, Transformer } from 'react-konva';
 import { useEffect, useState, useRef } from 'react';
+import { useParams } from 'react-router-dom';
+import { api } from '../../../../services/api';
 
 const SHAPE_COMPONENTS = {
     circle: Circle,
@@ -65,7 +67,9 @@ const Design = ({ onSaveRef }) => {
     const [shapes, setShapes] = useState([]);
     const [selectedShapeId, setSelectedShapeId] = useState(null);
     const shapeRefs = useRef({});
-    
+
+    const { projectId } = useParams();
+
     const [width, setWidth] = useState(500);
     const [height, setHeight] = useState(500);
 
@@ -75,6 +79,7 @@ const Design = ({ onSaveRef }) => {
         if (jsonString) {
             try {
                 const json = JSON.parse(jsonString);
+                console.log(json)
 
                 setWidth(json.attrs.width);
                 setHeight(json.attrs.height);
@@ -149,9 +154,10 @@ const Design = ({ onSaveRef }) => {
     }, [onSaveRef]);
 
     useEffect(() => {
-        const interval = setInterval(() => {
+        const interval = setInterval(async () => {
             const json = getDesignJson();
             if (json) {
+                const response = await api.patch(`/projects/${projectId}`, { info: JSON.parse(json)  });
                 localStorage.setItem('designData', json);
             }
         }, 1000);
