@@ -27,9 +27,7 @@ const Canvas = () => {
     useEffect(() => {
         const fetchProject = async () => {
             try {
-                console.log(projectId)
                 const res = await api.get(`/projects/${projectId}`);
-                console.log(res.data);
                 setProjectData(res.data); // assume it contains JSON and metadata
                 setLoading(false);
                 localStorage.setItem("designData", JSON.stringify(res.data.info));

@@ -42,6 +42,7 @@ const Recents = () => {
     };
 
     const handleCreate = async (newProjectData) => {
+        if (!newProjectData.title.trim()) newProjectData.title = 'Untitled project';
         editorStore.setProject(newProjectData);
         const designObject = {
             attrs: {
