@@ -35,7 +35,7 @@ const NewProjectModal = ({ onClose, onCreate }) => {
 	};
 
 	const handleCreate = () => {
-		if (!form.title.trim()) return;
+		if (!form.title.trim()) setForm(prev => ({...prev, title: 'Untitled Project'}))
 		onCreate(form);
 		onClose();
 	};
