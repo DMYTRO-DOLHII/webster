@@ -66,7 +66,6 @@ const Design = ({ onSaveRef }) => {
 	const [selectedShapeId, setSelectedShapeId] = useState(null);
 	const shapeRefs = useRef({});
 
-	// Загрузка shapes из localStorage, если есть
 	useEffect(() => {
 		const jsonString = localStorage.getItem('designData');
 		if (jsonString) {
@@ -97,10 +96,8 @@ const Design = ({ onSaveRef }) => {
 		const clickedOnEmpty = e.target === stage;
 
 		if (clickedOnEmpty) {
-			// Одиночный клик на пустом месте — снимаем выделение
 			setSelectedShapeId(null);
 		} else {
-			// Клик по фигуре — выделяем её
 			const clickedId = e.target._id || e.target.attrs.id;
 			if (clickedId) setSelectedShapeId(clickedId);
 		}
@@ -111,7 +108,6 @@ const Design = ({ onSaveRef }) => {
 		const clickedOnEmpty = e.target === stage;
 
 		if (clickedOnEmpty) {
-			// Добавляем новую фигуру при двойном клике на пустом месте
 			const tool = editorStore.selectedTool;
 			if (!SHAPE_DEFAULTS[tool]) return;
 

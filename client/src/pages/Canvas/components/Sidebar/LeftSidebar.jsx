@@ -27,7 +27,6 @@ const staticTools = [
 	{ id: 'select', icon: <TbVector size={15} />, label: 'Select Tool' },
 	{ id: 'brush', icon: <TbBrush size={16} />, label: 'Brush Tool' },
 	{ id: 'eraser', icon: <PiEraserBold size={17} />, label: 'Eraser Tool' },
-	// Shape tool goes here
 	{ id: 'crop', icon: <LiaCropAltSolid size={19} />, label: 'Crop Tool' },
 	{ id: 'text', icon: <RiFontFamily size={15} />, label: 'Text Tool' },
 	{ id: 'picker', icon: <BiSolidEyedropper size={17} />, label: 'Color Picker' },
@@ -65,10 +64,8 @@ const LeftSidebar = () => {
 		<div className='w-12 bg-[#1a1a1a] border-r border-[#2a2a2a] flex flex-col items-center py-4 space-y-4'>
 			{staticTools.map((tool, idx) => {
 				if (tool.id === 'crop') {
-					// вставляем shape перед crop
 					return (
 						<React.Fragment key={tool.id}>
-							{/* SHAPE TOOL BUTTON */}
 							<div className='relative' ref={shapeBtnRef}>
 								<button
 									onClick={() => editorStore.setTool(activeShapeTool)}
@@ -97,7 +94,6 @@ const LeftSidebar = () => {
 								)}
 							</div>
 
-							{/* Теперь продолжаем с crop */}
 							<button
 								title={tool.label}
 								className={`text-white hover:text-blue-400 transition-colors text-[1.1rem] mt-1 ${editorStore.selectedTool === tool.id ? 'text-blue-400' : ''}`}
