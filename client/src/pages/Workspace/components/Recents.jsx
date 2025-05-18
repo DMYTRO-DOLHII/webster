@@ -2,104 +2,131 @@ import { useEffect, useState } from 'react';
 import DesignCard from './DesignCard';
 import { getUserProjects } from '../../../services/userService';
 import { userStore } from '../../../store/userStore';
-import NewProjectModal from './NewProjectModal'; 
+import NewProjectModal from './NewProjectModal';
 import { useNavigate } from 'react-router-dom';
 import { editorStore } from '../../../store/editorStore';
+import { api } from '../../../services/api';
 
 const Recents = () => {
-	const [projects, setProjects] = useState([]);
-	const navigate = useNavigate();
-	const [isModalOpen, setIsModalOpen] = useState(false);
-	const [newProject, setNewProject] = useState({
-		title: '',
-		width: 1920,
-		height: 1080,
-		units: 'px',
-	});
+    const [projects, setProjects] = useState([]);
+    const navigate = useNavigate();
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [newProject, setNewProject] = useState({
+        title: '',
+        width: 1920,
+        height: 1080,
+        units: 'px',
+    });
 
-	const userId = userStore.user?.id;
+    const userId = userStore.user?.id;
 
-	useEffect(() => {
-		const loadProjects = async () => {
-			if (!userId) return;
+    useEffect(() => {
+        const loadProjects = async () => {
+            if (!userId) return;
 
-			try {
-				const data = await getUserProjects(userId);
-				setProjects(data);
-			} catch (error) {
-				console.error('Ошибка при загрузке проектов:', error);
-			}
-		};
+            try {
+                const data = await getUserProjects(userId);
+                setProjects(data);
+            } catch (error) {
+                console.error('Ошибка при загрузке проектов:', error);
+            }
+        };
 
-		loadProjects();
-	}, [userId]);
+        loadProjects();
+    }, [userId]);
 
-	const resolveImageSrc = previewImage => {
-		if (!previewImage) return 'https://via.placeholder.com/160x100?text=No+Preview';
-		if (previewImage.startsWith('http')) return previewImage;
-		return `data:image/png;base64,${previewImage}`;
-	};
+    const resolveImageSrc = previewImage => {
+        if (!previewImage) return 'https://via.placeholder.com/160x100?text=No+Preview';
+        if (previewImage.startsWith('http')) return previewImage;
+        return `data:image/png;base64,${previewImage}`;
+    };
 
-	const handleCreate = newProjectData => {
-		editorStore.setProject(newProjectData);
-		const designObject = {
-			attrs: {
-				width: newProjectData.width,
-				height: newProjectData.height,
-			},
-			className: 'Stage',
-			children: [
-				{
-					attrs: {},
-					className: 'Layer',
-					children: [
-						{
-							attrs: {
-								width: newProjectData.width,
-								height: newProjectData.height,
-								fill: newProjectData.background.toLowerCase(),
-								listening: false,
-							},
-							className: 'Rect',
-						},
-					],
-				},
-			],
-		};
+    const handleCreate = async (newProjectData) => {
+        if (!newProjectData.title.trim()) newProjectData.title = 'Untitled project';
+        editorStore.setProject(newProjectData);
+        const designObject = {
+            attrs: {
+                width: newProjectData.width,
+                height: newProjectData.height,
+            },
+            className: 'Stage',
+            children: [
+                {
+                    attrs: {},
+                    className: 'Layer',
+                    children: [
+                        {
+                            attrs: {
+                                width: newProjectData.width,
+                                height: newProjectData.height,
+                                fill: newProjectData.background.toLowerCase(),
+                                listening: false,
+                            },
+                            className: 'Rect',
+                        },
+                    ],
+                },
+            ],
+        };
 
-		const designData = JSON.stringify(designObject);
-		localStorage.setItem('designData', designData);
-		navigate('/canvas');
-	};
+        const response = await api.post('/projects', {
+            title: newProjectData.title,
+            previewImage: 'https://t4.ftcdn.net/jpg/02/01/98/73/360_F_201987380_YjR3kPM0PS3hF7Wvn7IBMmW1FWrMwruL.jpg',
+            info: designObject,
+            userId: userStore?.user?.id
+        });
 
-	return (
-		<>
-			<div className='flex items-center justify-between mb-4'>
-				<div className='text-sm font-semibold text-white'>Projects</div>
-				<button onClick={() => setIsModalOpen(true)} className='px-4 py-2 text-sm font-medium text-black transition-all bg-white rounded hover:bg-gray-200'>
-					+ New
-				</button>
-			</div>
+        console.log(response.data);
 
-			<section aria-label='Recent templates' className='grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 overflow-clip'>
-				{projects.map(project => (
-					<DesignCard
-						key={project.id}
-						project={{
-							imageUrl: resolveImageSrc(project.previewImage),
-							title: project.title,
-							editedText: `Edited ${new Date(project.updatedAt).toLocaleDateString()}`,
-							userInitial: userStore.user?.fullName?.[0] || 'U',
-							userBgColor: 'bg-blue-500',
-							userTextColor: 'text-white',
-						}}
-					/>
-				))}
-			</section>
+        const designData = JSON.stringify(designObject);
+        localStorage.setItem('designData', designData);
+        navigate(`/canvas/${response.data.id}`);
+    };
 
-			{isModalOpen && <NewProjectModal onClose={() => setIsModalOpen(false)} onCreate={handleCreate} />}
-		</>
-	);
+    const handleDeleteProject = async (projectId) => {
+        try {
+            await api.delete(`/projects/${projectId}`); // Assumes your backend supports DELETE /projects/:id
+            setProjects((prev) => prev.filter((project) => project.id !== projectId));
+        } catch (err) {
+            console.error("Error deleting project:", err);
+        }
+    };
+
+
+    return (
+        <div className='h-full'>
+            <div className='flex items-center justify-between mb-4'>
+                <div className='text-sm font-semibold text-white'>Projects</div>
+                <button onClick={() => setIsModalOpen(true)} className='px-4 py-2 text-sm font-medium text-black transition-all bg-white rounded hover:bg-gray-200'>
+                    + New
+                </button>
+            </div>
+
+            <section
+                aria-label="Recent templates"
+                className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 py-4 "
+            >
+                {projects.map((project) => (
+                    <DesignCard
+                        key={project.id}
+                        project={{
+                            id: project.id,
+                            info: project.info,
+                            imageUrl: resolveImageSrc(project.previewImage),
+                            title: project.title,
+                            editedText: `Edited ${new Date(project.updatedAt).toLocaleDateString()}`,
+                            userInitial: userStore.user?.fullName?.[0] || 'U',
+                            userBgColor: 'bg-blue-500',
+                            userTextColor: 'text-white',
+                        }}
+                        onDelete={() => handleDeleteProject(project.id)}
+                    />
+                ))}
+            </section>
+
+            {isModalOpen && <NewProjectModal onClose={() => setIsModalOpen(false)} onCreate={handleCreate} />}
+        </div>
+    );
 };
 
 export default Recents;

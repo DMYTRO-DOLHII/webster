@@ -5,7 +5,8 @@ class EditorStore {
 	project = null;
 	loading = false;
 	error = null;
-
+	selectedTool = null;
+	
 	constructor() {
 		makeAutoObservable(this);
 	}
@@ -26,26 +27,8 @@ class EditorStore {
 		this.project = null;
 	}
 
-	async saveProjectToServer() {
-		if (!this.project) return;
-
-		this.loading = true;
-		this.error = null;
-
-		try {
-			const response = await api();
-			runInAction(() => {
-				this.project = response.data;
-			});
-		} catch (error) {
-			runInAction(() => {
-				this.error = error.response?.data?.message || 'Save failed';
-			});
-		} finally {
-			runInAction(() => {
-				this.loading = false;
-			});
-		}
+	setTool(tool) {
+		this.selectedTool = tool;
 	}
 }
 

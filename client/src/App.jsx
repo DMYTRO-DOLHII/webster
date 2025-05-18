@@ -67,7 +67,7 @@ function AppContent() {
                 <Route path='/login' element={<Login />} />
                 <Route path='/register' element={<Register />} />
                 <Route path='/workspace' element={<Workspace />} />
-                <Route path='/canvas' element={<Canvas />} />
+                <Route path='/canvas/:projectId' element={<Canvas />} />
 
                 {/* Catch-all for 404 */}
                 <Route path="*" element={<Error404 />} />
