@@ -42,7 +42,7 @@ useEffect(() => {
       <div className="flex flex-grow overflow-hidden">
         <LeftSidebar />
         <div
-          className="flex-grow bg-[#121212] flex items-center justify-center"
+          className="bg-[#121212] flex items-center justify-center w-full overflow-hidden"
           id="canvas-parent"
           ref={containerRef}
         >
