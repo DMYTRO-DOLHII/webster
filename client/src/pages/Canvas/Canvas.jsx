@@ -46,7 +46,6 @@ useEffect(() => {
     if (containerRef.current) {
       const width = containerRef.current.offsetWidth;
       const height = containerRef.current.offsetHeight;
-      console.log("Measured size:", { width, height });
       setContainerSize({ width, height });
     }
   };
