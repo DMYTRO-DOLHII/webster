@@ -72,7 +72,7 @@ const SHAPE_DEFAULTS = {
     },
 };
 
-const Design = observer(({ onSaveRef }) => {
+const Design = observer(({ onSaveRef, zoom, containerSize, setZoom }) => {
     const stageRef = useRef(null);
     const [shapes, setShapes] = useState([]);
     const [selectedShapeId, setSelectedShapeId] = useState(null);
@@ -109,6 +109,36 @@ const Design = observer(({ onSaveRef }) => {
     // Set debounce to avoid updates on each small change
     const debouncedSave = useRef(debounce(saveDesign, 500)).current;
 
+    const handleWheel = (e) => {
+        e.evt.preventDefault();
+
+        const stage = stageRef.current;
+        const oldScale = stage.scaleX();
+        const pointer = stage.getPointerPosition();
+
+        const mousePointTo = {
+            x: (pointer.x - stage.x()) / oldScale,
+            y: (pointer.y - stage.y()) / oldScale,
+        };
+
+        let direction = e.evt.deltaY > 0 ? 1 : -1;
+        if (e.evt.ctrlKey) {
+            direction = -direction;
+        }
+
+        const scaleBy = 1.05;
+        const newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+
+        stage.scale({ x: newScale, y: newScale });
+
+        const newPos = {
+            x: pointer.x - mousePointTo.x * newScale,
+            y: pointer.y - mousePointTo.y * newScale,
+        };
+        stage.position(newPos);
+    };
+
+    // Load JSON from localStorage
     useEffect(() => {
         debouncedSave();
     }, [shapes]);
@@ -246,26 +276,47 @@ const Design = observer(({ onSaveRef }) => {
     //     const interval = setInterval(async () => {
     //         const json = getDesignJson();
     //         if (json) {
-    //             localStorage.setItem('designData', json);
     //             const response = await api.patch(`/projects/${projectId}`, { info: JSON.parse(json) });
-    //             console.log('saved');
+    //             localStorage.setItem('designData', json);
     //         }
     //     }, 1000);
-
     //     return () => clearInterval(interval);
-    // }, [shapes]);
+    // }, []);
+
+    // Expose save function
+    useEffect(() => {
+        if (onSaveRef) {
+            onSaveRef(getDesignJson);
+        }
+    }, [onSaveRef]);
+
+    // Calculate fit zoom
+    useEffect(() => {
+        if (!width || !height || !containerSize.width || !containerSize.height) return;
+        if (localStorage.getItem('zoomValue')) {
+            setZoom(parseFloat(localStorage.getItem('zoomValue')));
+            return;
+        };
+
+        const designWidth = width;
+        const designHeight = height;
+
+        const scaleX = containerSize.width / designWidth;
+        const scaleY = containerSize.height / designHeight;
+
+        const scale = Math.min(scaleX, scaleY, 1); // don’t scale up if design is smaller
+        setZoom(scale);
+    }, [height, width, containerSize]);
 
     return (
-        <Stage
-            ref={stageRef}
-            width={width}
-            height={height}
-            onClick={handleStageClick}
-            onDblClick={handleStageDblClick}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-        >
+        <Stage ref={stageRef}
+            width={width * zoom}
+            height={height * zoom}
+            scaleX={zoom}
+            scaleY={zoom}
+            className="border-1"
+            // onWheel={handleWheel}
+            onClick={handleStageClick} onDblClick={handleStageDblClick}>
             <Layer>
                 {shapes.map(shape => {
                     const Component = SHAPE_COMPONENTS[shape.type];
