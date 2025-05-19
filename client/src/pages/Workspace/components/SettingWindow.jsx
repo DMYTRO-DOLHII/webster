@@ -1,14 +1,42 @@
 import React, { useState } from "react";
+import blueBG from "./../../../assets/blueBg.png";
+import greenBG from "./../../../assets/greenBackground.png";
+import purpleBG from "./../../../assets/purpleBackground.png";
+import { userStore } from "../../../store/userStore";
 
 const SettingWindow = ({ onClose }) => {
     const [email, setEmail] = useState("Dmytro Dolhii");
     const [selectedPlan, setSelectedPlan] = useState("Basic");
+    const userName = userStore?.user?.fullName;
+    const profilePicture = userStore?.user?.profilePicture;
 
-    const subscriptionColors = {
-        Basic: "bg-[#0b132b]/60 border border-blue-800",
-        Advanced: "bg-[#0b2b13]/60 border border-green-800",
-        Pro: "bg-[#1c0b2b]/60 border border-purple-800",
+    const subscriptionBackgrounds = {
+        Basic: {
+            style: {
+                backgroundImage: `url(${blueBG})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+            },
+            className: "border border-blue-800 bg-opacity-60",
+        },
+        Advanced: {
+            style: {
+                backgroundImage: `url(${greenBG})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+            },
+            className: "border border-green-800 bg-opacity-60",
+        },
+        Pro: {
+            style: {
+                backgroundImage: `url(${purpleBG})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+            },
+            className: "border border-purple-800 bg-opacity-60",
+        },
     };
+
 
     return (
         <div className="fixed inset-0 z-50 flex justify-center items-center bg-black/40 backdrop-blur-sm">
@@ -31,21 +59,27 @@ const SettingWindow = ({ onClose }) => {
 
                 {/* Avatar */}
                 <div className="flex justify-center mb-6">
-                    <div className="w-28 h-28 bg-pink-600 rounded-full flex items-center justify-center text-4xl font-bold shadow-md relative">
-                        D
+                    <div
+                        className="w-28 h-28 bg-pink-600 rounded-full flex items-center justify-center text-4xl font-bold shadow-md relative overflow-hidden">
+                        {profilePicture ? (
+                            <img src={profilePicture} alt="Avatar" className="w-full h-full object-cover"/>
+                        ) : (
+                            <span>{userName?.[0] || "Photo suka"}</span>
+                        )}
                         <div className="absolute bottom-1 right-1 bg-white p-1 rounded-full cursor-pointer text-xs">
                             ✎
                         </div>
                     </div>
                 </div>
 
-                <hr className="border-gray-600 mb-6" />
+
+                <hr className="border-gray-600 mb-6"/>
 
                 {/* Name section */}
                 <div className="flex justify-between items-start mb-6">
                     <div>
                         <label className="block text-sm text-gray-300 mb-1">Name</label>
-                        <p className="text-lg font-medium">{email}</p>
+                        <p className="text-lg font-medium">{userName || "Clown, nickname 'Unknown'"}</p>
                     </div>
                     <button className="text-sm border border-gray-500 px-3 py-1 rounded-md hover:bg-gray-700">
                         Edit
@@ -83,7 +117,8 @@ const SettingWindow = ({ onClose }) => {
                             <div
                                 key={plan}
                                 onClick={() => setSelectedPlan(plan)}
-                                className={`flex-1 h-[150px] p-5 rounded-xl cursor-pointer transition-all duration-200 flex flex-col justify-between items-center text-center ${subscriptionColors[plan]} ${
+                                style={subscriptionBackgrounds[plan].style}
+                                className={`flex-1 h-[150px] p-5 rounded-xl cursor-pointer transition-all duration-200 flex flex-col justify-between items-center text-center ${subscriptionBackgrounds[plan].className} ${
                                     selectedPlan === plan ? "ring-2 ring-white" : "hover:ring hover:ring-white/30"
                                 }`}
                             >
@@ -102,6 +137,7 @@ const SettingWindow = ({ onClose }) => {
                                 </button>
                             </div>
                         ))}
+
                     </div>
                 </div>
 
