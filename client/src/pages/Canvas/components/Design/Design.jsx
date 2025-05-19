@@ -199,11 +199,12 @@ const Design = observer(({ onSaveRef, zoom, containerSize, setZoom }) => {
                 newShapeProps.stroke = currentColor;
             }
 
+            console.log(pointerPosition.x, pointerPosition.y)
             const newShape = {
                 id: `${tool}-${Date.now()}`,
                 type: tool,
-                x: pointerPosition.x,
-                y: pointerPosition.y,
+                x: pointerPosition.x / zoom,
+                y: pointerPosition.y / zoom,
                 ...newShapeProps,
             };
 
