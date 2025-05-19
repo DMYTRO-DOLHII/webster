@@ -7,6 +7,7 @@ import { Button } from "@mui/material";
 import { userStore } from '../../../store/userStore'
 import { api } from "../../../services/api";
 import { redirectToStripeCheckout } from '../../../utils/stripe'
+import Swal from "sweetalert2";
 
 const pricingData = {
     monthly: [
@@ -33,7 +34,10 @@ const Pricing = () => {
     const [billing, setBilling] = useState("monthly");
     const navigate = useNavigate();
 
-    const handlePlanSelect = (planTitle) => {
+    const handlePlanSelect = async (planTitle) => {
+        const currentPlan = userStore?.user?.subscription;
+        if (currentPlan === planTitle.toLowerCase()) return;
+
         // Save the selected plan in localStorage
         localStorage.setItem("selectedPlan", planTitle)
 
@@ -41,8 +45,33 @@ const Pricing = () => {
             // Not logged in — redirect to login
             navigate('/login')
         } else {
+            if ((currentPlan === "advanced" || currentPlan === "premium") && planTitle === "Basic") {
+                const result = await Swal.fire({
+                    title: "Confirm Plan Change",
+                    text: "Are you sure you want to downgrade to the Basic plan? This will cancel your current subscription.",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes, downgrade",
+                    cancelButtonText: "No, keep current plan"
+                });
+
+                if (result.isConfirmed) {
+                    try {
+                        await api.patch(`/users/${userStore?.user?.id}`, {
+                            plan: planTitle
+                        });
+                        userStore.user.subscription = "basic"; // update locally
+                        Swal.fire("Success", "Your plan was updated to Basic.", "success");
+                    } catch (err) {
+                        console.error("Subscription update failed:", err);
+                        Swal.fire("Error", "Something went wrong while updating your subscription.", "error");
+                    }
+                }
+
+                return;
+            }
             // Logged in — go directly to checkout
-            redirectToStripeCheckout(planTitle, userStore?.user?.id);
+            redirectToStripeCheckout(currentPlan, planTitle, userStore?.user?.id);
         }
     };
 
@@ -134,20 +163,20 @@ const Pricing = () => {
                             onClick={() => handlePlanSelect(plan.title)}
                             variant="outlined"
                             sx={{
-                                color: "#fff",
+                                color: userStore?.user?.subscription === plan.title.toLowerCase() ? "black" : "white",
                                 borderColor: "#fff",
                                 borderRadius: "0.5rem",
                                 padding: "0.5rem 1rem",
                                 textTransform: "none",
                                 width: "100%",
-                                backgroundColor: "transparent",
+                                backgroundColor: userStore?.user?.subscription === plan.title.toLowerCase() ? "white" : "transparent",
                                 "&:hover": {
                                     backgroundColor: "rgba(255, 255, 255, 0.1)",
                                     borderColor: "#fff",
                                 },
                             }}
                         >
-                            Choose Plan
+                            {userStore?.user?.subscription === plan.title.toLowerCase() ? "Current Plan" : "Select Plan"}
                         </Button>
                     </div>
                 ))}

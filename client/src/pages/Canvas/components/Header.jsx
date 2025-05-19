@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import { LuBrainCircuit } from "react-icons/lu";
 import { AsciiToHexadecimal } from "@ilihub/ascii-to-hexadecimal";
+import { editorStore } from "../../../store/editorStore";
+import toast from "react-hot-toast";
 
 const menuStructure = {
     File: ["New", "Open", "---", "Save as McOkster", "Export as"],
@@ -41,6 +43,49 @@ const Header = ({ onSave }) => {
         navigate('/workspace');
     };
 
+    const handleOpenMcOksterClick = async () => {
+        try {
+            const [fileHandle] = await window.showOpenFilePicker({
+                types: [{
+                    description: "McOkster File",
+                    accept: { "application/octet-stream": [".mcokster"] },
+                }],
+                excludeAcceptAllOption: true,
+                multiple: false,
+            });
+
+            const file = await fileHandle.getFile();
+            const hexText = await file.text();
+
+            // Convert Hex to ASCII
+            const ascii = hexText.match(/.{1,2}/g) // split every 2 characters
+                .map(byte => String.fromCharCode(parseInt(byte, 16)))
+                .join('');
+
+            // Convert ASCII to JSON
+            const json = JSON.parse(ascii);
+
+            // Save in localStorage
+            localStorage.setItem("designData", JSON.stringify(json));
+            editorStore.setProjectJSON(json);
+
+            toast.success('Design file has been loaded successfully.', {
+                style: {
+                    padding: '16px',
+                    color: '#9B34BA',
+                },
+                iconTheme: {
+                    primary: '#9B34BA',
+                    secondary: '#FFFAEE',
+                },
+            });
+        } catch (err) {
+            if (err.name === 'AbortError') return; // user cancelled
+            console.error("Failed to open McOkster file:", err);
+            alert("Failed to open file.");
+        }
+    };
+
     const handleSaveAsMcOksterClick = async () => {
         try {
             if (onSave) onSave();
@@ -53,7 +98,6 @@ const Header = ({ onSave }) => {
             }
 
             const hex = AsciiToHexadecimal(designJson);
-            // const hex = converter.convert(designJson);
 
             const options = {
                 suggestedName: "design.mcokster",
@@ -69,12 +113,15 @@ const Header = ({ onSave }) => {
             await writable.close();
 
         } catch (err) {
+            if (err.name === 'AbortError') {
+                // User cancelled the file save dialog — silently ignore
+                return;
+            }
+
             console.error("Save as McOkster failed:", err);
             alert("Failed to save file.");
         }
     };
-
-
 
     const handleMenuItemClick = (item, entry) => {
         console.log(`${item} → ${entry}`);
@@ -82,6 +129,9 @@ const Header = ({ onSave }) => {
 
         if (item === "File" && entry === "Save as McOkster") {
             handleSaveAsMcOksterClick();
+        }
+        if (item === "File" && entry === "Open") {
+            handleOpenMcOksterClick();
         }
 
         // Handle other items if needed

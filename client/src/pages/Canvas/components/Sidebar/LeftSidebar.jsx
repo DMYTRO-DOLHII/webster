@@ -1,14 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { editorStore } from '../../../../store/editorStore';
 import { RxCursorArrow } from 'react-icons/rx';
-import { TbVector, TbBrush } from 'react-icons/tb';
+import { TbVector, TbBrush, TbCircle, TbRectangle, TbTriangle, TbStar, TbHexagon, TbPentagon, TbArrowRight, TbLine } from 'react-icons/tb';
 import { PiEraserBold } from 'react-icons/pi';
 import { LiaCropAltSolid } from 'react-icons/lia';
 import { RiFontFamily } from 'react-icons/ri';
 import { BiSolidEyedropper } from 'react-icons/bi';
 import { IoIosSearch } from 'react-icons/io';
-import { TbCircle, TbRectangle, TbTriangle, TbStar, TbHexagon, TbPentagon, TbArrowRight, TbLine } from 'react-icons/tb';
-  
 
 const shapeOptions = [
 	{ id: 'circle', icon: <TbCircle />, label: 'Circle' },
@@ -20,7 +18,6 @@ const shapeOptions = [
 	{ id: 'hexagon', icon: <TbHexagon />, label: 'Hexagon' },
 	{ id: 'pentagon', icon: <TbPentagon />, label: 'Pentagon' },
 ];
-  
 
 const staticTools = [
 	{ id: 'move', icon: <RxCursorArrow size={15} />, label: 'Move Tool' },
@@ -36,6 +33,7 @@ const staticTools = [
 const LeftSidebar = () => {
 	const [activeShapeTool, setActiveShapeTool] = useState('circle');
 	const [showShapeMenu, setShowShapeMenu] = useState(false);
+	const [color, setColor] = useState(editorStore.selectedColor || '#000000');
 	const shapeBtnRef = useRef(null);
 
 	useEffect(() => {
@@ -47,6 +45,12 @@ const LeftSidebar = () => {
 		document.addEventListener('mousedown', handleClickOutside);
 		return () => document.removeEventListener('mousedown', handleClickOutside);
 	}, []);
+
+	// Если editorStore.selectedColor может обновляться извне,
+	// синхронизируем локальный стейт с ним
+	useEffect(() => {
+		setColor(editorStore.selectedColor || '#000000');
+	}, [editorStore.selectedColor]);
 
 	const shapeToolIcon = shapeOptions.find(opt => opt.id === activeShapeTool)?.icon;
 
@@ -60,9 +64,15 @@ const LeftSidebar = () => {
 		editorStore.setTool(id);
 	};
 
+	const handleColorChange = e => {
+		const newColor = e.target.value;
+		setColor(newColor);
+		editorStore.setColor(newColor);
+	};
+
 	return (
 		<div className='w-12 bg-[#1a1a1a] border-r border-[#2a2a2a] flex flex-col items-center py-4 space-y-4'>
-			{staticTools.map((tool, idx) => {
+			{staticTools.map(tool => {
 				if (tool.id === 'crop') {
 					return (
 						<React.Fragment key={tool.id}>
@@ -116,6 +126,33 @@ const LeftSidebar = () => {
 					</button>
 				);
 			})}
+
+			{/* Цветовой селектор под Zoom */}
+			<div className='flex flex-col items-center mt-4'>
+				<label htmlFor='colorPicker' className='mb-1 text-xs text-gray-400 select-none'>
+					Color
+				</label>
+				<input
+					id='colorPicker'
+					type='color'
+					value={color}
+					onChange={handleColorChange}
+					className='w-8 h-8 border border-gray-600 rounded cursor-pointer'
+					title='Select color'
+				/>
+				{/* Показываем цвет квадратом */}
+				<div
+					style={{
+						marginTop: 6,
+						width: 24,
+						height: 24,
+						backgroundColor: color,
+						border: '1px solid #555',
+						borderRadius: 4,
+					}}
+					title={`Current color: ${color}`}
+				/>
+			</div>
 		</div>
 	);
 };

@@ -3,6 +3,8 @@ import { Stage, Layer, Circle, Rect, Line, Text, RegularPolygon, Star, Arrow, Tr
 import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { api } from '../../../../services/api';
+import { debounce } from 'lodash';
+import { observer } from 'mobx-react-lite';
 
 const SHAPE_COMPONENTS = {
     circle: Circle,
@@ -12,9 +14,9 @@ const SHAPE_COMPONENTS = {
     triangle: RegularPolygon,
     pentagon: RegularPolygon,
     hexagon: RegularPolygon,
-    rhombus: RegularPolygon,
     star: Star,
     arrow: Arrow,
+    brush: Line,
 };
 
 const SHAPE_DEFAULTS = {
@@ -60,32 +62,67 @@ const SHAPE_DEFAULTS = {
         strokeWidth: 4,
         draggable: true,
     },
+    brush: {
+        stroke: 'black',
+        strokeWidth: 3,
+        tension: 0.5,
+        lineCap: 'round',
+        globalCompositeOperation: 'source-over',
+        draggable: false,
+    },
 };
 
-const Design = ({ onSaveRef }) => {
+const Design = observer(({ onSaveRef }) => {
     const stageRef = useRef(null);
     const [shapes, setShapes] = useState([]);
     const [selectedShapeId, setSelectedShapeId] = useState(null);
     const shapeRefs = useRef({});
 
-    const { projectId } = useParams();
-
     const [width, setWidth] = useState(500);
     const [height, setHeight] = useState(500);
 
+    const { projectId } = useParams();
+
+    const isDrawing = useRef(false);
+    const [currentLine, setCurrentLine] = useState(null);
+
+    // Last saved json to localStorage
+    const lastSavedDesign = useRef(null);
+
+    // Handle any changes on design - save instantly to db
+    const saveDesign = async () => {
+        const json = getDesignJson();
+        if (!json) return;
+
+        if (json === lastSavedDesign.current) return; // Skip if nothing changed
+
+        try {
+            localStorage.setItem('designData', json);
+            await api.patch(`/projects/${projectId}`, { info: JSON.parse(json) });
+            lastSavedDesign.current = json;
+            console.log('saved');
+        } catch (error) {
+            console.error('Save failed:', error);
+        }
+    };
+
+    // Set debounce to avoid updates on each small change
+    const debouncedSave = useRef(debounce(saveDesign, 500)).current;
 
     useEffect(() => {
+        debouncedSave();
+    }, [shapes]);
+
+    useEffect(() => {
+        console.log('here');
         const jsonString = localStorage.getItem('designData');
         if (jsonString) {
             try {
                 const json = JSON.parse(jsonString);
-                console.log(json)
-
                 setWidth(json.attrs.width);
                 setHeight(json.attrs.height);
 
                 let loadedShapes = [];
-
                 if (json.children && json.children.length > 0) {
                     const layer = json.children.find(c => c.className === 'Layer');
                     if (layer && layer.children) {
@@ -96,46 +133,98 @@ const Design = ({ onSaveRef }) => {
                         }));
                     }
                 }
-
                 setShapes(loadedShapes);
             } catch (e) {
                 console.error('Failed to parse designData', e);
             }
         }
-    }, []);
+    }, [editorStore.proejctJSON]);
 
     const handleStageClick = e => {
         const stage = stageRef.current.getStage();
         const clickedOnEmpty = e.target === stage;
 
         if (clickedOnEmpty) {
-            setSelectedShapeId(null);
-        } else {
-            const clickedId = e.target._id || e.target.attrs.id;
-            if (clickedId) setSelectedShapeId(clickedId);
-        }
-    };
-
-    const handleStageDblClick = e => {
-        const stage = stageRef.current.getStage();
-        const clickedOnEmpty = e.target === stage;
-
-        if (clickedOnEmpty) {
             const tool = editorStore.selectedTool;
-            if (!SHAPE_DEFAULTS[tool]) return;
+            if (!SHAPE_DEFAULTS[tool] || tool === 'brush') {
+                // Очистить выделение, если фигура не создаётся
+                setSelectedShapeId(null);
+                return;
+            }
 
             const pointerPosition = stage.getPointerPosition();
+            const currentColor = editorStore.selectedColor || '#000000';
+
+            let newShapeProps = { ...SHAPE_DEFAULTS[tool] };
+
+            if ('fill' in newShapeProps) {
+                newShapeProps.fill = currentColor;
+            }
+            if ('stroke' in newShapeProps) {
+                newShapeProps.stroke = currentColor;
+            }
 
             const newShape = {
                 id: `${tool}-${Date.now()}`,
                 type: tool,
                 x: pointerPosition.x,
                 y: pointerPosition.y,
-                ...SHAPE_DEFAULTS[tool],
+                ...newShapeProps,
             };
 
             setShapes(prev => [...prev, newShape]);
+            setSelectedShapeId(newShape.id);
+        } else {
+            // Клик по фигуре — выделяем её
+            const clickedId = e.target._id || e.target.attrs.id;
+            if (clickedId) setSelectedShapeId(clickedId);
         }
+    };
+
+    // Удаляем логику двойного клика для создания фигур — пустая функция
+    const handleStageDblClick = e => { };
+
+    const handleMouseDown = e => {
+        if (editorStore.selectedTool !== 'brush') return;
+        isDrawing.current = true;
+        const stage = stageRef.current.getStage();
+        const point = stage.getPointerPosition();
+
+        const currentColor = editorStore.selectedColor || 'black';
+
+        const newLine = {
+            id: `brush-${Date.now()}`,
+            type: 'brush',
+            points: [point.x, point.y],
+            ...SHAPE_DEFAULTS.brush,
+            stroke: currentColor,
+        };
+        setShapes(prev => [...prev, newLine]);
+        setCurrentLine(newLine.id);
+    };
+
+    const handleMouseMove = e => {
+        if (!isDrawing.current || editorStore.selectedTool !== 'brush') return;
+        const stage = stageRef.current.getStage();
+        const point = stage.getPointerPosition();
+
+        setShapes(prevShapes =>
+            prevShapes.map(shape => {
+                if (shape.id === currentLine) {
+                    return {
+                        ...shape,
+                        points: [...shape.points, point.x, point.y],
+                    };
+                }
+                return shape;
+            })
+        );
+    };
+
+    const handleMouseUp = () => {
+        if (editorStore.selectedTool !== 'brush') return;
+        isDrawing.current = false;
+        setCurrentLine(null);
     };
 
     const handleDoubleClick = id => {
@@ -153,37 +242,53 @@ const Design = ({ onSaveRef }) => {
         }
     }, [onSaveRef]);
 
-    useEffect(() => {
-        const interval = setInterval(async () => {
-            const json = getDesignJson();
-            if (json) {
-                const response = await api.patch(`/projects/${projectId}`, { info: JSON.parse(json)  });
-                localStorage.setItem('designData', json);
-            }
-        }, 1000);
+    // useEffect(() => {
+    //     const interval = setInterval(async () => {
+    //         const json = getDesignJson();
+    //         if (json) {
+    //             localStorage.setItem('designData', json);
+    //             const response = await api.patch(`/projects/${projectId}`, { info: JSON.parse(json) });
+    //             console.log('saved');
+    //         }
+    //     }, 1000);
 
-        return () => clearInterval(interval);
-    }, [shapes]);
+    //     return () => clearInterval(interval);
+    // }, [shapes]);
 
     return (
-        <Stage ref={stageRef} width={width} height={height} onClick={handleStageClick} onDblClick={handleStageDblClick}>
+        <Stage
+            ref={stageRef}
+            width={width}
+            height={height}
+            onClick={handleStageClick}
+            onDblClick={handleStageDblClick}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+        >
             <Layer>
                 {shapes.map(shape => {
                     const Component = SHAPE_COMPONENTS[shape.type];
-                    return Component ? (
+                    if (!Component) return null;
+
+                    const { id, type, ...shapeProps } = shape;
+
+                    return (
                         <Component
-                            key={shape.id}
-                            id={shape.id}
-                            {...shape}
-                            draggable
-                            onDblClick={() => handleDoubleClick(shape.id)}
+                            key={id}
+                            id={id}
+                            {...shapeProps}
+                            onDragEnd={debouncedSave}
+                            onTransformEnd={debouncedSave}
+                            onMouseUp={debouncedSave}
+                            onDblClick={() => handleDoubleClick(id)}
                             ref={el => {
                                 if (el) {
-                                    shapeRefs.current[shape.id] = el;
+                                    shapeRefs.current[id] = el;
                                 }
                             }}
                         />
-                    ) : null;
+                    );
                 })}
                 {selectedShapeId && shapeRefs.current[selectedShapeId] && (
                     <Transformer
@@ -195,12 +300,13 @@ const Design = ({ onSaveRef }) => {
                         anchorStroke='black'
                         anchorFill='white'
                         anchorSize={10}
-                        flipEnabled={false}
+                        flipEnabled={true}
+                        keepRatio={true}
                     />
                 )}
             </Layer>
         </Stage>
     );
-};
+});
 
 export default Design;

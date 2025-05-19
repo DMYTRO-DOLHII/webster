@@ -7,5 +7,6 @@ const router = Router();
 router.get('/', UserController.getAll.bind(UserController));
 router.get('/:id', UserController.getOne.bind(UserController));
 router.get('/:id/projects', UserController.getUserProjects.bind(UserController));
+router.patch('/:id', UserController.update.bind(UserController)); 
 
 export default router;

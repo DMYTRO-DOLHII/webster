@@ -105,7 +105,8 @@ class UserStore {
             runInAction(() => {
                 // console.log(this.user);
                 localStorage.clear();
-                this.user = null; // Сбрасываем пользователя
+                if (this.user) this.user = null;
+                
                 // calendarStore.clearCalendars();
             });
         } catch (error) {
