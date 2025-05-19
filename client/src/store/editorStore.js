@@ -6,7 +6,8 @@ class EditorStore {
 	loading = false;
 	error = null;
 	selectedTool = null;
-	
+	selectedColor = '#000000';
+
 	constructor() {
 		makeAutoObservable(this);
 	}
@@ -17,7 +18,6 @@ class EditorStore {
 
 	updateProject(updates) {
 		if (!this.project) return;
-
 		runInAction(() => {
 			this.project = { ...this.project, ...updates };
 		});
@@ -29,6 +29,10 @@ class EditorStore {
 
 	setTool(tool) {
 		this.selectedTool = tool;
+	}
+
+	setColor(color) {
+		this.selectedColor = color;
 	}
 }
 
