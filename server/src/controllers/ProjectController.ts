@@ -58,15 +58,12 @@ export const ProjectController = {
         const { id } = req.params;
         const updates = req.body;
 
-        console.log(updates);
-
         try {
             const project = await Project.findOne({ where: { id } });
             if (!project) {
                 return res.status(404).json({ message: 'Project not found' });
             }
             
-
             Object.assign(project, updates);
             await project.save();
 
