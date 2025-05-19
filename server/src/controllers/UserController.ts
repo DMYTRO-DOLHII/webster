@@ -1,109 +1,126 @@
 import { Request, Response } from 'express';
-import { User } from '../models/User';
+import { SubscriptionType, User } from '../models/User';
 import { Project } from '../models/Project';
 
 export const UserController = {
-	async create(req: Request, res: Response): Promise<Response> {
-		const { fullName, email, login, password, profilePicture, subscription } = req.body;
+    async create(req: Request, res: Response): Promise<Response> {
+        const { fullName, email, login, password, profilePicture, subscription } = req.body;
 
-		try {
-			const existing = await User.findOne({ where: [{ email }, { login }] });
-			if (existing) {
-				return res.status(400).json({ message: 'Email or login already in use' });
-			}
+        try {
+            const existing = await User.findOne({ where: [{ email }, { login }] });
+            if (existing) {
+                return res.status(400).json({ message: 'Email or login already in use' });
+            }
 
-			const user = User.create({
-				fullName,
-				email,
-				login,
-				password,
-				profilePicture,
-				subscription,
-			});
+            const user = User.create({
+                fullName,
+                email,
+                login,
+                password,
+                profilePicture,
+                subscription,
+            });
 
-			await user.save();
-			return res.status(201).json(user);
-		} catch (error) {
-			console.error('Create user error:', error);
-			return res.status(500).json({ message: 'Failed to create user' });
-		}
-	},
+            await user.save();
+            return res.status(201).json(user);
+        } catch (error) {
+            console.error('Create user error:', error);
+            return res.status(500).json({ message: 'Failed to create user' });
+        }
+    },
 
-	async getAll(req: Request, res: Response): Promise<Response> {
-		try {
-			const users = await User.find();
-			return res.status(200).json(users);
-		} catch (error) {
-			return res.status(500).json({ message: 'Failed to fetch users' });
-		}
-	},
+    async getAll(req: Request, res: Response): Promise<Response> {
+        try {
+            const users = await User.find();
+            return res.status(200).json(users);
+        } catch (error) {
+            return res.status(500).json({ message: 'Failed to fetch users' });
+        }
+    },
 
-	async getOne(req: Request, res: Response): Promise<Response> {
-		const { id } = req.params;
+    async getOne(req: Request, res: Response): Promise<Response> {
+        const { id } = req.params;
 
-		try {
-			const user = await User.findOne({ where: { id } });
-			if (!user) {
-				return res.status(404).json({ message: 'User not found' });
-			}
+        try {
+            const user = await User.findOne({ where: { id } });
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
 
-			return res.status(200).json(user);
-		} catch (error) {
-			return res.status(500).json({ message: 'Failed to fetch user' });
-		}
-	},
+            return res.status(200).json(user);
+        } catch (error) {
+            return res.status(500).json({ message: 'Failed to fetch user' });
+        }
+    },
 
-	async update(req: Request, res: Response): Promise<Response> {
-		const { id } = req.params;
-		const updates = req.body;
+    async update(req: Request, res: Response): Promise<Response> {
+        const { id } = req.params;
+        const updates = req.body;
 
-		try {
-			const user = await User.findOne({ where: { id } });
-			if (!user) {
-				return res.status(404).json({ message: 'User not found' });
-			}
+        try {
+            const user = await User.findOne({ where: { id } });
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
 
-			Object.assign(user, updates);
-			await user.save();
+            if (updates.plan) {
+                switch (updates.plan.toLowerCase()) {
+                    case 'basic':
+                        user.subscription = SubscriptionType.BASIC;
+                        break;
+                    case 'advanced':
+                        user.subscription = SubscriptionType.ADVANCED;
+                        break;
+                    case 'premium':
+                        user.subscription = SubscriptionType.PREMIUM;
+                        break;
+                    default:
+                        return res.status(400).json({ message: 'Invalid subscription plan' });
+                }
+                delete updates.plan; // prevent reassignment via Object.assign
+            }
 
-			return res.status(200).json(user);
-		} catch (error) {
-			return res.status(500).json({ message: 'Failed to update user' });
-		}
-	},
+            Object.assign(user, updates);
+            await user.save();
 
-	async delete(req: Request, res: Response): Promise<Response> {
-		const { id } = req.params;
+            return res.status(200).json(user);
+        } catch (error) {
+            return res.status(500).json({ message: 'Failed to update user' });
+        }
+    },
 
-		try {
-			const user = await User.findOne({ where: { id } });
-			if (!user) {
-				return res.status(404).json({ message: 'User not found' });
-			}
+    async delete(req: Request, res: Response): Promise<Response> {
+        const { id } = req.params;
 
-			await user.remove();
-			return res.status(200).json({ message: 'User deleted successfully' });
-		} catch (error) {
-			return res.status(500).json({ message: 'Failed to delete user' });
-		}
-	},
+        try {
+            const user = await User.findOne({ where: { id } });
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
 
-	async getUserProjects(req: Request, res: Response): Promise<Response> {
-		const { id } = req.params;
+            await user.remove();
+            return res.status(200).json({ message: 'User deleted successfully' });
+        } catch (error) {
+            return res.status(500).json({ message: 'Failed to delete user' });
+        }
+    },
 
-		try {
-			const user = await User.findOne({
-				where: { id },
-				relations: ['projects'],
-			});
+    async getUserProjects(req: Request, res: Response): Promise<Response> {
+        const { id } = req.params;
 
-			if (!user) {
-				return res.status(404).json({ message: 'User not found' });
-			}
+        try {
+            const user = await User.findOne({
+                where: { id },
+                relations: ['projects'],
+            });
 
-			return res.status(200).json(user.projects);
-		} catch (error) {
-			return res.status(500).json({ message: 'Failed to fetch user projects' });
-		}
-	},
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            return res.status(200).json(user.projects);
+        } catch (error) {
+            return res.status(500).json({ message: 'Failed to fetch user projects' });
+        }
+    },
 };

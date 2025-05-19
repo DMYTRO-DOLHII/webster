@@ -10,6 +10,7 @@ import Register from './pages/Register/Register';
 import Workspace from './pages/Workspace/Workspace';
 import Editor from './pages/Canvas/Canvas'
 import Canvas from './pages/Canvas/Canvas'
+import Success from './pages/Success/Success'
 import Error404 from './pages/404/404';
 
 // Components import
@@ -18,6 +19,7 @@ import Footer from './components/Footer'
 import LoadingSpinner from './components/LoadingSpinner'
 import ScrollToTop from './components/ScrollToTop';
 import WithLayout from './components/WithLayout'
+import Pricing from './pages/Main/components/Pricing';
 
 import { userStore } from './store/userStore';
 
@@ -58,16 +60,22 @@ function AppContent() {
 
     return (
         <div className='flex flex-col h-screen scroll-smooth'>
+            <div>
+                <Toaster position='top-right' />
+            </div>
             <Routes>
                 <Route element={<WithLayout />}>
                     <Route path='/' element={<Main />} />
+                    <Route path='/pricing' element={<Pricing />} />
+                    <Route path='/subscription/success' element={<Success />} />
+
                     {/* Add other pages here that need Header/Footer */}
                 </Route>
 
                 <Route path='/login' element={<Login />} />
                 <Route path='/register' element={<Register />} />
                 <Route path='/workspace' element={<Workspace />} />
-                <Route path='/canvas' element={<Canvas />} />
+                <Route path='/canvas/:projectId' element={<Canvas />} />
 
                 {/* Catch-all for 404 */}
                 <Route path="*" element={<Error404 />} />

@@ -33,7 +33,7 @@ const Login = () => {
 
                 if (selectedPlan) {
                     localStorage.removeItem("selectedPlan");
-                    redirectToStripeCheckout(selectedPlan, userStore?.user?.id);
+                    redirectToStripeCheckout(userStore?.user?.subscription, selectedPlan, userStore?.user?.id);
                 }
                 else navigate('/');
             }

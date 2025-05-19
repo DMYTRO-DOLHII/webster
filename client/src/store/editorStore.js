@@ -5,6 +5,9 @@ class EditorStore {
 	project = null;
 	loading = false;
 	error = null;
+	selectedTool = null;
+	selectedColor = '#000000';
+    proejctJSON = null;
 
 	constructor() {
 		makeAutoObservable(this);
@@ -14,9 +17,12 @@ class EditorStore {
 		this.project = projectData;
 	}
 
+    setProjectJSON(josn) {
+        this.proejctJSON = josn;
+    }
+
 	updateProject(updates) {
 		if (!this.project) return;
-
 		runInAction(() => {
 			this.project = { ...this.project, ...updates };
 		});
@@ -26,26 +32,12 @@ class EditorStore {
 		this.project = null;
 	}
 
-	async saveProjectToServer() {
-		if (!this.project) return;
+	setTool(tool) {
+		this.selectedTool = tool;
+	}
 
-		this.loading = true;
-		this.error = null;
-
-		try {
-			const response = await api();
-			runInAction(() => {
-				this.project = response.data;
-			});
-		} catch (error) {
-			runInAction(() => {
-				this.error = error.response?.data?.message || 'Save failed';
-			});
-		} finally {
-			runInAction(() => {
-				this.loading = false;
-			});
-		}
+	setColor(color) {
+		this.selectedColor = color;
 	}
 }
 

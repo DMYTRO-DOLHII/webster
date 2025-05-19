@@ -3,10 +3,14 @@ import { FaClock, FaFileAlt, FaTrashAlt, FaFolder } from "react-icons/fa";
 import ProfileDropdown from "./ProfileDropdown";
 import { MdKeyboardArrowDown } from "react-icons/md";
 import { userStore } from "../../../store/userStore";
+import Button from '@mui/material/Button'; // Add at top with other imports
+import { useNavigate } from "react-router-dom";
+
 
 const Sidebar = ({ activeTab, setActiveTab, onOpenSettings }) => {
     const [isDropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
+    const navigate = useNavigate();
 
     const userName = userStore?.user?.fullName;
     const profilePicture = userStore?.user?.profilePicture;
@@ -30,7 +34,7 @@ const Sidebar = ({ activeTab, setActiveTab, onOpenSettings }) => {
                 className="flex items-center gap-2 px-4 py-3 border-b border-[#222222] cursor-pointer relative"
                 onClick={() => setDropdownOpen(!isDropdownOpen)}
             >
-                <img className="w-8 h-8 rounded-full bg-pink-600 flex items-center justify-center text-white font-semibold text-sm"  src={profilePicture} alt="" />
+                <img className="w-8 h-8 rounded-full bg-pink-600 flex items-center justify-center text-white font-semibold text-sm" src={profilePicture} alt="" />
                 <span className="text-white text-sm font-normal flex items-center gap-1">
                     {userName} <MdKeyboardArrowDown />
                 </span>
@@ -65,6 +69,44 @@ const Sidebar = ({ activeTab, setActiveTab, onOpenSettings }) => {
                     Trash
                 </button>
             </nav>
+
+            {/* Subscription Plan */}
+            <div className="px-4 py-4 border-t border-[#222222]">
+                <div className="text-xs text-[#b3b3b3] mb-1">Your Plan</div>
+
+                <div
+                    className={`text-sm font-semibold mt-2 px-3 py-1 rounded-sm w-full text-center inline-block mb-3 shadow-md transition-all duration-300
+                            ${userStore?.user?.subscription === 'premium'
+                            ? 'bg-gradient-to-r from-purple-600 to-indigo-500 text-white'
+                            : userStore?.user?.subscription === 'advanced'
+                                ? 'bg-gradient-to-r from-green-600 to-emerald-400 text-white'
+                                : 'bg-gradient-to-r from-black to-blue-800 text-white'
+                        }`}
+                >
+                    {userStore?.user?.subscription?.charAt(0).toUpperCase() + userStore?.user?.subscription?.slice(1)}
+                </div>
+
+                <Button
+                    variant="outlined"
+                    size="small"
+                    fullWidth
+                    onClick={() => navigate('/pricing')}
+                    sx={{
+                        color: '#b3b3b3',
+                        borderColor: '#333',
+                        '&:hover': {
+                            borderColor: '#555',
+                            backgroundColor: '#1f1f1f',
+                        },
+                        textTransform: 'none',
+                        fontSize: '0.75rem',
+                    }}
+                >
+                    Change Plan
+                </Button>
+            </div>
+
+
 
             <div className="flex-grow"></div>
 

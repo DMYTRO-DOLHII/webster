@@ -1,9 +1,12 @@
 import { FaCog, FaUserPlus, FaSignOutAlt } from "react-icons/fa";
 import { userStore } from "../../../store/userStore";
+import { useNavigate } from "react-router-dom";
 
 const ProfileDropdown = ({ onOpenSettings }) => {
     const fullName = userStore?.user?.fullName;
     const profilePicture = userStore?.user?.profilePicture;
+
+    const navigate = useNavigate();
 
     return (
         <div className="absolute top-13 left-4 backdrop-blur-md border border-[#333] rounded-md text-xs p-3 w-56 z-10 text-white">
@@ -21,7 +24,12 @@ const ProfileDropdown = ({ onOpenSettings }) => {
                 <button className="flex items-center cursor-pointer px-3 py-2 gap-2 rounded-sm hover:text-[#fff] transition hover:bg-white/10">
                     <FaUserPlus /> Add Account
                 </button>
-                <button className="flex items-center cursor-pointer px-3 py-2 gap-2 rounded-sm hover:text-[#fff] transition hover:bg-white/10">
+                <button
+                    onClick={() => {
+                        userStore?.logout();
+                        navigate('/');
+                    }}
+                    className="flex items-center cursor-pointer px-3 py-2 gap-2 rounded-sm hover:text-[#fff] transition hover:bg-white/10">
                     <FaSignOutAlt /> Logout
                 </button>
             </div>
