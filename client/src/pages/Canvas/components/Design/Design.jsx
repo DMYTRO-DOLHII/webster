@@ -63,11 +63,9 @@ const SHAPE_DEFAULTS = {
     },
 };
 
-const Design = ({ onSaveRef, zoom, containerSize }) => {
+const Design = ({ onSaveRef, zoom, containerSize, setZoom }) => {
     // console.log(containerSize);
     const stageRef = useRef(null);
-    const [konvaJson, setKonvaJson] = useState(null);
-    const [fitZoom, setFitZoom] = useState(1);
     const [shapes, setShapes] = useState([]);
     const [selectedShapeId, setSelectedShapeId] = useState(null);
     const shapeRefs = useRef({});
@@ -187,16 +185,16 @@ const Design = ({ onSaveRef, zoom, containerSize }) => {
         }
     }, [onSaveRef]);
 
-    useEffect(() => {
-        const interval = setInterval(async () => {
-            const json = getDesignJson();
-            if (json) {
-                const response = await api.patch(`/projects/${projectId}`, { info: JSON.parse(json) });
-                localStorage.setItem('designData', json);
-            }
-        }, 1000);
-        return () => clearInterval(interval);
-    }, []);
+    // useEffect(() => {
+    //     const interval = setInterval(async () => {
+    //         const json = getDesignJson();
+    //         if (json) {
+    //             const response = await api.patch(`/projects/${projectId}`, { info: JSON.parse(json) });
+    //             localStorage.setItem('designData', json);
+    //         }
+    //     }, 1000);
+    //     return () => clearInterval(interval);
+    // }, []);
 
     // Expose save function
     useEffect(() => {
@@ -208,6 +206,10 @@ const Design = ({ onSaveRef, zoom, containerSize }) => {
     // Calculate fit zoom
     useEffect(() => {
         if (!width || !height || !containerSize.width || !containerSize.height) return;
+        if (localStorage.getItem('zoomValue')) {
+            setZoom(parseFloat(localStorage.getItem('zoomValue')));
+            return;
+        };
 
         const designWidth = width;
         const designHeight = height;
@@ -216,61 +218,52 @@ const Design = ({ onSaveRef, zoom, containerSize }) => {
         const scaleY = containerSize.height / designHeight;
 
         const scale = Math.min(scaleX, scaleY, 1); // don’t scale up if design is smaller
-        setFitZoom(scale);
+        setZoom(scale);
     }, [height, width, containerSize]);
-
-    // console.log(konvaJson);
-
-    // if (!konvaJson) return <div className='text-white'><LoadingSpinner /></div>;
-
-    const finalZoom = zoom * fitZoom;
-    // const width = konvaJson.attrs.width;
-    // const height = konvaJson.attrs.height;
 
     return (
         <Stage ref={stageRef}
-                width={width * finalZoom}
-                height={height * finalZoom}
-                scale={finalZoom}
-                scaleX={finalZoom}
-                scaleY={finalZoom}
-                className="border-red-400 border-4"
-                onWheel={handleWheel}
-                onClick={handleStageClick} onDblClick={handleStageDblClick}>
-                <Layer>
-                    {shapes.map(shape => {
-                        const Component = SHAPE_COMPONENTS[shape.type];
-                        return Component ? (
-                            <Component
-                                key={shape.id}
-                                id={shape.id}
-                                {...shape}
-                                draggable
-                                onDblClick={() => handleDoubleClick(shape.id)}
-                                ref={el => {
-                                    if (el) {
-                                        shapeRefs.current[shape.id] = el;
-                                    }
-                                }}
-                            />
-                        ) : null;
-                    })}
-                    {selectedShapeId && shapeRefs.current[selectedShapeId] && (
-                        <Transformer
-                            nodes={[shapeRefs.current[selectedShapeId]]}
-                            resizeEnabled={true}
-                            rotateEnabled={true}
-                            borderStroke='black'
-                            borderDash={[6, 2]}
-                            anchorStroke='black'
-                            anchorFill='white'
-                            anchorSize={10}
-                            flipEnabled={false}
+            width={width * zoom}
+            height={height * zoom}
+            scaleX={zoom}
+            scaleY={zoom}
+            className="border-red-400 border-4"
+            onWheel={handleWheel}
+            onClick={handleStageClick} onDblClick={handleStageDblClick}>
+            <Layer>
+                {shapes.map(shape => {
+                    const Component = SHAPE_COMPONENTS[shape.type];
+                    return Component ? (
+                        <Component
+                            key={shape.id}
+                            id={shape.id}
+                            {...shape}
+                            draggable
+                            onDblClick={() => handleDoubleClick(shape.id)}
+                            ref={el => {
+                                if (el) {
+                                    shapeRefs.current[shape.id] = el;
+                                }
+                            }}
                         />
-                    )}
-                </Layer>
-            </Stage>
-            );
+                    ) : null;
+                })}
+                {selectedShapeId && shapeRefs.current[selectedShapeId] && (
+                    <Transformer
+                        nodes={[shapeRefs.current[selectedShapeId]]}
+                        resizeEnabled={true}
+                        rotateEnabled={true}
+                        borderStroke='black'
+                        borderDash={[6, 2]}
+                        anchorStroke='black'
+                        anchorFill='white'
+                        anchorSize={10}
+                        flipEnabled={false}
+                    />
+                )}
+            </Layer>
+        </Stage>
+    );
 };
 
-            export default Design;
+export default Design;

@@ -28,6 +28,16 @@ const Canvas = () => {
     }
   };
 
+  const handleZoomChange = (newZoom) => {
+    setZoom(newZoom);
+    localStorage.setItem('zoomValue', newZoom); // Сохраняем значение зума в localStorage
+  };
+  useEffect(() => {
+    return () => {
+      localStorage.removeItem("zoomValue");
+    };
+  }, []);
+
   // useEffect(() => {
   //   const handleResize = () => {
   //     const canvasH = document.getElementById('canvas-parent').clientHeight;
@@ -41,19 +51,19 @@ const Canvas = () => {
   //   // Чистим таймер при размонтировании компонента
   //   return () => clearTimeout(timeoutId);
   // }, []);
-useEffect(() => {
-  const updateSize = () => {
-    if (containerRef.current) {
-      const width = containerRef.current.offsetWidth;
-      const height = containerRef.current.offsetHeight;
-      setContainerSize({ width, height });
-    }
-  };
+  useEffect(() => {
+    const updateSize = () => {
+      if (containerRef.current) {
+        const width = containerRef.current.offsetWidth;
+        const height = containerRef.current.offsetHeight;
+        setContainerSize({ width, height });
+      }
+    };
 
-  const timeout = setTimeout(updateSize, 100); // Задержка 100мс после монтирования
+    const timeout = setTimeout(updateSize, 100); // Задержка 100мс после монтирования
 
-  return () => clearTimeout(timeout);
-}, []);
+    return () => clearTimeout(timeout);
+  }, []);
 
 
   useEffect(() => {
@@ -96,11 +106,12 @@ useEffect(() => {
             zoom={zoom}
             containerSize={containerSize}
             initialData={projectData.json}
+            setZoom={handleZoomChange}
           />
         </div>
         <RightSidebar />
       </div>
-      <Footer zoom={zoom} setZoom={setZoom} />
+      <Footer zoom={zoom} setZoom={handleZoomChange} />
     </div>
   );
 };
