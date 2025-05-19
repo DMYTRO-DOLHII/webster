@@ -91,12 +91,17 @@ const Design = observer(({ onSaveRef, zoom, containerSize, setZoom }) => {
 
     // Handle any changes on design - save instantly to db
     const saveDesign = async () => {
-        const json = getDesignJson();
-        if (!json) return;
+        const jsonString = getDesignJson();
+        if (!jsonString) return;
 
-        if (json === lastSavedDesign.current) return; // Skip if nothing changed
+        if (jsonString === lastSavedDesign.current) return; // Skip if nothing changed
 
         try {
+            const jsonObject = JSON.parse(jsonString); // теперь это объект
+
+            if (width) jsonObject.attrs.width = width;
+            if (height) jsonObject.attrs.height = height;
+            const json = JSON.stringify(jsonObject);
             localStorage.setItem('designData', json);
             await api.patch(`/projects/${projectId}`, { info: JSON.parse(json) });
             lastSavedDesign.current = json;
