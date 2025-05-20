@@ -2,7 +2,7 @@ import React from "react";
 
 const RightSidebar = () => {
     return (
-        <div className="w-64 bg-[#1a1a1a] border-l border-[#2a2a2a] p-4 text-white overflow-auto">
+        <div className="pt-15 w-64 bg-[#1a1a1a] border-l border-[#2a2a2a] p-4 text-white overflow-auto">
             {/* Example Panels */}
             <div className="mb-6">
                 <h2 className="text-sm font-semibold mb-2 border-b border-[#333] pb-1">Layers</h2>

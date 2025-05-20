@@ -71,7 +71,7 @@ const LeftSidebar = () => {
 	};
 
 	return (
-		<div className='w-12 bg-[#1a1a1a] border-r border-[#2a2a2a] flex flex-col items-center py-4 space-y-4'>
+		<div className='pt-15 w-12 bg-[#1a1a1a] border-r border-[#2a2a2a] flex flex-col items-center py-4 space-y-4'>
 			{staticTools.map(tool => {
 				if (tool.id === 'crop') {
 					return (
