@@ -20,11 +20,9 @@ const Canvas = () => {
   const [projectData, setProjectData] = useState(null);
   const [shapes, setShapes] = useState([]); // Состояние для хранения слоев
 
-  const toggleLayerVisibility = (id) => {
-    console.log(id);
-    console.log(shapes);
-    setShapes(prev =>
-      prev.map(shape =>
+  const handleToggleVisibility = (id) => {
+    setShapes((prevShapes) =>
+      prevShapes.map((shape) =>
         shape.id === id ? { ...shape, visible: !shape.visible } : shape
       )
     );
@@ -92,6 +90,7 @@ const Canvas = () => {
         >
           <Design
             onSaveRef={(fn) => (getDesignJsonRef.current = fn)}
+            shapes={shapes}
             zoom={zoom}
             containerSize={containerSize}
             initialData={projectData.json}
@@ -99,7 +98,7 @@ const Canvas = () => {
             onShapesChange={setShapes}
           />
         </div>
-        <RightSidebar layers={shapes} onToggleVisibility={toggleLayerVisibility}/> {/* Передаем слои в сайдбар */}
+        <RightSidebar layers={shapes} onToggleVisibility={handleToggleVisibility}/> {/* Передаем слои в сайдбар */}
       </div>
       <Footer zoom={zoom} setZoom={handleZoomChange} />
     </div>

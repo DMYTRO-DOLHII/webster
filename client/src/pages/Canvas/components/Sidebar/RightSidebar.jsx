@@ -1,4 +1,5 @@
 import React from "react";
+import { Eye, EyeOff } from "lucide-react"; // Можно любую иконку использовать
 
 const RightSidebar = ({ layers, onToggleVisibility }) => {
     return (
@@ -7,16 +8,15 @@ const RightSidebar = ({ layers, onToggleVisibility }) => {
                 <h2 className="text-sm font-semibold mb-2 border-b border-[#333] pb-1">Layers</h2>
                 {layers && layers.length > 0 ? (
                     layers.map((layer, index) => (
-                        <div key={layer.id} className="flex items-center justify-between text-xs opacity-70 mb-1 cursor-pointer">
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    checked={layer.visible !== false}
-                                    onChange={() => onToggleVisibility(layer.id)}
-                                    className="mr-2"
-                                />
-                                {`Layer ${index + 1}: ${layer.type}`}
-                            </label>
+                        <div key={layer.id} className="flex justify-between items-center text-xs opacity-70 mb-1">
+                            <span>{`Layer ${index + 1}: ${layer.type}`}</span>
+                            <button
+                                onClick={() => onToggleVisibility(layer.id)}
+                                title={layer.visible === false ? "Show layer" : "Hide layer"}
+                                className="ml-2 text-white hover:text-gray-400"
+                            >
+                                {layer.visible === false ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
                         </div>
                     ))
                 ) : (
@@ -26,13 +26,11 @@ const RightSidebar = ({ layers, onToggleVisibility }) => {
 
             <div className="mb-6">
                 <h2 className="text-sm font-semibold mb-2 border-b border-[#333] pb-1">Properties</h2>
-                {/* TODO: display properties of the selected layer */}
                 <div className="text-xs opacity-70">Select a layer to see properties</div>
             </div>
 
             <div>
                 <h2 className="text-sm font-semibold mb-2 border-b border-[#333] pb-1">History</h2>
-                {/* TODO: implement history log */}
                 <div className="text-xs opacity-70">No history available</div>
             </div>
         </div>
