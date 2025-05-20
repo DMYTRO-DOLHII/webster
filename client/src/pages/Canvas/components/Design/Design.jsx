@@ -1,181 +1,142 @@
-import { editorStore } from '../../../../store/editorStore';
-import { Stage, Layer, Circle, Rect, Line, Text, RegularPolygon, Star, Arrow, Transformer } from 'react-konva';
-import { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { Stage, Layer, Transformer } from 'react-konva';
 import { useParams } from 'react-router-dom';
-import { api } from '../../../../services/api';
 import { debounce } from 'lodash';
 import { observer } from 'mobx-react-lite';
 
-const SHAPE_COMPONENTS = {
-    circle: Circle,
-    rect: Rect,
-    text: Text,
-    line: Line,
-    triangle: RegularPolygon,
-    pentagon: RegularPolygon,
-    hexagon: RegularPolygon,
-    star: Star,
-    arrow: Arrow,
-    brush: Line,
-};
-
-const SHAPE_DEFAULTS = {
-    circle: { radius: 30, fill: 'red', draggable: true },
-    rect: { width: 80, height: 40, fill: 'green', draggable: true },
-    text: { text: 'Text', fontSize: 20, fill: 'white', draggable: true },
-    line: {
-        points: [-30, -30, 30, 30],
-        stroke: 'blue',
-        strokeWidth: 2,
-        draggable: true,
-    },
-    triangle: {
-        sides: 3,
-        radius: 40,
-        fill: 'orange',
-        draggable: true,
-    },
-    pentagon: {
-        sides: 5,
-        radius: 40,
-        fill: 'yellow',
-        draggable: true,
-    },
-    hexagon: {
-        sides: 6,
-        radius: 40,
-        fill: 'purple',
-        draggable: true,
-    },
-    star: {
-        numPoints: 5,
-        innerRadius: 20,
-        outerRadius: 40,
-        fill: 'gold',
-        draggable: true,
-    },
-    arrow: {
-        points: [0, 0, 100, 0],
-        pointerLength: 10,
-        pointerWidth: 10,
-        stroke: 'cyan',
-        strokeWidth: 4,
-        draggable: true,
-    },
-    brush: {
-        stroke: 'black',
-        strokeWidth: 3,
-        tension: 0.5,
-        lineCap: 'round',
-        globalCompositeOperation: 'source-over',
-        draggable: false,
-    },
-};
+import { editorStore } from '../../../../store/editorStore';
+import { api } from '../../../../services/api';
+import { SHAPE_COMPONENTS, SHAPE_DEFAULTS } from '../Shapes';
 
 const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onShapesChange }) => {
     const stageRef = useRef(null);
-    // const [shapes, setShapes] = useState([]);
-    const [selectedShapeId, setSelectedShapeId] = useState(null);
     const shapeRefs = useRef({});
+    const isDrawing = useRef(false);
+    const lastSavedDesign = useRef(null);
+    const widthRef = useRef(0);
+    const heightRef = useRef(0);
 
-    const [width, setWidth] = useState(500);
-    const [height, setHeight] = useState(500);
+    const [selectedShapeId, setSelectedShapeId] = useState(null);
+    const [currentLineId, setCurrentLineId] = useState(null);
+
+    const [width, setWidth] = useState(0);
+    const [height, setHeight] = useState(0);
 
     const { projectId } = useParams();
 
-    const isDrawing = useRef(false);
-    const [currentLine, setCurrentLine] = useState(null);
-
-    const lastSavedDesign = useRef(null);
-
-    // Load saved design from localStorage or from editorStore
+    // Update refs when width and height change
     useEffect(() => {
+        widthRef.current = width;
+    }, [width]);
+
+    useEffect(() => {
+        heightRef.current = height;
+    }, [height]);
+
+    // Initialize design from localStorage or editorStore.projectJSON
+    useEffect(() => {
+        if (!containerSize.width || !containerSize.height) return;
+
         let jsonString = localStorage.getItem('designData');
         if (!jsonString && typeof editorStore.projectJSON === 'object') {
             jsonString = JSON.stringify(editorStore.projectJSON);
         }
-
-        if (!jsonString || !containerSize.width || !containerSize.height) {
-            return;
-        }
-
-        if (jsonString) {
-            try {
-                const json = JSON.parse(jsonString);
-                if (json.attrs) {
-                    if (json.attrs.width) setWidth(json.attrs.width);
-                    if (json.attrs.height) setHeight(json.attrs.height);
-                }
-
-                let loadedShapes = [];
-                if (json.children && json.children.length > 0) {
-                    const layer = json.children.find(c => c.className === 'Layer');
-                    if (layer && layer.children) {
-                        loadedShapes = layer.children.map(shape => ({
-                            id: shape.attrs.id || `${shape.className}-${Date.now()}`,
-                            type: shape.className.toLowerCase(),
-                            visible: shape.visible !== false,
-                            ...shape.attrs,
-                        }));
-                    }
-                }
-                // setShapes(loadedShapes);
-                handleShapesChange(loadedShapes);
-            } catch (e) {
-                console.error('Failed to parse designData', e);
-            }
-        }
-    }, [editorStore.projectJSON, containerSize]);
-
-    const saveDesign = async () => {
-        const jsonString = getDesignJson();
         if (!jsonString) return;
 
-        if (jsonString === lastSavedDesign.current) return;
+        try {
+            const json = JSON.parse(jsonString);
+
+            if (json.attrs?.width) {
+                setWidth(json.attrs.width);
+            };
+            if (json.attrs?.height) setHeight(json.attrs.height);
+
+            const layer = json.children?.find(c => c.className === 'Layer');
+            const loadedShapes = layer?.children?.map(shape => ({
+                id: shape.attrs.id || `${shape.className}-${Date.now()}`,
+                type: shape.className.toLowerCase(),
+                visible: shape.visible !== false,
+                ...shape.attrs,
+            })) || [];
+
+            onShapesChange(loadedShapes);
+        } catch (err) {
+            console.error('Failed to parse designData', err);
+        }
+    }, [editorStore.projectJSON, containerSize, onShapesChange]);
+    // Save design to localStorage and backend
+    const saveDesign = useCallback(async () => {
+        if (!stageRef.current) return;
+
+        const jsonString = stageRef.current.toJSON();
+        if (!jsonString || jsonString === lastSavedDesign.current) return;
 
         try {
             const jsonObject = JSON.parse(jsonString);
 
-            if (width) jsonObject.attrs.width = width;
-            if (height) jsonObject.attrs.height = height;
+            if (widthRef.current) jsonObject.attrs.width = widthRef.current;
+            if (heightRef.current) jsonObject.attrs.height = heightRef.current;
 
             const json = JSON.stringify(jsonObject);
             localStorage.setItem('designData', json);
 
-            // Store the current stage reference (already handled)
             editorStore.setStage(stageRef.current);
 
-            // Get base64 image from stage
-            const base64Image = stageRef.current.toDataURL({
-                pixelRatio: 1 // or 2 if you want better quality
-            });
+            const base64Image = stageRef.current.toDataURL({ pixelRatio: 1 });
 
-            // Send to backend
             await api.patch(`/projects/${projectId}`, {
                 info: JSON.parse(json),
-                previewImage: base64Image // assuming `preview` is your DB column
+                previewImage: base64Image,
             });
 
             lastSavedDesign.current = json;
-            console.log('saved');
+            console.log('Design saved');
         } catch (error) {
             console.error('Save failed:', error);
         }
-    };
+    }, [projectId]);
 
+    // Debounce saveDesign to limit save frequency
     const debouncedSave = useRef(debounce(saveDesign, 500)).current;
 
-    const handleShapesChange = (shapes) => {
-        // setShapes(shapes);
-        onShapesChange(shapes);
-        editorStore.setStage(stageRef.current);
-    };
+    useEffect(() => {
+        if (onSaveRef) {
+            onSaveRef(() => stageRef.current?.toJSON());
+        }
+    }, [onSaveRef]);
+    useEffect(() => {
+        debouncedSave();
+    }, [shapes]);
+    // Manage zoom scale when container or design size changes
+    useEffect(() => {
+        if (!width || !height || !containerSize.width || !containerSize.height) return;
 
+        const savedZoom = localStorage.getItem('zoomValue');
+        if (savedZoom) {
+            setZoom(parseFloat(savedZoom));
+            return;
+        }
+
+        const scaleX = containerSize.width / width;
+        const scaleY = containerSize.height / height;
+        const scale = Math.min(scaleX, scaleY, 1);
+        setZoom(scale);
+        console.log(width, height, containerSize, scale)
+    }, [width, height, containerSize, setZoom]);
+
+    // Handle shape changes callback with latest stage reference
+    const handleShapesChange = useCallback(
+        updatedShapes => {
+            onShapesChange(updatedShapes);
+            editorStore.setStage(stageRef.current);
+        },
+        [onShapesChange]
+    );
+
+    // Handle stage click - create new shape or select existing
     const handleStageClick = e => {
         const stage = stageRef.current.getStage();
-        const clickedOnEmpty = e.target === stage;
-
-        if (clickedOnEmpty) {
+        if (e.target === stage) {
             const tool = editorStore.selectedTool;
             if (!SHAPE_DEFAULTS[tool] || tool === 'brush') {
                 setSelectedShapeId(null);
@@ -183,15 +144,12 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
             }
 
             const pointerPosition = stage.getPointerPosition();
-            const currentColor = editorStore.selectedColor || '#000000';
+            const currentColor = editorStore.selectedColor ?? '#000000';
 
-            let newShapeProps = { ...SHAPE_DEFAULTS[tool] };
-            if ('fill' in newShapeProps) {
-                newShapeProps.fill = currentColor;
-            }
-            if ('stroke' in newShapeProps) {
-                newShapeProps.stroke = currentColor;
-            }
+            // Prepare new shape props with color overrides
+            const baseProps = { ...SHAPE_DEFAULTS[tool] };
+            if ('fill' in baseProps) baseProps.fill = currentColor;
+            if ('stroke' in baseProps) baseProps.stroke = currentColor;
 
             const newShape = {
                 id: `${tool}-${Date.now()}`,
@@ -199,10 +157,9 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
                 x: pointerPosition.x / zoom,
                 y: pointerPosition.y / zoom,
                 visible: true,
-                ...newShapeProps,
+                ...baseProps,
             };
 
-            // setShapes(prev => [...prev, newShape]);
             handleShapesChange(prev => [...prev, newShape]);
             setSelectedShapeId(newShape.id);
         } else {
@@ -211,12 +168,14 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
         }
     };
 
+    // Brush tool handlers
     const handleMouseDown = e => {
         if (editorStore.selectedTool !== 'brush') return;
+
         isDrawing.current = true;
         const stage = stageRef.current.getStage();
         const point = stage.getPointerPosition();
-        const currentColor = editorStore.selectedColor || 'black';
+        const currentColor = editorStore.selectedColor ?? 'black';
 
         const newLine = {
             id: `brush-${Date.now()}`,
@@ -225,72 +184,37 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
             ...SHAPE_DEFAULTS.brush,
             stroke: currentColor,
         };
-        // setShapes(prev => [...prev, newLine]);
+
         handleShapesChange(prev => [...prev, newLine]);
-        setCurrentLine(newLine.id);
+        setCurrentLineId(newLine.id);
     };
 
     const handleMouseMove = e => {
         if (!isDrawing.current || editorStore.selectedTool !== 'brush') return;
+
         const stage = stageRef.current.getStage();
         const point = stage.getPointerPosition();
 
-        // setShapes(prevShapes =>
-        //     prevShapes.map(shape => {
-        //         if (shape.id === currentLine) {
-        //             return {
-        //                 ...shape,
-        //                 points: [...shape.points, point.x, point.y],
-        //             };
-        //         }
-        //         return shape;
-        //     })
-        // );
-        handleShapesChange(
-            prevShapes =>
-                prevShapes.map(shape => {
-                    if (shape.id === currentLine) {
-                        return {
-                            ...shape,
-                            points: [...shape.points, point.x, point.y],
-                        };
-                    }
-                    return shape;
-                })
+        handleShapesChange(prevShapes =>
+            prevShapes.map(shape => {
+                if (shape.id === currentLineId) {
+                    return {
+                        ...shape,
+                        points: [...shape.points, point.x, point.y],
+                    };
+                }
+                return shape;
+            })
         );
     };
 
     const handleMouseUp = () => {
         if (editorStore.selectedTool !== 'brush') return;
         isDrawing.current = false;
-        setCurrentLine(null);
+        setCurrentLineId(null);
     };
 
-    const getDesignJson = () => {
-        if (!stageRef.current) return null;
-        return stageRef.current.toJSON();
-    };
-
-    useEffect(() => {
-        if (onSaveRef) {
-            onSaveRef(getDesignJson);
-        }
-    }, [onSaveRef]);
-
-    useEffect(() => {
-        if (!width || !height || !containerSize.width || !containerSize.height) return;
-        if (localStorage.getItem('zoomValue')) {
-            setZoom(parseFloat(localStorage.getItem('zoomValue')));
-            return;
-        };
-
-        const scaleX = containerSize.width / width;
-        const scaleY = containerSize.height / height;
-
-        const scale = Math.min(scaleX, scaleY, 1);
-        setZoom(scale);
-    }, [height, width, containerSize, setZoom]);
-
+    // Render the component
     return (
         <Stage
             ref={stageRef}
@@ -309,6 +233,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
                 {shapes.map(shape => {
                     const Component = SHAPE_COMPONENTS[shape.type];
                     if (!Component) return null;
+
                     const { id, type, ...shapeProps } = shape;
 
                     return (
@@ -329,15 +254,16 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
                         />
                     );
                 })}
+
                 {selectedShapeId && shapeRefs.current[selectedShapeId] && (
                     <Transformer
                         nodes={[shapeRefs.current[selectedShapeId]]}
                         resizeEnabled
                         rotateEnabled
-                        borderStroke='black'
+                        borderStroke="black"
                         borderDash={[6, 2]}
-                        anchorStroke='black'
-                        anchorFill='white'
+                        anchorStroke="black"
+                        anchorFill="white"
                         anchorSize={10}
                         flipEnabled
                         keepRatio
@@ -349,4 +275,3 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
 });
 
 export default Design;
-

@@ -19,7 +19,12 @@ const Canvas = () => {
   const [error, setError] = useState(null);
   const [projectData, setProjectData] = useState(null);
   const [shapes, setShapes] = useState([]); // Состояние для хранения слоев
-
+  
+  useEffect(() => {
+    return () => {
+      localStorage.removeItem("zoomValue");
+    };
+  }, []);
   const handleToggleVisibility = (id) => {
     setShapes((prevShapes) =>
       prevShapes.map((shape) =>
@@ -98,7 +103,7 @@ const Canvas = () => {
             onShapesChange={setShapes}
           />
         </div>
-        <RightSidebar layers={shapes} onToggleVisibility={handleToggleVisibility}/> {/* Передаем слои в сайдбар */}
+        <RightSidebar layers={shapes} onToggleVisibility={handleToggleVisibility} /> {/* Передаем слои в сайдбар */}
       </div>
       <Footer zoom={zoom} setZoom={handleZoomChange} />
     </div>
