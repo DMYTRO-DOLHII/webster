@@ -238,15 +238,15 @@ const Design = observer(({ onSaveRef, zoom, containerSize, setZoom, onShapesChan
         // );
         handleShapesChange(
             prevShapes =>
-            prevShapes.map(shape => {
-                if (shape.id === currentLine) {
-                    return {
-                        ...shape,
-                        points: [...shape.points, point.x, point.y],
-                    };
-                }
-                return shape;
-            })
+                prevShapes.map(shape => {
+                    if (shape.id === currentLine) {
+                        return {
+                            ...shape,
+                            points: [...shape.points, point.x, point.y],
+                        };
+                    }
+                    return shape;
+                })
         );
     };
 
