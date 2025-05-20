@@ -1,25 +1,31 @@
 import React from "react";
 
-const RightSidebar = () => {
+const RightSidebar = ({ layers }) => {
     return (
         <div className="pt-15 w-64 bg-[#1a1a1a] border-l border-[#2a2a2a] p-4 text-white overflow-auto">
-            {/* Example Panels */}
             <div className="mb-6">
                 <h2 className="text-sm font-semibold mb-2 border-b border-[#333] pb-1">Layers</h2>
-                <div className="text-xs opacity-70">Layer 1</div>
-                <div className="text-xs opacity-70">Layer 2</div>
+                {layers && layers.length > 0 ? (
+                    layers.map((layer, index) => (
+                        <div key={layer.id} className="text-xs opacity-70">
+                            {`Layer ${index + 1}: ${layer.type}`}
+                        </div>
+                    ))
+                ) : (
+                    <div className="text-xs opacity-50">No layers available</div>
+                )}
             </div>
 
             <div className="mb-6">
                 <h2 className="text-sm font-semibold mb-2 border-b border-[#333] pb-1">Properties</h2>
-                <div className="text-xs opacity-70">Position: X=100, Y=200</div>
-                <div className="text-xs opacity-70">Size: 400 x 300</div>
+                {/* TODO: display properties of the selected layer */}
+                <div className="text-xs opacity-70">Select a layer to see properties</div>
             </div>
 
             <div>
                 <h2 className="text-sm font-semibold mb-2 border-b border-[#333] pb-1">History</h2>
-                <div className="text-xs opacity-70">Added rectangle</div>
-                <div className="text-xs opacity-70">Changed color</div>
+                {/* TODO: implement history log */}
+                <div className="text-xs opacity-70">No history available</div>
             </div>
         </div>
     );

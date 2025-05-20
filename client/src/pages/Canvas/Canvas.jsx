@@ -6,11 +6,9 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Design from "./components/Design/Design";
 import { editorStore } from '../../store/editorStore';
-import axios from "axios"; // or fetch, but axios is more convenient
 import { api } from "../../services/api";
 
 const Canvas = () => {
-
   const { projectId } = useParams();
   const navigate = useNavigate();
   const getDesignJsonRef = useRef(null);
@@ -20,6 +18,7 @@ const Canvas = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [projectData, setProjectData] = useState(null);
+  const [shapes, setShapes] = useState([]); // Состояние для хранения слоев
 
   const handleSaveClick = () => {
     if (getDesignJsonRef.current) {
@@ -30,27 +29,9 @@ const Canvas = () => {
 
   const handleZoomChange = (newZoom) => {
     setZoom(newZoom);
-    localStorage.setItem('zoomValue', newZoom); // Сохраняем значение зума в localStorage
+    localStorage.setItem('zoomValue', newZoom);
   };
-  useEffect(() => {
-    return () => {
-      localStorage.removeItem("zoomValue");
-    };
-  }, []);
 
-  // useEffect(() => {
-  //   const handleResize = () => {
-  //     const canvasH = document.getElementById('canvas-parent').clientHeight;
-  //     const canvasW = document.getElementById('canvas-parent').clientWidth;
-  //     setContainerSize({ width: canvasW, height: canvasH });
-  //   };
-
-  //   // Используем setTimeout для отложенного выполнения
-  //   const timeoutId = setTimeout(handleResize, 0);
-
-  //   // Чистим таймер при размонтировании компонента
-  //   return () => clearTimeout(timeoutId);
-  // }, []);
   useEffect(() => {
     const updateSize = () => {
       if (containerRef.current) {
@@ -60,17 +41,15 @@ const Canvas = () => {
       }
     };
 
-    const timeout = setTimeout(updateSize, 100); // Задержка 100мс после монтирования
-
+    const timeout = setTimeout(updateSize, 100);
     return () => clearTimeout(timeout);
   }, []);
-
 
   useEffect(() => {
     const fetchProject = async () => {
       try {
         const res = await api.get(`/projects/${projectId}`);
-        setProjectData(res.data); // assume it contains JSON and metadata
+        setProjectData(res.data);
         setLoading(false);
         localStorage.setItem("designData", JSON.stringify(res.data.info));
       } catch (err) {
@@ -107,14 +86,14 @@ const Canvas = () => {
             containerSize={containerSize}
             initialData={projectData.json}
             setZoom={handleZoomChange}
+            onShapesChange={setShapes}
           />
         </div>
-        <RightSidebar />
+        <RightSidebar layers={shapes} /> {/* Передаем слои в сайдбар */}
       </div>
       <Footer zoom={zoom} setZoom={handleZoomChange} />
     </div>
   );
 };
-
 
 export default Canvas;
