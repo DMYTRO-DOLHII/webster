@@ -6,7 +6,7 @@ import { editorStore } from "../../../store/editorStore";
 import toast from "react-hot-toast";
 
 const menuStructure = {
-    File: ["New", "Open", "---", "Save as McOkster", "Export as"],
+    File: ["New", "Open", "---", "Save as McOkster", "Export PNG"],
     Edit: [
         "Step forward",
         "Step backward",
@@ -42,6 +42,23 @@ const Header = ({ onSave }) => {
     const handleLogoClick = () => {
         navigate('/workspace');
     };
+
+    const handleExportPNGClck = async () => {
+        try {
+            const dataURL = editorStore.stage.toDataURL({
+                pixelRatio: 1
+            });
+
+            const link = document.createElement('a');
+            link.download = 'projectName.png';
+            link.href = dataURL;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (err) {
+            console.error("Failed to export png:", err)
+        }
+    }
 
     const handleOpenMcOksterClick = async () => {
         try {
@@ -132,6 +149,9 @@ const Header = ({ onSave }) => {
         }
         if (item === "File" && entry === "Open") {
             handleOpenMcOksterClick();
+        }
+        if (item === "File" && entry === "Export PNG") {
+            handleExportPNGClck();
         }
 
         // Handle other items if needed

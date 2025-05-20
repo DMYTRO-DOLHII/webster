@@ -9,9 +9,15 @@ class EditorStore {
 	selectedColor = '#000000';
     projectJSON = null;
 
+    stage = null;
+
 	constructor() {
 		makeAutoObservable(this);
 	}
+
+    setStage(stage) {
+        this.stage = stage;
+    }
 
 	setProject(projectData) {
 		this.project = projectData;

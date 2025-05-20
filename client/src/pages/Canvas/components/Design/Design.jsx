@@ -148,7 +148,21 @@ const Design = observer(({ onSaveRef, zoom, containerSize, setZoom, onShapesChan
 
             const json = JSON.stringify(jsonObject);
             localStorage.setItem('designData', json);
-            await api.patch(`/projects/${projectId}`, { info: JSON.parse(json) });
+
+            // Store the current stage reference (already handled)
+            editorStore.setStage(stageRef.current);
+
+            // Get base64 image from stage
+            const base64Image = stageRef.current.toDataURL({
+                pixelRatio: 1 // or 2 if you want better quality
+            });
+
+            // Send to backend
+            await api.patch(`/projects/${projectId}`, {
+                info: JSON.parse(json),
+                previewImage: base64Image // assuming `preview` is your DB column
+            });
+
             lastSavedDesign.current = json;
             console.log('saved');
         } catch (error) {
@@ -157,10 +171,13 @@ const Design = observer(({ onSaveRef, zoom, containerSize, setZoom, onShapesChan
     };
 
     const debouncedSave = useRef(debounce(saveDesign, 500)).current;
+
     const handleShapesChange = (shapes) => {
         setShapes(shapes);
         onShapesChange(shapes);
+        editorStore.setStage(stageRef.current);
     };
+
     const handleStageClick = e => {
         const stage = stageRef.current.getStage();
         const clickedOnEmpty = e.target === stage;

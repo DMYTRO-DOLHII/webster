@@ -38,7 +38,7 @@ const Recents = () => {
     const resolveImageSrc = previewImage => {
         if (!previewImage) return 'https://via.placeholder.com/160x100?text=No+Preview';
         if (previewImage.startsWith('http')) return previewImage;
-        return `data:image/png;base64,${previewImage}`;
+        return `${previewImage}`;
     };
 
     const handleCreate = async (newProjectData) => {
