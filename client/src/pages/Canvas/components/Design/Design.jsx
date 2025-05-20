@@ -72,9 +72,9 @@ const SHAPE_DEFAULTS = {
     },
 };
 
-const Design = observer(({ onSaveRef, zoom, containerSize, setZoom, onShapesChange }) => {
+const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onShapesChange }) => {
     const stageRef = useRef(null);
-    const [shapes, setShapes] = useState([]);
+    // const [shapes, setShapes] = useState([]);
     const [selectedShapeId, setSelectedShapeId] = useState(null);
     const shapeRefs = useRef({});
 
@@ -87,14 +87,6 @@ const Design = observer(({ onSaveRef, zoom, containerSize, setZoom, onShapesChan
     const [currentLine, setCurrentLine] = useState(null);
 
     const lastSavedDesign = useRef(null);
-
-    // Whenever shapes update locally, notify parent via onShapesChange
-    // useEffect(() => {
-    //     if (typeof onShapesChange === 'function') {
-    //         onShapesChange(shapes);
-    //     }
-    //     console.log(shapes);
-    // }, [shapes, onShapesChange]);
 
     // Load saved design from localStorage or from editorStore
     useEffect(() => {
@@ -122,6 +114,7 @@ const Design = observer(({ onSaveRef, zoom, containerSize, setZoom, onShapesChan
                         loadedShapes = layer.children.map(shape => ({
                             id: shape.attrs.id || `${shape.className}-${Date.now()}`,
                             type: shape.className.toLowerCase(),
+                            visible: shape.visible !== false,
                             ...shape.attrs,
                         }));
                     }
@@ -158,7 +151,7 @@ const Design = observer(({ onSaveRef, zoom, containerSize, setZoom, onShapesChan
 
     const debouncedSave = useRef(debounce(saveDesign, 500)).current;
     const handleShapesChange = (shapes) => {
-        setShapes(shapes);
+        // setShapes(shapes);
         onShapesChange(shapes);
     };
     const handleStageClick = e => {
