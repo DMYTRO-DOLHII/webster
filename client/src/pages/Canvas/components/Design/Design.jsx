@@ -89,12 +89,12 @@ const Design = observer(({ onSaveRef, zoom, containerSize, setZoom, onShapesChan
     const lastSavedDesign = useRef(null);
 
     // Whenever shapes update locally, notify parent via onShapesChange
-    useEffect(() => {
-        if (typeof onShapesChange === 'function') {
-            onShapesChange(shapes);
-        }
-        console.log(shapes);
-    }, [shapes, onShapesChange]);
+    // useEffect(() => {
+    //     if (typeof onShapesChange === 'function') {
+    //         onShapesChange(shapes);
+    //     }
+    //     console.log(shapes);
+    // }, [shapes, onShapesChange]);
 
     // Load saved design from localStorage or from editorStore
     useEffect(() => {
@@ -188,6 +188,7 @@ const Design = observer(({ onSaveRef, zoom, containerSize, setZoom, onShapesChan
                 type: tool,
                 x: pointerPosition.x / zoom,
                 y: pointerPosition.y / zoom,
+                visible: true,
                 ...newShapeProps,
             };
 
@@ -309,6 +310,7 @@ const Design = observer(({ onSaveRef, zoom, containerSize, setZoom, onShapesChan
                             onTransformEnd={debouncedSave}
                             onMouseUp={debouncedSave}
                             onDblClick={() => setSelectedShapeId(id)}
+                            visible={shape.visible !== false}
                             ref={el => {
                                 if (el) {
                                     shapeRefs.current[id] = el;
