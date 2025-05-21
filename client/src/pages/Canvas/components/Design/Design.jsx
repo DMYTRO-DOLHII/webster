@@ -24,7 +24,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
 
     const { projectId } = useParams();
 
-    // Update refs when width and height change
     useEffect(() => {
         widthRef.current = width;
     }, [width]);
@@ -33,7 +32,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
         heightRef.current = height;
     }, [height]);
 
-    // Initialize design from localStorage or editorStore.projectJSON
     useEffect(() => {
         if (!containerSize.width || !containerSize.height) return;
 
@@ -64,7 +62,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
             console.error('Failed to parse designData', err);
         }
     }, [editorStore.projectJSON, containerSize, onShapesChange]);
-    // Save design to localStorage and backend
     const saveDesign = useCallback(async () => {
         if (!stageRef.current) return;
 
@@ -96,7 +93,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
         }
     }, [projectId]);
 
-    // Debounce saveDesign to limit save frequency
     const debouncedSave = useRef(debounce(saveDesign, 500)).current;
 
     useEffect(() => {
@@ -107,7 +103,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
     useEffect(() => {
         debouncedSave();
     }, [shapes]);
-    // Manage zoom scale when container or design size changes
     useEffect(() => {
         if (!width || !height || !containerSize.width || !containerSize.height) return;
 
@@ -124,7 +119,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
         console.log(width, height, containerSize, scale)
     }, [width, height, containerSize, setZoom]);
 
-    // Handle shape changes callback with latest stage reference
     const handleShapesChange = useCallback(
         updatedShapes => {
             onShapesChange(updatedShapes);
@@ -133,7 +127,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
         [onShapesChange]
     );
 
-    // Handle stage click - create new shape or select existing
     const handleStageClick = e => {
         const stage = stageRef.current.getStage();
         if (e.target === stage) {
@@ -146,7 +139,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
             const pointerPosition = stage.getPointerPosition();
             const currentColor = editorStore.selectedColor ?? '#000000';
 
-            // Prepare new shape props with color overrides
             const baseProps = { ...SHAPE_DEFAULTS[tool] };
             if ('fill' in baseProps) baseProps.fill = currentColor;
             if ('stroke' in baseProps) baseProps.stroke = currentColor;
@@ -168,7 +160,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
         }
     };
 
-    // Brush tool handlers
     const handleMouseDown = e => {
         if (editorStore.selectedTool !== 'brush') return;
 
@@ -214,7 +205,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
         setCurrentLineId(null);
     };
 
-    // Render the component
     return (
         <Stage
             ref={stageRef}
