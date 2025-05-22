@@ -25,13 +25,6 @@ const Canvas = () => {
       localStorage.removeItem("zoomValue");
     };
   }, []);
-  const handleToggleVisibility = (id) => {
-    setShapes((prevShapes) =>
-      prevShapes.map((shape) =>
-        shape.id === id ? { ...shape, visible: !shape.visible } : shape
-      )
-    );
-  };
 
   const handleSaveClick = () => {
     if (getDesignJsonRef.current) {
@@ -100,10 +93,10 @@ const Canvas = () => {
             containerSize={containerSize}
             initialData={projectData.json}
             setZoom={handleZoomChange}
-            onShapesChange={setShapes}
+            setShapes={setShapes}
           />
         </div>
-        <RightSidebar layers={shapes} onToggleVisibility={handleToggleVisibility} /> {/* Передаем слои в сайдбар */}
+        <RightSidebar layers={shapes} setShapes={setShapes} /> {/* Передаем слои в сайдбар */}
       </div>
       <Footer zoom={zoom} setZoom={handleZoomChange} />
     </div>

@@ -61,6 +61,7 @@ const Recents = () => {
                                 height: newProjectData.height,
                                 fill: newProjectData.background.toLowerCase(),
                                 listening: false,
+                                name: 'Background'
                             },
                             className: 'Rect',
                         },

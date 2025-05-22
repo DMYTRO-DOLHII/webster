@@ -8,7 +8,7 @@ import { editorStore } from '../../../../store/editorStore';
 import { api } from '../../../../services/api';
 import { SHAPE_COMPONENTS, SHAPE_DEFAULTS } from '../Shapes';
 
-const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onShapesChange }) => {
+const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setShapes }) => {
     const stageRef = useRef(null);
     const shapeRefs = useRef({});
     const isDrawing = useRef(false);
@@ -67,11 +67,11 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
                 ...shape.attrs,
             })) || [];
 
-            onShapesChange(loadedShapes);
+            setShapes(loadedShapes);
         } catch (err) {
             console.error('Failed to parse designData', err);
         }
-    }, [editorStore.projectJSON, containerSize, onShapesChange]);
+    }, [editorStore.projectJSON, containerSize, setShapes]);
     const saveDesign = useCallback(async () => {
         if (!stageRef.current) return;
 
@@ -176,6 +176,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
                 const newImage = {
                     id: `image-${Date.now()}`,
                     type: 'image',
+                    name: file.name,
                     image: img,
                     x: point.x, // Центрирование относительно курсора
                     y: point.y / zoom,
@@ -198,10 +199,10 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
 
     const handleShapesChange = useCallback(
         updatedShapes => {
-            onShapesChange(updatedShapes);
+            setShapes(updatedShapes);
             editorStore.setStage(stageRef.current);
         },
-        [onShapesChange]
+        [setShapes]
     );
 
     const handleStageClick = e => {
@@ -219,6 +220,13 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
             const baseProps = { ...SHAPE_DEFAULTS[tool] };
             if ('fill' in baseProps) baseProps.fill = currentColor;
             if ('stroke' in baseProps) baseProps.stroke = currentColor;
+            let name = 'Figure';
+
+            if (tool === 'text') {
+                name = baseProps.text || 'Text';
+            } else if (tool === 'image') {
+                name = baseProps.fileName || 'Image';
+            }
 
             const newShape = {
                 id: `${tool}-${Date.now()}`,
@@ -226,6 +234,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
                 x: pointerPosition.x / zoom,
                 y: pointerPosition.y / zoom,
                 visible: true,
+                name,
                 ...baseProps,
             };
 
@@ -268,7 +277,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
                 if (shape.id === currentLineId) {
                     return {
                         ...shape,
-                        points: [...shape.points, point.x / zoom , point.y / zoom ],
+                        points: [...shape.points, point.x / zoom, point.y / zoom],
                     };
                 }
                 return shape;

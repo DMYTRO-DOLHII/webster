@@ -1,5 +1,5 @@
 // shapes.js
-import { Stage, Layer, Circle, Rect, Line, Text, RegularPolygon, Star, Arrow, Transformer, Image } from 'react-konva';
+import { Circle, Rect, Line, Text, RegularPolygon, Star, Arrow, Image } from 'react-konva';
 export const SHAPE_COMPONENTS = {
     circle: Circle,
     rect: Rect,
