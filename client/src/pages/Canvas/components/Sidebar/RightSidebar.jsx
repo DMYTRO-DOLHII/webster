@@ -1,7 +1,10 @@
-import React from "react";
-import { Eye, EyeOff } from "lucide-react"; // Можно любую иконку использовать
+import React, { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 const RightSidebar = ({ layers, setShapes }) => {
+    const [editingLayerId, setEditingLayerId] = useState(null);
+    const [nameInputValue, setNameInputValue] = useState("");
+
     const handleToggleVisibility = (id) => {
         setShapes((prevShapes) =>
             prevShapes.map((shape) =>
@@ -13,20 +16,52 @@ const RightSidebar = ({ layers, setShapes }) => {
     const handleNameChange = (id, name) => {
         setShapes((prevShapes) =>
             prevShapes.map((shape) =>
-                shape.id === id ? { ...shape, visible: !shape.visible } : shape
+                shape.id === id ? { ...shape, name } : shape
             )
         );
     };
-    console.log(layers);
+
+    const startEditing = (id, currentName) => {
+        setEditingLayerId(id);
+        setNameInputValue(currentName);
+    };
+
+    const finishEditing = (id) => {
+        handleNameChange(id, nameInputValue.trim() || " ");
+        setEditingLayerId(null);
+    };
 
     return (
         <div className="pt-15 w-64 bg-[#1a1a1a] border-l border-[#2a2a2a] p-4 text-white overflow-auto">
             <div className="mb-6">
                 <h2 className="text-sm font-semibold mb-2 border-b border-[#333] pb-1">Layers</h2>
                 {layers && layers.length > 0 ? (
-                    layers.toReversed().map((layer, index) => (
-                        <div key={layer.id} className="flex justify-between items-center text-xs opacity-70 mb-1">
-                            <span>{`${layer.name} ${layers.length - index}`}</span>
+                    [...layers].reverse().map((layer, index) => (
+                        <div key={layer.id} className="flex justify-between items-center text-xs opacity-70 mb-1"
+                            onDoubleClick={() => startEditing(layer.id, layer.name)}
+                            title={layer.name}>
+                            {editingLayerId === layer.id ? (
+                                <input
+                                    className="bg-transparent border-b border-white text-white focus:outline-none px-1 mr-2 w-full"
+                                    value={nameInputValue}
+                                    autoFocus
+                                    onChange={(e) => setNameInputValue(e.target.value)}
+                                    onBlur={() => finishEditing(layer.id)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            finishEditing(layer.id);
+                                        } else if (e.key === "Escape") {
+                                            setEditingLayerId(null);
+                                        }
+                                    }}
+                                />
+                            ) : (
+                                <span
+                                    className="cursor-pointer truncate mr-2"
+                                >
+                                    {`${layer.name}`}
+                                </span>
+                            )}
                             <button
                                 onClick={() => handleToggleVisibility(layer.id)}
                                 title={layer.visible === false ? "Show layer" : "Hide layer"}

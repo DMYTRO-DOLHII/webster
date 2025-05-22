@@ -227,6 +227,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
             } else if (tool === 'image') {
                 name = baseProps.fileName || 'Image';
             }
+            name += ` ${shapes.length}`;
 
             const newShape = {
                 id: `${tool}-${Date.now()}`,
