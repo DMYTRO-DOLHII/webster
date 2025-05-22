@@ -70,6 +70,7 @@ const Recents = () => {
 											listening: false,
 										},
 										className: 'Rect',
+                                        name: 'Background'
 									},
 								],
 							},
