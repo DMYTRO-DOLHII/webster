@@ -41,52 +41,59 @@ const Recents = () => {
         return `${previewImage}`;
     };
 
-    const handleCreate = async (newProjectData) => {
-        if (!newProjectData.title.trim()) newProjectData.title = 'Untitled project';
-        editorStore.setProject(newProjectData);
-        const designObject = {
-            attrs: {
-                width: newProjectData.width,
-                height: newProjectData.height,
-            },
-            className: 'Stage',
-            children: [
-                {
-                    attrs: {},
-                    className: 'Layer',
-                    children: [
-                        {
-                            attrs: {
-                                width: newProjectData.width,
-                                height: newProjectData.height,
-                                fill: newProjectData.background.toLowerCase(),
-                                listening: false,
-                                name: 'Background'
-                            },
-                            className: 'Rect',
-                        },
-                    ],
-                },
-            ],
-        };
+    const handleCreate = async newProjectData => {
+		if (!newProjectData.title.trim()) {
+			newProjectData.title = 'Untitled project';
+		}
 
-        const response = await api.post('/projects', {
-            title: newProjectData.title,
-            previewImage: 'https://t4.ftcdn.net/jpg/02/01/98/73/360_F_201987380_YjR3kPM0PS3hF7Wvn7IBMmW1FWrMwruL.jpg',
-            info: designObject,
-            userId: userStore?.user?.id
-        });
+		editorStore.setProject(newProjectData);
 
-        console.log(response.data);
+		const designObject =
+			newProjectData.info && typeof newProjectData.info === 'object' && Object.keys(newProjectData.info).length > 0
+				? newProjectData.info
+				: {
+						attrs: {
+							width: newProjectData.width,
+							height: newProjectData.height,
+						},
+						className: 'Stage',
+						children: [
+							{
+								attrs: {},
+								className: 'Layer',
+								children: [
+									{
+										attrs: {
+											width: newProjectData.width,
+											height: newProjectData.height,
+											fill: newProjectData.background.toLowerCase(),
+											listening: false,
+										},
+										className: 'Rect',
+									},
+								],
+							},
+						],
+				  };
 
-        const designData = JSON.stringify(designObject);
-        localStorage.setItem('designData', designData);
-        navigate(`/canvas/${response.data.id}`);
-    };
+		const response = await api.post('/projects', {
+			title: newProjectData.title,
+			previewImage: 'https://t4.ftcdn.net/jpg/02/01/98/73/360_F_201987380_YjR3kPM0PS3hF7Wvn7IBMmW1FWrMwruL.jpg',
+			info: designObject,
+			userId: userStore?.user?.id,
+		});
+
+		console.log(response.data);
+
+		const designData = JSON.stringify(designObject);
+		localStorage.setItem('designData', designData);
+		navigate(`/canvas/${response.data.id}`);
+	};
+    
 
     const handleDeleteProject = async (projectId) => {
         try {
-            await api.delete(`/projects/${projectId}`); // Assumes your backend supports DELETE /projects/:id
+            await api.delete(`/projects/${projectId}`);
             setProjects((prev) => prev.filter((project) => project.id !== projectId));
         } catch (err) {
             console.error("Error deleting project:", err);
@@ -105,7 +112,7 @@ const Recents = () => {
 
             <section
                 aria-label="Recent templates"
-                className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 py-4 "
+                className="grid grid-cols-1 gap-4 py-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 "
             >
                 {projects.map((project) => (
                     <DesignCard
