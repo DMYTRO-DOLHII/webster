@@ -24,6 +24,16 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
 
     const { projectId } = useParams();
 
+    const [contextMenu, setContextMenu] = useState({
+        visible: false,
+        x: 0,
+        y: 0,
+        stageX: 0,
+        stageY: 0,
+    });
+    const fileInputRef = useRef(null);
+    const menuRef = useRef(null);
+
     useEffect(() => {
         widthRef.current = width;
     }, [width]);
@@ -119,6 +129,73 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
         console.log(width, height, containerSize, scale)
     }, [width, height, containerSize, setZoom]);
 
+    useEffect(() => {
+        const handleClickOutside = e => {
+            if (menuRef.current && !menuRef.current.contains(e.target)) {
+                setContextMenu({ ...contextMenu, visible: false });
+            }
+        };
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, []);
+
+    // Обработчик контекстного меню
+    const handleContextMenu = e => {
+        const stage = e.target.getStage();
+        if (e.target === stage) {
+            e.evt.preventDefault();
+            const pointerPos = stage.getPointerPosition();
+
+            // Сохраняем позицию в координатах stage с учетом трансформаций
+            setContextMenu({
+                visible: true,
+                x: e.evt.clientX,
+                y: e.evt.clientY,
+                stageX: pointerPos.x / zoom,
+                stageY: pointerPos.y / zoom,
+            });
+        }
+    };
+
+    const handleFileSelect = e => {
+        const file = e.target.files[0];
+        if (!file?.type.startsWith('image/')) return;
+
+        const reader = new FileReader();
+        reader.onload = event => {
+            const img = new window.Image();
+            img.src = event.target.result;
+
+            img.onload = () => {
+                // Автоматическое масштабирование с сохранением пропорций
+                const maxWidth = SHAPE_DEFAULTS.image.width;
+                const maxHeight = SHAPE_DEFAULTS.image.height;
+                const scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
+                const stage = stageRef.current.getStage();
+                const point = stage.getPointerPosition();
+                const newImage = {
+                    id: `image-${Date.now()}`,
+                    type: 'image',
+                    image: img,
+                    x: point.x, // Центрирование относительно курсора
+                    y: point.y / zoom,
+                    width: img.width * scale,
+                    height: img.height * scale,
+                    draggable: true,
+                };
+
+                handleShapesChange(prev => [...prev, newImage]);
+                setContextMenu({ ...contextMenu, visible: false });
+            };
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleDoubleClick = id => {
+        setSelectedShapeId(id);
+    };
+
+
     const handleShapesChange = useCallback(
         updatedShapes => {
             onShapesChange(updatedShapes);
@@ -171,7 +248,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
         const newLine = {
             id: `brush-${Date.now()}`,
             type: 'brush',
-            points: [point.x, point.y],
+            points: [point.x / zoom, point.y / zoom],
             ...SHAPE_DEFAULTS.brush,
             stroke: currentColor,
         };
@@ -191,7 +268,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
                 if (shape.id === currentLineId) {
                     return {
                         ...shape,
-                        points: [...shape.points, point.x, point.y],
+                        points: [...shape.points, point.x / zoom , point.y / zoom ],
                     };
                 }
                 return shape;
@@ -206,61 +283,83 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
     };
 
     return (
-        <Stage
-            ref={stageRef}
-            width={width * zoom}
-            height={height * zoom}
-            scaleX={zoom}
-            scaleY={zoom}
-            className="border-1"
-            onClick={handleStageClick}
-            onDblClick={() => { }}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-        >
-            <Layer>
-                {shapes.map(shape => {
-                    const Component = SHAPE_COMPONENTS[shape.type];
-                    if (!Component) return null;
+        <div className='relative'>
+            <Stage
+                ref={stageRef}
+                width={width * zoom}
+                height={height * zoom}
+                scaleX={zoom}
+                scaleY={zoom}
+                className="border-1"
+                onClick={handleStageClick}
+                onDblClick={e => { }}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onContextMenu={handleContextMenu}
+            >
+                <Layer>
+                    {shapes.map(shape => {
+                        const Component = SHAPE_COMPONENTS[shape.type];
+                        if (!Component) return null;
 
-                    const { id, type, ...shapeProps } = shape;
+                        const { id, type, ...shapeProps } = shape;
 
-                    return (
-                        <Component
-                            key={id}
-                            id={id}
-                            {...shapeProps}
-                            onDragEnd={debouncedSave}
-                            onTransformEnd={debouncedSave}
-                            onMouseUp={debouncedSave}
-                            onDblClick={() => setSelectedShapeId(id)}
-                            visible={shape.visible !== false}
-                            ref={el => {
-                                if (el) {
-                                    shapeRefs.current[id] = el;
-                                }
-                            }}
+                        return (
+                            <Component
+                                key={id}
+                                id={id}
+                                {...shapeProps}
+                                onDragEnd={debouncedSave}
+                                onTransformEnd={debouncedSave}
+                                onMouseUp={debouncedSave}
+                                onDblClick={() => handleDoubleClick(id)}
+                                visible={shape.visible !== false}
+                                ref={el => {
+                                    if (el) {
+                                        shapeRefs.current[id] = el;
+                                    }
+                                }}
+                            />
+                        );
+                    })}
+
+                    {selectedShapeId && shapeRefs.current[selectedShapeId] && (
+                        <Transformer
+                            nodes={[shapeRefs.current[selectedShapeId]]}
+                            resizeEnabled={true}
+                            rotateEnabled={true}
+                            borderStroke="black"
+                            borderDash={[6, 2]}
+                            anchorStroke="black"
+                            anchorFill="white"
+                            anchorSize={10}
+                            flipEnabled={true}
+                            keepRatio={true}
                         />
-                    );
-                })}
+                    )}
+                </Layer>
+            </Stage>
+            {contextMenu.visible && (
+                <div
+                    ref={menuRef}
+                    style={{
+                        position: 'fixed',
+                        left: contextMenu.x,
+                        top: contextMenu.y,
+                        backgroundColor: 'white',
+                        boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+                        zIndex: 1000,
+                    }}
+                >
+                    <div style={{ padding: '8px 16px', cursor: 'pointer' }} onClick={() => fileInputRef.current.click()}>
+                        Add Image
+                    </div>
+                </div>
+            )}
 
-                {selectedShapeId && shapeRefs.current[selectedShapeId] && (
-                    <Transformer
-                        nodes={[shapeRefs.current[selectedShapeId]]}
-                        resizeEnabled
-                        rotateEnabled
-                        borderStroke="black"
-                        borderDash={[6, 2]}
-                        anchorStroke="black"
-                        anchorFill="white"
-                        anchorSize={10}
-                        flipEnabled
-                        keepRatio
-                    />
-                )}
-            </Layer>
-        </Stage>
+            <input type='file' accept='image/*' ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileSelect} />
+        </div>
     );
 });
 

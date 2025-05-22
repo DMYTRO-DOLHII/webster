@@ -1,6 +1,5 @@
 // shapes.js
-import { Circle, Rect, Line, Text, RegularPolygon, Star, Arrow } from 'react-konva';
-
+import { Stage, Layer, Circle, Rect, Line, Text, RegularPolygon, Star, Arrow, Transformer, Image } from 'react-konva';
 export const SHAPE_COMPONENTS = {
     circle: Circle,
     rect: Rect,
@@ -12,12 +11,18 @@ export const SHAPE_COMPONENTS = {
     star: Star,
     arrow: Arrow,
     brush: Line,
+    image: Image,
 };
 
 export const SHAPE_DEFAULTS = {
     circle: { radius: 30, fill: 'red', draggable: true },
     rect: { width: 80, height: 40, fill: 'green', draggable: true },
     text: { text: 'Text', fontSize: 20, fill: 'white', draggable: true },
+    image: {
+        width: 200,
+        height: 200,
+        draggable: true,
+    },
     line: {
         points: [-30, -30, 30, 30],
         stroke: 'blue',
