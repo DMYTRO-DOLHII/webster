@@ -15,6 +15,9 @@ export class Project extends BaseEntity {
 	@Column({ type: 'json', nullable: true })
 	info: Record<string, any>;
 
+	@Column({ default: false })
+	isTemplate: boolean;
+
 	@CreateDateColumn()
 	createdAt: Date;
 

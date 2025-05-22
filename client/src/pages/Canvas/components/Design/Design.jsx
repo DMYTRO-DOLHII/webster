@@ -191,7 +191,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, onSh
                 if (shape.id === currentLineId) {
                     return {
                         ...shape,
-                        points: [...shape.points, point.x, point.y],
+                        points: [...shape.points, point.x / zoom, point.y / zoom],
                     };
                 }
                 return shape;
