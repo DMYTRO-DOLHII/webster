@@ -9,6 +9,9 @@ class EditorStore {
 	selectedColor = '#000000';
     projectJSON = null;
 
+    width = null;
+    height = null;
+
     stage = null;
 
 	constructor() {
@@ -45,6 +48,14 @@ class EditorStore {
 	setColor(color) {
 		this.selectedColor = color;
 	}
+
+    setWidth(width) {
+        this.width = width;
+    }
+
+    setHeight(height) {
+        this.height = height;
+    }
 }
 
 export const editorStore = new EditorStore();

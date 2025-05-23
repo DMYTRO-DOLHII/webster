@@ -71,3 +71,19 @@ export const SHAPE_DEFAULTS = {
         draggable: false,
     },
 };
+
+export const isText = (name) => name === "text";
+
+export const isShape = (name) => [
+    "circle",
+    "rect",
+    "line",
+    "triangle",
+    "pentagon",
+    "hexagon",
+    "star",
+    "arrow"
+].includes(name);
+
+
+

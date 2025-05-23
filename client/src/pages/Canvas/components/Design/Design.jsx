@@ -56,8 +56,12 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
 
             if (json.attrs?.width) {
                 setWidth(json.attrs.width);
+                editorStore.setWidth(json.attrs.width)
             };
-            if (json.attrs?.height) setHeight(json.attrs.height);
+            if (json.attrs?.height) {
+                setHeight(json.attrs.height);
+                editorStore.setHeight(json.attrs.height)
+            }
 
             const layer = json.children?.find(c => c.className === 'Layer');
             const loadedShapes = layer?.children?.map(shape => ({
@@ -72,6 +76,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
             console.error('Failed to parse designData', err);
         }
     }, [editorStore.projectJSON, containerSize, setShapes]);
+    
     const saveDesign = useCallback(async () => {
         if (!stageRef.current) return;
 
@@ -221,7 +226,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
             if ('fill' in baseProps) baseProps.fill = currentColor;
             if ('stroke' in baseProps) baseProps.stroke = currentColor;
             let name = 'Figure';
-
             if (tool === 'text') {
                 name = baseProps.text || 'Text';
             } else if (tool === 'image') {
@@ -261,6 +265,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
             points: [point.x / zoom, point.y / zoom],
             ...SHAPE_DEFAULTS.brush,
             stroke: currentColor,
+            name: 'Bruh'
         };
 
         handleShapesChange(prev => [...prev, newLine]);

@@ -180,7 +180,13 @@ const Header = ({ onSave }) => {
             await new Promise(res => setTimeout(res, 100));
             const designJson = localStorage.getItem('designData');
             if (!designJson) return alert('No design data to save!');
-            const hex = AsciiToHexadecimal(designJson);
+            const parsed = JSON.parse(designJson);
+            
+            parsed.attrs.width = editorStore.width;
+            parsed.attrs.height = editorStore.height;
+
+            const anotherDesignJSON = JSON.stringify(parsed);
+            const hex = AsciiToHexadecimal(anotherDesignJSON);
 
             const handle = await window.showSaveFilePicker({
                 suggestedName: 'design.mcokster',
