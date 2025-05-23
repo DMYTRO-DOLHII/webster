@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { editorStore } from '../../../store/editorStore';
 import { api } from '../../../services/api';
 
-const Recents = () => {
+const Projects = () => {
     const [projects, setProjects] = useState([]);
     const navigate = useNavigate();
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -138,4 +138,4 @@ const Recents = () => {
     );
 };
 
-export default Recents;
+export default Projects;

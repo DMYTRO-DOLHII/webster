@@ -31,6 +31,8 @@ const Header = ({ onSave }) => {
     const navigate = useNavigate();
     const { projectId } = useParams();
 
+    const projectName = editorStore.project.title;
+
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -141,7 +143,7 @@ const Header = ({ onSave }) => {
         try {
             const dataURL = editorStore.stage.toDataURL({ mimeType });
             const link = document.createElement('a');
-            link.download = `projectName.${extension}`;
+            link.download = `${projectName}.${extension}`;
             link.href = dataURL;
             document.body.appendChild(link);
             link.click();
@@ -157,7 +159,7 @@ const Header = ({ onSave }) => {
             const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF();
             pdf.addImage(imgData, 'PNG', 10, 10);
-            pdf.save('projectName.pdf');
+            pdf.save(projectName + '.pdf');
         } catch (err) {
             console.error('Failed to export as PDF:', err);
         }

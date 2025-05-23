@@ -300,7 +300,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
                 height={height * zoom}
                 scaleX={zoom}
                 scaleY={zoom}
-                className="border-1"
+                className="border-0 border-white shadow-[0px_0px_20px_0px_#9B34BA70]"
                 onClick={handleStageClick}
                 onDblClick={e => { }}
                 onMouseDown={handleMouseDown}
