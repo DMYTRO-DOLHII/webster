@@ -221,7 +221,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
             if ('fill' in baseProps) baseProps.fill = currentColor;
             if ('stroke' in baseProps) baseProps.stroke = currentColor;
             let name = 'Figure';
-
             if (tool === 'text') {
                 name = baseProps.text || 'Text';
             } else if (tool === 'image') {
@@ -261,6 +260,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
             points: [point.x / zoom, point.y / zoom],
             ...SHAPE_DEFAULTS.brush,
             stroke: currentColor,
+            name: 'Bruh'
         };
 
         handleShapesChange(prev => [...prev, newLine]);

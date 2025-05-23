@@ -7,6 +7,7 @@ const ItemTypes = {
 };
 
 const Layers = ({ layers, setShapes, setSelectedLayerId, selectedLayerId }) => {
+    console.log(layers);
     const [editingLayerId, setEditingLayerId] = useState(null);
     const [nameInputValue, setNameInputValue] = useState("");
     const [hoveredIndex, setHoveredIndex] = useState(null);
