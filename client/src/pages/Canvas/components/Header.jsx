@@ -7,6 +7,7 @@ import { api } from '../../../services/api';
 import toast from 'react-hot-toast';
 import { jsPDF } from 'jspdf';
 window.jspdf = { jsPDF };
+import { exportStageSVG } from 'react-konva-to-svg'
 
 const menuStructure = {
     File: [
@@ -17,11 +18,11 @@ const menuStructure = {
         'Save as Template',
         {
             label: 'Export As',
-            submenu: ['PNG', 'JPG', 'PDF'],
+            submenu: ['PNG', 'JPG', 'PDF', 'SVG'],
         },
     ],
     Edit: ['Step forward', 'Step backward', '---', 'Copy', 'Paste', '---', 'Transform'],
-    
+
 };
 
 const Header = ({ onSave }) => {
@@ -75,6 +76,10 @@ const Header = ({ onSave }) => {
                 case 'Export As → PDF':
                     handleExportAsPDF();
                     break;
+                case 'Export As → SVG':
+                    handleExportAsSVG();
+                    break;
+
                 default:
                     console.log(`${menu} → ${item}`);
             }
@@ -164,6 +169,25 @@ const Header = ({ onSave }) => {
             console.error('Failed to export as PDF:', err);
         }
     };
+
+    const handleExportAsSVG = async() => {
+        try {
+            const url = await exportStageSVG(editorStore.stage, false);
+
+            const link = document.createElement('a');
+            link.download = `${projectName}.svg`;
+            link.href = url;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('Failed to export as SVG:', err);
+            alert('Export to SVG failed.');
+        }
+    };
+
 
     const handleSaveAsTemplateClick = async () => {
         try {

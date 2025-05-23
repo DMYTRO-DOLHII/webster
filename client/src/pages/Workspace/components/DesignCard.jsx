@@ -38,7 +38,6 @@ const ProjectCard = ({ project, onDelete }) => {
         <article
             className="relative group flex gap-4 p-3 border h-[150px] border-[#222222] rounded-md cursor-pointer duration-300 hover:border-[#414141] hover:shadow-lg hover:shadow-[#a020f0]/30"
             onClick={() => {
-                editorStore.setProject(project)
                 navigate(`/canvas/${project.id}`)
             }}
         >
