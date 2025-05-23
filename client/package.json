@@ -39,6 +39,7 @@
     "react-konva-to-svg": "^1.0.2",
     "react-konva-utils": "^1.1.0",
     "react-router-dom": "^7.5.3",
+    "react-share": "^5.2.2",
     "react-slick": "^0.30.3",
     "react-type-animation": "^3.2.0",
     "slick-carousel": "^1.8.1",

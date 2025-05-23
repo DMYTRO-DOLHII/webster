@@ -7,6 +7,23 @@ import { api } from '../../../services/api';
 import toast from 'react-hot-toast';
 import { jsPDF } from 'jspdf';
 window.jspdf = { jsPDF };
+import {
+    FacebookShareButton,
+    TwitterShareButton,
+    LinkedinShareButton,
+    TelegramShareButton,
+    WhatsappShareButton,
+    RedditShareButton,
+    EmailShareButton,
+    FacebookIcon,
+    TwitterIcon,
+    LinkedinIcon,
+    TelegramIcon,
+    WhatsappIcon,
+    RedditIcon,
+    EmailIcon,
+} from 'react-share';
+import { FiLink } from 'react-icons/fi';
 import { exportStageSVG } from 'react-konva-to-svg'
 
 const menuStructure = {
@@ -22,34 +39,70 @@ const menuStructure = {
         },
     ],
     Edit: ['Step forward', 'Step backward', '---', 'Copy', 'Paste', '---', 'Transform'],
-
 };
 
 const Header = ({ onSave }) => {
     const [openMenu, setOpenMenu] = useState(null);
     const [openSubMenu, setOpenSubMenu] = useState(null);
+    const [showShare, setShowShare] = useState(false);
     const menuRef = useRef(null);
+    const shareRef = useRef(null);
     const navigate = useNavigate();
     const { projectId } = useParams();
 
-    const projectName = editorStore.project.title;
+    const [projectName, setProjectName] = useState('');
+    const shareUrl = window.location.href;
+
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            toast.success('Link copied to clipboard!', {
+                style: { background: '#333', color: '#fff' },
+            });
+        } catch (err) {
+            toast.error('Failed to copy link', {
+                style: { background: '#333', color: '#fff' },
+            });
+        }
+    };
+
 
     useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (menuRef.current && !menuRef.current.contains(e.target)) {
+        const handleClickOutside = e => {
+            if (menuRef.current && !menuRef.current.contains(e.target) && shareRef.current && !shareRef.current.contains(e.target)) {
                 setOpenMenu(null);
                 setOpenSubMenu(null);
+                setShowShare(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    useEffect(() => {
+        const storedProject = editorStore.project;
+        if (storedProject?.title) {
+            setProjectName(storedProject.title);
+        } else {
+            try {
+                const savedData = localStorage.getItem('designData');
+                if (savedData) {
+                    const parsed = JSON.parse(savedData);
+                    if (parsed.title) {
+                        setProjectName(parsed.title);
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load project title from localStorage:', err);
+            }
+        }
+    }, []);
+
     const handleLogoClick = () => navigate('/workspace');
 
-    const handleMenuToggle = (menuName) => {
+    const handleMenuToggle = menuName => {
         setOpenSubMenu(null);
-        setOpenMenu((prev) => (prev === menuName ? null : menuName));
+        setOpenMenu(prev => (prev === menuName ? null : menuName));
     };
 
     const handleMenuItemClick = async (menu, item) => {
@@ -79,7 +132,6 @@ const Header = ({ onSave }) => {
                 case 'Export As → SVG':
                     handleExportAsSVG();
                     break;
-
                 default:
                     console.log(`${menu} → ${item}`);
             }
@@ -89,17 +141,22 @@ const Header = ({ onSave }) => {
     const handleOpenMcOksterClick = async () => {
         try {
             const [fileHandle] = await window.showOpenFilePicker({
-                types: [{
-                    description: 'McOkster File',
-                    accept: { 'application/octet-stream': ['.mcokster'] },
-                }],
+                types: [
+                    {
+                        description: 'McOkster File',
+                        accept: { 'application/octet-stream': ['.mcokster'] },
+                    },
+                ],
                 excludeAcceptAllOption: true,
                 multiple: false,
             });
 
             const file = await fileHandle.getFile();
             const hexText = await file.text();
-            const ascii = hexText.match(/.{1,2}/g).map(b => String.fromCharCode(parseInt(b, 16))).join('');
+            const ascii = hexText
+                .match(/.{1,2}/g)
+                .map(b => String.fromCharCode(parseInt(b, 16)))
+                .join('');
             const json = JSON.parse(ascii);
 
             localStorage.setItem('designData', JSON.stringify(json));
@@ -127,10 +184,12 @@ const Header = ({ onSave }) => {
 
             const handle = await window.showSaveFilePicker({
                 suggestedName: 'design.mcokster',
-                types: [{
-                    description: 'McOkster File',
-                    accept: { 'application/octet-stream': ['.mcokster'] },
-                }],
+                types: [
+                    {
+                        description: 'McOkster File',
+                        accept: { 'application/octet-stream': ['.mcokster'] },
+                    },
+                ],
             });
 
             const writable = await handle.createWritable();
@@ -170,8 +229,10 @@ const Header = ({ onSave }) => {
         }
     };
 
-    const handleExportAsSVG = async() => {
+    const handleExportAsSVG = async () => {
         try {
+            console.log(editorStore.stage);
+            return;
             const url = await exportStageSVG(editorStore.stage, false);
 
             const link = document.createElement('a');
@@ -187,7 +248,6 @@ const Header = ({ onSave }) => {
             alert('Export to SVG failed.');
         }
     };
-
 
     const handleSaveAsTemplateClick = async () => {
         try {
@@ -213,10 +273,7 @@ const Header = ({ onSave }) => {
                 <nav className='flex space-x-5 text-sm'>
                     {Object.entries(menuStructure).map(([menuName, items]) => (
                         <div key={menuName} className='relative'>
-                            <div
-                                className='px-3 py-1 hover:bg-[#3a3a3a] cursor-pointer rounded'
-                                onClick={() => handleMenuToggle(menuName)}
-                            >
+                            <div className='px-3 py-1 hover:bg-[#3a3a3a] cursor-pointer rounded' onClick={() => handleMenuToggle(menuName)}>
                                 {menuName}
                             </div>
                             {openMenu === menuName && (
@@ -228,11 +285,7 @@ const Header = ({ onSave }) => {
 
                                         if (typeof item === 'string') {
                                             return (
-                                                <div
-                                                    key={item}
-                                                    onClick={() => handleMenuItemClick(menuName, item)}
-                                                    className='px-4 py-2 hover:bg-[#3a3a3a] cursor-pointer'
-                                                >
+                                                <div key={item} onClick={() => handleMenuItemClick(menuName, item)} className='px-4 py-2 hover:bg-[#3a3a3a] cursor-pointer'>
                                                     {item}
                                                 </div>
                                             );
@@ -243,9 +296,7 @@ const Header = ({ onSave }) => {
                                                 <div key={item.label} className='relative'>
                                                     <div
                                                         className='px-4 py-2 hover:bg-[#3a3a3a] cursor-pointer flex justify-between items-center'
-                                                        onClick={() =>
-                                                            setOpenSubMenu(prev => (prev === item.label ? null : item.label))
-                                                        }
+                                                        onClick={() => setOpenSubMenu(prev => (prev === item.label ? null : item.label))}
                                                     >
                                                         {item.label}
                                                         <span className='ml-2'>&#9654;</span>
@@ -276,10 +327,50 @@ const Header = ({ onSave }) => {
                 </nav>
             </div>
 
-            <div>
-                <button className='px-3 py-1 text-sm text-white bg-purple-600 rounded hover:bg-purple-700'>
+            <div className='relative' ref={shareRef}>
+                <button onClick={() => setShowShare(prev => !prev)} className='px-3 py-1 text-sm text-white bg-purple-600 rounded hover:bg-purple-700'>
                     Share
                 </button>
+
+                {showShare && (
+                    <div className='absolute right-0 mt-2 bg-[#2a2a2a] border border-[#444] rounded p-3 flex flex-wrap gap-3 z-50 max-w-xs'>
+                        <FacebookShareButton url={shareUrl} quote={projectName}>
+                            <FacebookIcon size={32} round />
+                        </FacebookShareButton>
+
+                        <TwitterShareButton url={shareUrl} title={projectName}>
+                            <TwitterIcon size={32} round />
+                        </TwitterShareButton>
+
+                        <LinkedinShareButton url={shareUrl} title={projectName}>
+                            <LinkedinIcon size={32} round />
+                        </LinkedinShareButton>
+
+                        <TelegramShareButton url={shareUrl} title={projectName}>
+                            <TelegramIcon size={32} round />
+                        </TelegramShareButton>
+
+                        <WhatsappShareButton url={shareUrl} title={projectName}>
+                            <WhatsappIcon size={32} round />
+                        </WhatsappShareButton>
+
+                        <RedditShareButton url={shareUrl} title={projectName}>
+                            <RedditIcon size={32} round />
+                        </RedditShareButton>
+
+                        <EmailShareButton url={shareUrl} subject={projectName} body={`Check this out: ${shareUrl}`}>
+                            <EmailIcon size={32} round />
+                        </EmailShareButton>
+
+                        <button
+                            onClick={handleCopy}
+                            className='flex items-center justify-center w-8 h-8 text-black transition bg-white rounded-full hover:opacity-80'
+                            title='Copy link'
+                        >
+                            <FiLink size={18} />
+                        </button>
+                    </div>
+                )}
             </div>
         </header>
     );

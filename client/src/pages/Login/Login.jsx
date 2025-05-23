@@ -6,6 +6,7 @@ import { useOAuth, useOAuthCallback } from '../../utils/oauth';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { userStore } from '../../store/userStore';
 import { redirectToStripeCheckout } from '../../utils/stripe';
+import toast from 'react-hot-toast';
 
 const Login = () => {
     const [login, setLogin] = useState('');
@@ -21,7 +22,6 @@ const Login = () => {
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        setLoading(true);
 
         const email = login.includes('@') ? login : '';
         setLogin(email ? '' : login);
@@ -39,7 +39,17 @@ const Login = () => {
             }
         } catch (error) {
             console.log(error);
-            setServerError(error.response?.data?.message || 'Login failed');
+            if (error.status === 401) {
+                toast.error('Invalid login or password')
+                return
+            }
+            if (error.status === 400) {
+                toast.error('User does not exist')
+                return
+            } else {
+                toast.error('Something went wrong. Please try again tommorow');
+                return;
+            }
         } finally {
             setLoading(false);
         }
