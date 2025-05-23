@@ -1,13 +1,13 @@
 import { useState } from "react";
 import Sidebar from "./components/Sidebar";
-import Recents from "./components/Recents";
+import Projects from "./components/Projects";
 import Templates from "./components/Templates";
 import Trash from "./components/Trash";
 import SettingWindow from "./components/SettingWindow";
 import { userStore } from "../../store/userStore";
 
 const Workspace = () => {
-    const [activeTab, setActiveTab] = useState("recents");
+    const [activeTab, setActiveTab] = useState("projects");
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     const renderContent = () => {
@@ -17,9 +17,9 @@ const Workspace = () => {
                 return <Templates />;
             case "trash":
                 return <Trash />;
-            case "recents":
+            case "projects":
             default:
-                return <Recents />;
+                return <Projects />;
         }
     };
 
@@ -38,9 +38,6 @@ const Workspace = () => {
                 <div className="absolute bottom-0 left-[-150px] w-500 h-50 bg-gradient-to-r from-[#9B34BA] to-[#4ab021] blur-[150px] opacity-20 pointer-events-none z-0 animated-circles"></div>
 
                 <div className="relative z-20 h-full">
-                    <h1 className="mb-3 text-sm font-normal text-white capitalize">
-                        {activeTab}
-                    </h1>
                     {renderContent()}
                 </div>
             </main>

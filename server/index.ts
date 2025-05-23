@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { json } from 'express'
 import { createUserAndDatabase } from './src/database/db.create'
 import { AppDataSource } from './src/database/data-source'
 import cors from 'cors'
@@ -32,6 +32,10 @@ const corsOptions = {
 }
 
 app.use(cors(corsOptions))
+
+app.use(json({
+    limit: '20mb'
+}));
 
 // 👉 Stripe webhook: needs raw body middleware BEFORE express.json()
 app.use(

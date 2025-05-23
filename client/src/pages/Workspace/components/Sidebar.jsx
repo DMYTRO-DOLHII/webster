@@ -56,9 +56,9 @@ const Sidebar = ({ activeTab, setActiveTab, onOpenSettings }) => {
             </div>
 
             <nav className="flex flex-col mt-2 text-[14px] font-normal text-[#b3b3b3]">
-                <button onClick={() => setActiveTab("recents")} className={`flex items-center gap-2 px-4 py-3 ${activeTab === 'recents' ? 'bg-[#3a1a5a] text-white' : 'hover:bg-[#222222]'} transition-colors`}>
+                <button onClick={() => setActiveTab("projects")} className={`flex items-center gap-2 px-4 py-3 ${activeTab === 'projects' ? 'bg-[#3a1a5a] text-white' : 'hover:bg-[#222222]'} transition-colors`}>
                     <FaClock className="text-[10px]" />
-                    Recents
+                    Projects
                 </button>
                 <button onClick={() => setActiveTab("templates")} className={`flex items-center gap-2 px-4 py-3 ${activeTab === 'templates' ? 'bg-[#3a1a5a] text-white' : 'hover:bg-[#222222]'} transition-colors`}>
                     <FaFileAlt className="text-[10px]" />
@@ -75,7 +75,7 @@ const Sidebar = ({ activeTab, setActiveTab, onOpenSettings }) => {
                 <div className="text-xs text-[#b3b3b3] mb-1">Your Plan</div>
 
                 <div
-                    className={`text-sm font-semibold mt-2 px-3 py-1 rounded-sm w-full text-center inline-block mb-3 shadow-md transition-all duration-300
+                    className={`text-sm font-semibold mt-2 px-3 py-3 rounded-sm w-full text-center inline-block mb-3 shadow-md transition-all duration-300
                             ${userStore?.user?.subscription === 'premium'
                             ? 'bg-gradient-to-r from-purple-600 to-indigo-500 text-white'
                             : userStore?.user?.subscription === 'advanced'

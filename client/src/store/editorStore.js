@@ -7,18 +7,27 @@ class EditorStore {
 	error = null;
 	selectedTool = null;
 	selectedColor = '#000000';
-    proejctJSON = null;
+    projectJSON = null;
+
+    width = null;
+    height = null;
+
+    stage = null;
 
 	constructor() {
 		makeAutoObservable(this);
 	}
 
+    setStage(stage) {
+        this.stage = stage;
+    }
+
 	setProject(projectData) {
 		this.project = projectData;
 	}
 
-    setProjectJSON(josn) {
-        this.proejctJSON = josn;
+    setProjectJSON(json) {
+        this.projectJSON = json;
     }
 
 	updateProject(updates) {
@@ -39,6 +48,14 @@ class EditorStore {
 	setColor(color) {
 		this.selectedColor = color;
 	}
+
+    setWidth(width) {
+        this.width = width;
+    }
+
+    setHeight(height) {
+        this.height = height;
+    }
 }
 
 export const editorStore = new EditorStore();

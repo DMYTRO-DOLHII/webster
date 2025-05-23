@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { userStore } from "../../../store/userStore";
 import { MoreHorizontal } from "lucide-react"; // or use any 3-dot icon
 import clsx from "clsx";
+import { api } from "../../../services/api";
+import { editorStore } from "../../../store/editorStore";
 
 const ProjectCard = ({ project, onDelete }) => {
     const navigate = useNavigate();
@@ -24,15 +26,20 @@ const ProjectCard = ({ project, onDelete }) => {
         };
     }, []);
 
-    const handleTitleChange = (e) => {
+    const handleTitleChange = async (e) => {
         setEditableTitle(e.target.value);
+        project.title = e.target.value;
+
+        await api.patch(`/projects/${project.id}`, { title: project.title });
         // TODO: Optional: debounce update to backend
     };
 
     return (
         <article
             className="relative group flex gap-4 p-3 border h-[150px] border-[#222222] rounded-md cursor-pointer duration-300 hover:border-[#414141] hover:shadow-lg hover:shadow-[#a020f0]/30"
-            onClick={() => navigate(`/canvas/${project.id}`)}
+            onClick={() => {
+                navigate(`/canvas/${project.id}`)
+            }}
         >
             {/* Three dots icon (only visible on hover) */}
             <button
@@ -48,7 +55,7 @@ const ProjectCard = ({ project, onDelete }) => {
             {/* Preview Image */}
             <img
                 alt="project preview"
-                className="object-cover w-40 h-24 rounded"
+                className="object-cover w-40 h-30 rounded"
                 src={project.imageUrl}
             />
 
