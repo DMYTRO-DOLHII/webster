@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { editorStore } from '../../../../store/editorStore';
-import { RxCursorArrow } from 'react-icons/rx';
-import { TbVector, TbBrush, TbCircle, TbRectangle, TbTriangle, TbStar, TbHexagon, TbPentagon, TbArrowRight, TbLine } from 'react-icons/tb';
-import { PiEraserBold } from 'react-icons/pi';
-import { LiaCropAltSolid } from 'react-icons/lia';
+import { LuMousePointer2 } from "react-icons/lu";
+import { TbCircle, TbRectangle, TbTriangle, TbStar, TbHexagon, TbPentagon, TbArrowRight, TbLine } from 'react-icons/tb';
+import { LuEraser } from "react-icons/lu";
+import { LuBrush } from "react-icons/lu";
+import { LuCrop } from "react-icons/lu";
 import { RiFontFamily } from 'react-icons/ri';
 import { BiSolidEyedropper } from 'react-icons/bi';
-import { IoIosSearch } from 'react-icons/io';
+import { LuSearch } from "react-icons/lu";
 import { observer } from 'mobx-react-lite';
 import { IoIosSwap } from "react-icons/io";
 
@@ -22,14 +23,13 @@ const shapeOptions = [
 ];
 
 const staticTools = [
-    { id: 'move', icon: <RxCursorArrow size={15} />, label: 'Move Tool' },
-    { id: 'select', icon: <TbVector size={15} />, label: 'Select Tool' },
-    { id: 'brush', icon: <TbBrush size={16} />, label: 'Brush Tool' },
-    { id: 'eraser', icon: <PiEraserBold size={17} />, label: 'Eraser Tool' },
-    { id: 'crop', icon: <LiaCropAltSolid size={19} />, label: 'Crop Tool' },
+    { id: 'move', icon: <LuMousePointer2 size={15} />, label: 'Move Tool' },
+    { id: 'brush', icon: <LuBrush size={16} />, label: 'Brush Tool' },
+    { id: 'eraser', icon: <LuEraser size={17} />, label: 'Eraser Tool' },
+    { id: 'crop', icon: <LuCrop size={17} />, label: 'Crop Tool' },
     { id: 'text', icon: <RiFontFamily size={15} />, label: 'Text Tool' },
     { id: 'picker', icon: <BiSolidEyedropper size={17} />, label: 'Color Picker' },
-    { id: 'zoom', icon: <IoIosSearch size={18} />, label: 'Zoom Tool' },
+    { id: 'zoom', icon: <LuSearch size={18} />, label: 'Zoom Tool' },
 ];
 
 const LeftSidebar = observer(() => {
@@ -79,12 +79,11 @@ const LeftSidebar = observer(() => {
                 if (tool.id === 'crop') {
                     return (
                         <React.Fragment key={tool.id}>
-                            <div className='relative mt-1 mb-2' ref={shapeBtnRef}>
+                            <div className='relative m-0' ref={shapeBtnRef}>
                                 <button
                                     onClick={() => editorStore.setTool(activeShapeTool)}
                                     onDoubleClick={handleShapeDoubleClick}
-                                    className={`hover:text-[#df75ff] transition-colors text-[1.1rem] mt-1 ${editorStore.selectedTool === activeShapeTool ? 'text-[#9B34BA]' : 'text-white'
-                                        }`}
+                                    className={`p-3 mb-1 rounded-md hover:text-[#df75ff] transition-colors text-[1.1rem] ${editorStore.selectedTool === activeShapeTool ? 'text-[#9B34BA] bg-white/10' : 'text-white'}`}
                                     title='Shape Tool (Double-click to change)'
                                 >
                                     {shapeToolIcon}
@@ -108,7 +107,7 @@ const LeftSidebar = observer(() => {
 
                             <button
                                 title={tool.label}
-                                className={`hover:text-[#df75ff] transition-colors text-[1.1rem] mt-1 ${tool.id === editorStore.selectedTool ? 'text-[#9B34BA]' : 'text-white'}`}
+                                className={`p-3 mb-1 rounded-md hover:text-[#df75ff] transition-colors text-[1.1rem] ${tool.id === editorStore.selectedTool ? 'text-[#9B34BA] bg-white/10' : 'text-white'}`}
                                 onClick={() => editorStore.setTool(tool.id)}
                             >
                                 {tool.icon}
@@ -121,7 +120,7 @@ const LeftSidebar = observer(() => {
                     <button
                         key={tool.id}
                         title={tool.label}
-                        className={`hover:text-[#df75ff] transition-colors text-[1.1rem] mt-1 ${tool.id === editorStore.selectedTool ? 'text-[#9B34BA]' : 'text-white'}`}
+                        className={`p-3 mb-1 rounded-md hover:text-[#df75ff] transition-colors text-[1.1rem] ${tool.id === editorStore.selectedTool ? 'text-[#9B34BA] bg-white/10' : 'text-white'}`}
                         onClick={() => editorStore.setTool(tool.id)}
                     >
                         {tool.icon}
@@ -147,7 +146,7 @@ const LeftSidebar = observer(() => {
                     setColor(secondColor);
                     setSecondColor(temp);
                     editorStore.setColor(secondColor);
-                }}/>
+                }} />
                 <input
                     id='colorPicker'
                     type='color'

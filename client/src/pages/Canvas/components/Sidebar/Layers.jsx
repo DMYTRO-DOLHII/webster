@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useDrag, useDrop } from "react-dnd";
+import { LuAsterisk } from "react-icons/lu";
 
 const ItemTypes = {
     LAYER: 'layer',
 };
 
 const Layers = ({ layers, setShapes, setSelectedLayerId, selectedLayerId }) => {
-    console.log(layers);
     const [editingLayerId, setEditingLayerId] = useState(null);
     const [nameInputValue, setNameInputValue] = useState("");
     const [hoveredIndex, setHoveredIndex] = useState(null);
@@ -76,7 +76,7 @@ const Layers = ({ layers, setShapes, setSelectedLayerId, selectedLayerId }) => {
             <div
                 ref={node => drag(drop(node))}
                 key={layer.id}
-                className={`flex justify-between items-center text-xs mb-1 px-2 py-1 rounded cursor-pointer 
+                className={`flex justify-between items-center text-xs mb-1 px-2 py-2 rounded cursor-pointer 
                     ${selectedLayerId === layer.id ? 'bg-blue-600' : 'opacity-70 hover:bg-[#2a2a2a]'}`}
                 onDoubleClick={() => startEditing(layer.id, layer.name)}
                 onClick={() => {

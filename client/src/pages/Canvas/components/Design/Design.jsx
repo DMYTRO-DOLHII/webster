@@ -7,6 +7,7 @@ import { observer } from 'mobx-react-lite';
 import { editorStore } from '../../../../store/editorStore';
 import { api } from '../../../../services/api';
 import { SHAPE_COMPONENTS, SHAPE_DEFAULTS } from '../Shapes';
+import { TbVersionsOff } from 'react-icons/tb';
 
 const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setShapes }) => {
     const stageRef = useRef(null);
@@ -71,12 +72,26 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
                 ...shape.attrs,
             })) || [];
 
-            setShapes(loadedShapes);
+            const shapedFromJSON = loadedShapes.map(shape => {
+                if (shape.type === 'image') {
+                    const img = new window.Image();
+                    img.src = shape.img64;
+
+                    return {
+                        ...shape,
+                        image: img
+                    }
+                }
+
+                return shape;
+            })
+
+            setShapes(shapedFromJSON);
         } catch (err) {
             console.error('Failed to parse designData', err);
         }
     }, [editorStore.projectJSON, containerSize, setShapes]);
-    
+
     const saveDesign = useCallback(async () => {
         if (!stageRef.current) return;
 
@@ -144,6 +159,55 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
         return () => document.removeEventListener('click', handleClickOutside);
     }, []);
 
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            const selectedShape = Object.values(shapeRefs.current).find(
+                shape => shape._id === selectedShapeId
+            );
+
+            if (!selectedShape) return;
+
+            const step = e.shiftKey ? 10 : 1;
+            let dx = 0;
+            let dy = 0;
+
+            switch (e.key) {
+                case 'ArrowUp':
+                    dy = -step;
+                    break;
+                case 'ArrowDown':
+                    dy = step;
+                    break;
+                case 'ArrowLeft':
+                    dx = -step;
+                    break;
+                case 'ArrowRight':
+                    dx = step;
+                    break;
+                default:
+                    return;
+            }
+
+            e.preventDefault();
+
+            // Move the shape
+            selectedShape.position({
+                x: selectedShape.x() + dx,
+                y: selectedShape.y() + dy,
+            });
+
+            selectedShape.getLayer().batchDraw();
+
+            // Save changes
+            debouncedSave();
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [selectedShapeId]);
+
     // Обработчик контекстного меню
     const handleContextMenu = e => {
         const stage = e.target.getStage();
@@ -188,6 +252,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
                     width: img.width * scale,
                     height: img.height * scale,
                     draggable: true,
+                    img64: event.target.result
                 };
 
                 handleShapesChange(prev => [...prev, newImage]);

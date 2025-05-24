@@ -106,7 +106,7 @@ const ProjectCard = ({ project, onDelete }) => {
                                 onDelete?.(); // safe optional chaining
                                 setIsDropdownOpen(false);
                             }}
-                            className="w-full text-left hover:text-red-600">Move to Trash</button>
+                            className="w-full text-left hover:text-red-600">Delete Project</button>
                     </div>
                 </div>
             )}
