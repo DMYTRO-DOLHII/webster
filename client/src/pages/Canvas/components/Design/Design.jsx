@@ -3,7 +3,7 @@ import { Stage, Layer, Transformer } from 'react-konva';
 import { useParams } from 'react-router-dom';
 import { debounce } from 'lodash';
 import { observer } from 'mobx-react-lite';
-
+import { Rect } from 'react-konva';
 import { editorStore } from '../../../../store/editorStore';
 import { api } from '../../../../services/api';
 import { SHAPE_COMPONENTS, SHAPE_DEFAULTS } from '../Shapes';
@@ -22,6 +22,14 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
 
     const [width, setWidth] = useState(0);
     const [height, setHeight] = useState(0);
+
+    const [cropRect, setCropRect] = useState({
+        x: 100,
+        y: 100,
+        width: 300,
+        height: 300,
+    });
+    const cropRef = useRef(null);
 
     const { projectId } = useParams();
 
@@ -57,20 +65,21 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
 
             if (json.attrs?.width) {
                 setWidth(json.attrs.width);
-                editorStore.setWidth(json.attrs.width)
-            };
+                editorStore.setWidth(json.attrs.width);
+            }
             if (json.attrs?.height) {
                 setHeight(json.attrs.height);
-                editorStore.setHeight(json.attrs.height)
+                editorStore.setHeight(json.attrs.height);
             }
 
             const layer = json.children?.find(c => c.className === 'Layer');
-            const loadedShapes = layer?.children?.map(shape => ({
-                id: shape.attrs.id || `${shape.className}-${Date.now()}`,
-                type: shape.className.toLowerCase(),
-                visible: shape.visible !== false,
-                ...shape.attrs,
-            })) || [];
+            const loadedShapes =
+                layer?.children?.map(shape => ({
+                    id: shape.attrs.id || `${shape.className}-${Date.now()}`,
+                    type: shape.className.toLowerCase(),
+                    visible: shape.visible !== false,
+                    ...shape.attrs,
+                })) || [];
 
             const shapedFromJSON = loadedShapes.map(shape => {
                 if (shape.type === 'image') {
@@ -130,9 +139,11 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
             onSaveRef(() => stageRef.current?.toJSON());
         }
     }, [onSaveRef]);
+
     useEffect(() => {
         debouncedSave();
     }, [shapes]);
+
     useEffect(() => {
         if (!width || !height || !containerSize.width || !containerSize.height) return;
 
@@ -146,7 +157,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
         const scaleY = containerSize.height / height;
         const scale = Math.min(scaleX, scaleY, 1);
         setZoom(scale);
-        console.log(width, height, containerSize, scale)
+        console.log(width, height, containerSize, scale);
     }, [width, height, containerSize, setZoom]);
 
     useEffect(() => {
@@ -208,14 +219,12 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
         };
     }, [selectedShapeId]);
 
-    // Обработчик контекстного меню
     const handleContextMenu = e => {
         const stage = e.target.getStage();
         if (e.target === stage) {
             e.evt.preventDefault();
             const pointerPos = stage.getPointerPosition();
 
-            // Сохраняем позицию в координатах stage с учетом трансформаций
             setContextMenu({
                 visible: true,
                 x: e.evt.clientX,
@@ -265,7 +274,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
     const handleDoubleClick = id => {
         setSelectedShapeId(id);
     };
-
 
     const handleShapesChange = useCallback(
         updatedShapes => {
@@ -330,7 +338,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
             points: [point.x / zoom, point.y / zoom],
             ...SHAPE_DEFAULTS.brush,
             stroke: currentColor,
-            name: 'Bruh'
+            name: 'Bruh',
         };
 
         handleShapesChange(prev => [...prev, newLine]);
@@ -362,15 +370,62 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
         setCurrentLineId(null);
     };
 
+    const handleCrop = () => {
+        if (!cropRect) return;
+
+        const croppedShapes = shapes
+            .map(shape => {
+                const { x, y, width = 0, height = 0 } = shape;
+
+                const intersects = x + width > cropRect.x && x < cropRect.x + cropRect.width && y + height > cropRect.y && y < cropRect.y + cropRect.height;
+
+                if (!intersects) return null;
+
+                return {
+                    ...shape,
+                    x: shape.x - cropRect.x,
+                    y: shape.y - cropRect.y,
+                };
+            })
+            .filter(Boolean);
+
+        setShapes(croppedShapes);
+        setWidth(cropRect.width);
+        setHeight(cropRect.height);
+        editorStore.setWidth(cropRect.width);
+        editorStore.setHeight(cropRect.height);
+        editorStore.setTool("move");
+        setCropRect(null);
+    };
+
     return (
         <div className='relative'>
+            {editorStore.selectedTool === 'crop' && (
+                <button
+                    onClick={handleCrop}
+                    style={{
+                        position: 'absolute',
+                        top: '10px',
+                        right: '10px',
+                        zIndex: 1000,
+                        padding: '8px 16px',
+                        backgroundColor: '#9B34BA',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                    }}
+                >
+                    Apply Crop
+                </button>
+            )}
             <Stage
                 ref={stageRef}
                 width={width * zoom}
                 height={height * zoom}
                 scaleX={zoom}
                 scaleY={zoom}
-                className="border-0 border-white shadow-[0px_0px_20px_0px_#9B34BA70]"
+                className='border-0 border-white shadow-[0px_0px_20px_0px_#9B34BA70]'
                 onClick={handleStageClick}
                 onDblClick={e => { }}
                 onMouseDown={handleMouseDown}
@@ -379,6 +434,68 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
                 onContextMenu={handleContextMenu}
             >
                 <Layer>
+                    {editorStore.selectedTool === 'crop' && cropRect && (
+                        <>
+                            <Rect x={0} y={0} width={width} height={cropRect.y} fill='rgba(0, 0, 0, 0.5)' />
+                            <Rect x={0} y={cropRect.y} width={cropRect.x} height={cropRect.height} fill='rgba(0, 0, 0, 0.5)' />
+                            <Rect x={cropRect.x + cropRect.width} y={cropRect.y} width={width - cropRect.x - cropRect.width} height={cropRect.height} fill='rgba(0, 0, 0, 0.5)' />
+                            <Rect x={0} y={cropRect.y + cropRect.height} width={width} height={height - cropRect.y - cropRect.height} fill='rgba(0, 0, 0, 0.5)' />
+
+                            <Rect
+                                ref={cropRef}
+                                {...cropRect}
+                                stroke='black'
+                                strokeWidth={4}
+                                dash={[10, 4]}
+                                draggable
+                                onDragEnd={e => {
+                                    setCropRect({
+                                        ...cropRect,
+                                        x: Math.max(0, Math.min(e.target.x(), width - cropRect.width)),
+                                        y: Math.max(0, Math.min(e.target.y(), height - cropRect.height)),
+                                    });
+                                }}
+                                onTransformEnd={e => {
+                                    const node = e.target;
+                                    const scaleX = node.scaleX();
+                                    const scaleY = node.scaleY();
+
+                                    setCropRect({
+                                        x: Math.max(0, node.x()),
+                                        y: Math.max(0, node.y()),
+                                        width: Math.max(50, Math.min(node.width() * scaleX, width - node.x())),
+                                        height: Math.max(50, Math.min(node.height() * scaleY, height - node.y())),
+                                    });
+
+                                    node.scaleX(1);
+                                    node.scaleY(1);
+                                }}
+                            />
+
+                            <Rect
+                                {...cropRect}
+                                stroke='black'
+                                strokeWidth={2}
+                                dash={[10, 4]}
+                                listening={false}
+                            />
+                        </>
+                    )}
+                    {editorStore.selectedTool === 'crop' && cropRef.current && (
+                        <Transformer
+                            nodes={[cropRef.current]}
+                            boundBoxFunc={(oldBox, newBox) => {
+                                if (newBox.width < 50 || newBox.height < 50) return oldBox;
+                                return {
+                                    ...newBox,
+                                    x: Math.max(0, Math.min(newBox.x, width - newBox.width)),
+                                    y: Math.max(0, Math.min(newBox.y, height - newBox.height)),
+                                    width: Math.min(newBox.width, width - newBox.x),
+                                    height: Math.min(newBox.height, height - newBox.y),
+                                };
+                            }}
+                        />
+                    )}
                     {shapes.map(shape => {
                         const Component = SHAPE_COMPONENTS[shape.type];
                         if (!Component) return null;
@@ -403,16 +520,15 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
                             />
                         );
                     })}
-
                     {selectedShapeId && shapeRefs.current[selectedShapeId] && (
                         <Transformer
                             nodes={[shapeRefs.current[selectedShapeId]]}
                             resizeEnabled={true}
                             rotateEnabled={true}
-                            borderStroke="black"
+                            borderStroke='black'
                             borderDash={[6, 2]}
-                            anchorStroke="black"
-                            anchorFill="white"
+                            anchorStroke='black'
+                            anchorFill='white'
                             anchorSize={10}
                             flipEnabled={true}
                             keepRatio={true}
@@ -444,3 +560,4 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
 });
 
 export default Design;
+
