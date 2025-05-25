@@ -16,7 +16,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
     const widthRef = useRef(0);
     const heightRef = useRef(0);
 
-    const [selectedShapeId, setSelectedShapeId] = useState(null);
     const [currentLineId, setCurrentLineId] = useState(null);
 
     const [width, setWidth] = useState(0);
@@ -193,7 +192,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
     };
 
     const handleDoubleClick = id => {
-        setSelectedShapeId(id);
+        editorStore.setSeletedShapeId(id);
     };
 
 
@@ -210,7 +209,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
         if (e.target === stage) {
             const tool = editorStore.selectedTool;
             if (!SHAPE_DEFAULTS[tool] || tool === 'brush') {
-                setSelectedShapeId(null);
+        editorStore.setSeletedShapeId(null);
                 return;
             }
 
@@ -239,10 +238,10 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
             };
 
             handleShapesChange(prev => [...prev, newShape]);
-            setSelectedShapeId(newShape.id);
+                    editorStore.setSeletedShapeId(newShape.id);
         } else {
             const clickedId = e.target._id || e.target.attrs.id;
-            if (clickedId) setSelectedShapeId(clickedId);
+            if (clickedId)         editorStore.setSeletedShapeId(clickedId);
         }
     };
 
@@ -334,9 +333,9 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
                         );
                     })}
 
-                    {selectedShapeId && shapeRefs.current[selectedShapeId] && (
+                    {editorStore.selectedShapeId && shapeRefs.current[editorStore.selectedShapeId] && (
                         <Transformer
-                            nodes={[shapeRefs.current[selectedShapeId]]}
+                            nodes={[shapeRefs.current[editorStore.selectedShapeId]]}
                             resizeEnabled={true}
                             rotateEnabled={true}
                             borderStroke="black"

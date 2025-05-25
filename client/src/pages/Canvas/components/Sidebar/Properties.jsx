@@ -1,8 +1,10 @@
 import React from 'react';
 import { isShape, isText } from "../Shapes";
 import { Bold, Italic, Underline, Strikethrough, AlignLeft, AlignCenter, AlignRight } from "lucide-react";
+import { editorStore } from '../../../../store/editorStore';
+import { observer } from 'mobx-react-lite';
 
-const Properties = ({ selectedLayerId, layers, setShapes }) => {
+const Properties = observer(({ layers, setShapes }) => {
     const updateShape = (key, value, selectedLayer) => {
         setShapes(prev =>
             prev.map(shape =>
@@ -11,7 +13,7 @@ const Properties = ({ selectedLayerId, layers, setShapes }) => {
         );
     };
 
-    if (!selectedLayerId) {
+    if (!editorStore.selectedShapeId) {
         return (
             <div className="mb-6">
                 <h2 className="text-sm font-semibold mb-2 border-b border-[#333] pb-1">Properties</h2>
@@ -20,7 +22,7 @@ const Properties = ({ selectedLayerId, layers, setShapes }) => {
         )
     }
 
-    const selectedLayer = layers.find(layer => layer.id === selectedLayerId);
+    const selectedLayer = layers.find(layer => layer.id === editorStore.selectedShapeId);
     if (!selectedLayer) return null;
 
     // Because fontStyle might contain multiple styles e.g. "italic bold", we should handle toggling carefully for bold and italic separately.
@@ -56,6 +58,7 @@ const Properties = ({ selectedLayerId, layers, setShapes }) => {
         const current = selectedLayer.textDecoration || "";
         updateShape("textDecoration", current === "line-through" ? "" : "line-through", selectedLayer);
     };
+    console.log(selectedLayer.fill);
 
     return (
         <div className="mb-6">
@@ -69,7 +72,7 @@ const Properties = ({ selectedLayerId, layers, setShapes }) => {
                             <input
                                 type="color"
                                 className="w-10 h-6 border-none rounded"
-                                value={selectedLayer.fill}
+                                value={selectedLayer.fill === "white" ? "#ffffff" : selectedLayer.fill || "#000000"}
                                 onChange={(e) => updateShape("fill", e.target.value, selectedLayer)}
                             />
                         </div>
@@ -206,7 +209,7 @@ const Properties = ({ selectedLayerId, layers, setShapes }) => {
             </div>
         </div>
     );
-};
+});
 
 export default Properties;
 

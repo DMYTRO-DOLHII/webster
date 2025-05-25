@@ -11,8 +11,14 @@ class EditorStore {
 
     stage = null;
 
+	selectedShapeId = null;
+
 	constructor() {
 		makeAutoObservable(this);
+	}
+
+	setSeletedShapeId(selectedShapeId) {
+		this.selectedShapeId = selectedShapeId;
 	}
 
     setStage(stage) {

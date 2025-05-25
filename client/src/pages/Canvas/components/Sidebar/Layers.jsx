@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useDrag, useDrop } from "react-dnd";
+import { editorStore } from "../../../../store/editorStore";
+import { observer } from "mobx-react-lite";
 
 const ItemTypes = {
     LAYER: 'layer',
 };
 
-const Layers = ({ layers, setShapes, setSelectedLayerId, selectedLayerId }) => {
+const Layers = ({ layers, setShapes }) => {
     console.log(layers);
     const [editingLayerId, setEditingLayerId] = useState(null);
     const [nameInputValue, setNameInputValue] = useState("");
@@ -47,7 +49,7 @@ const Layers = ({ layers, setShapes, setSelectedLayerId, selectedLayerId }) => {
         setEditingLayerId(null);
     };
 
-    const LayerItem = ({ layer, index }) => {
+    const LayerItem = observer(({ layer, index }) => {
         const [{ isDragging }, drag] = useDrag({
             type: ItemTypes.LAYER,
             item: { index },
@@ -77,10 +79,10 @@ const Layers = ({ layers, setShapes, setSelectedLayerId, selectedLayerId }) => {
                 ref={node => drag(drop(node))}
                 key={layer.id}
                 className={`flex justify-between items-center text-xs mb-1 px-2 py-1 rounded cursor-pointer 
-                    ${selectedLayerId === layer.id ? 'bg-blue-600' : 'opacity-70 hover:bg-[#2a2a2a]'}`}
+                    ${editorStore.selectedShapeId === layer.id ? 'bg-blue-600' : 'opacity-70 hover:bg-[#2a2a2a]'}`}
                 onDoubleClick={() => startEditing(layer.id, layer.name)}
                 onClick={() => {
-                    setSelectedLayerId(layer.id);
+                    editorStore.setSeletedShapeId(layer.id);
                     setHoveredIndex(null);
                 }}
                 title={layer.name}
@@ -113,7 +115,7 @@ const Layers = ({ layers, setShapes, setSelectedLayerId, selectedLayerId }) => {
                 </button>
             </div>
         );
-    };
+    });
 
     return (
         <div className="mb-6">
