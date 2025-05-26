@@ -238,6 +238,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
     const handleDeleteShape = () => {
         if (!contextMenu.shapeId) return;
         setShapes(prev => prev.filter(shape => shape.id !== contextMenu.shapeId));
+        if (editorStore.selectedShapeId === contextMenu.shapeId) editorStore.setShape(null);
         setContextMenu({ visible: false, x: 0, y: 0, stageX: 0, stageY: 0, shapeId: null });
     };
 

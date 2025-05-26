@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Trash2 } from "lucide-react";
 import { useDrag, useDrop } from "react-dnd";
 import { editorStore } from "../../../../store/editorStore";
 import { observer } from "mobx-react-lite";
@@ -9,7 +9,6 @@ const ItemTypes = {
 };
 
 const Layers = ({ layers, setShapes }) => {
-    console.log(layers);
     const [editingLayerId, setEditingLayerId] = useState(null);
     const [nameInputValue, setNameInputValue] = useState("");
     const [hoveredIndex, setHoveredIndex] = useState(null);
@@ -19,11 +18,16 @@ const Layers = ({ layers, setShapes }) => {
             const backgroundLayer = layers.find(layer => layer.name.toLowerCase() === 'background');
             if (backgroundLayer) {
                 editorStore.setShape(backgroundLayer.id);
-            } else if (layers.length > 0) {
-                editorStore.setShape(layers[0].id);
+            } else{
+                editorStore.setShape(null);
             }
         }
     }, [layers]);
+
+    const handleDeleteLayer = id => {
+        setShapes(prev => prev.filter(shape => shape.id !== id));
+        if (editorStore.selectedShapeId === id) editorStore.setShape(null);
+    };
 
     const handleToggleVisibility = (id) => {
         setShapes(prev =>
@@ -114,16 +118,28 @@ const Layers = ({ layers, setShapes }) => {
                 ) : (
                     <span className="truncate mr-2">{layer.name}</span>
                 )}
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        handleToggleVisibility(layer.id);
-                    }}
-                    title={layer.visible === false ? "Show layer" : "Hide layer"}
-                    className="ml-2 text-white hover:text-gray-400"
-                >
-                    {layer.visible === false ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
+                <div className='flex items-center gap-1'>
+                    <button
+                        onClick={e => {
+                            e.stopPropagation();
+                            handleToggleVisibility(layer.id);
+                        }}
+                        title={layer.visible === false ? 'Show layer' : 'Hide layer'}
+                        className='text-white hover:text-gray-400'
+                    >
+                        {layer.visible === false ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                    <button
+                        onClick={e => {
+                            e.stopPropagation();
+                            handleDeleteLayer(layer.id);
+                        }}
+                        title='Delete layer'
+                        className='text-white hover:text-red-500'
+                    >
+                        <Trash2 size={16} />
+                    </button>
+                </div>
             </div>
         );
     });
