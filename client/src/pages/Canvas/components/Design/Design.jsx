@@ -192,7 +192,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
     };
 
     const handleDoubleClick = id => {
-        editorStore.setSeletedShapeId(id);
+        editorStore.setShape(id);
     };
 
 
@@ -209,7 +209,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
         if (e.target === stage) {
             const tool = editorStore.selectedTool;
             if (!SHAPE_DEFAULTS[tool] || tool === 'brush') {
-        editorStore.setSeletedShapeId(null);
+                editorStore.setShape(null);
                 return;
             }
 
@@ -238,10 +238,16 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
             };
 
             handleShapesChange(prev => [...prev, newShape]);
-                    editorStore.setSeletedShapeId(newShape.id);
+            setTimeout(() => {
+                editorStore.setShape(newShape.id);
+            }, 0);
         } else {
-            const clickedId = e.target._id || e.target.attrs.id;
-            if (clickedId)         editorStore.setSeletedShapeId(clickedId);
+            const clickedId = e.target.attrs.id || e.target._id;
+            if (clickedId) {
+                editorStore.setShape(clickedId);
+                editorStore.setTool('move');
+                console.log(editorStore.selectedTool);
+            }
         }
     };
 
@@ -322,7 +328,8 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
                                 onDragEnd={debouncedSave}
                                 onTransformEnd={debouncedSave}
                                 onMouseUp={debouncedSave}
-                                onDblClick={() => handleDoubleClick(id)}
+                                onClick={() => editorStore.setShape(id)}
+                                // onDblClick={() => handleDoubleClick(id)}
                                 visible={shape.visible !== false}
                                 ref={el => {
                                     if (el) {

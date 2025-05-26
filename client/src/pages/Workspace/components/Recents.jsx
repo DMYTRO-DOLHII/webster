@@ -42,55 +42,55 @@ const Recents = () => {
     };
 
     const handleCreate = async newProjectData => {
-		if (!newProjectData.title.trim()) {
-			newProjectData.title = 'Untitled project';
-		}
+        if (!newProjectData.title.trim()) {
+            newProjectData.title = 'Untitled project';
+        }
 
-		editorStore.setProject(newProjectData);
+        editorStore.setProject(newProjectData);
 
-		const designObject =
-			newProjectData.info && typeof newProjectData.info === 'object' && Object.keys(newProjectData.info).length > 0
-				? newProjectData.info
-				: {
-						attrs: {
-							width: newProjectData.width,
-							height: newProjectData.height,
-						},
-						className: 'Stage',
-						children: [
-							{
-								attrs: {},
-								className: 'Layer',
-								children: [
-									{
-										attrs: {
-											width: newProjectData.width,
-											height: newProjectData.height,
-											fill: newProjectData.background.toLowerCase(),
-											listening: false,
-										},
-										className: 'Rect',
+        const designObject =
+            newProjectData.info && typeof newProjectData.info === 'object' && Object.keys(newProjectData.info).length > 0
+                ? newProjectData.info
+                : {
+                    attrs: {
+                        width: newProjectData.width,
+                        height: newProjectData.height,
+                    },
+                    className: 'Stage',
+                    children: [
+                        {
+                            attrs: {},
+                            className: 'Layer',
+                            children: [
+                                {
+                                    attrs: {
+                                        width: newProjectData.width,
+                                        height: newProjectData.height,
+                                        fill: newProjectData.background.toLowerCase(),
+                                        listening: false,
                                         name: 'Background'
-									},
-								],
-							},
-						],
-				  };
+                                    },
+                                    className: 'Rect',
+                                },
+                            ],
+                        },
+                    ],
+                };
 
-		const response = await api.post('/projects', {
-			title: newProjectData.title,
-			previewImage: 'https://t4.ftcdn.net/jpg/02/01/98/73/360_F_201987380_YjR3kPM0PS3hF7Wvn7IBMmW1FWrMwruL.jpg',
-			info: designObject,
-			userId: userStore?.user?.id,
-		});
+        const response = await api.post('/projects', {
+            title: newProjectData.title,
+            previewImage: 'https://t4.ftcdn.net/jpg/02/01/98/73/360_F_201987380_YjR3kPM0PS3hF7Wvn7IBMmW1FWrMwruL.jpg',
+            info: designObject,
+            userId: userStore?.user?.id,
+        });
 
-		console.log(response.data);
+        console.log(response.data);
 
-		const designData = JSON.stringify(designObject);
-		localStorage.setItem('designData', designData);
-		navigate(`/canvas/${response.data.id}`);
-	};
-    
+        const designData = JSON.stringify(designObject);
+        localStorage.setItem('designData', designData);
+        navigate(`/canvas/${response.data.id}`);
+    };
+
 
     const handleDeleteProject = async (projectId) => {
         try {

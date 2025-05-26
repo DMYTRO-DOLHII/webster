@@ -17,7 +17,7 @@ class EditorStore {
 		makeAutoObservable(this);
 	}
 
-	setSeletedShapeId(selectedShapeId) {
+	setShape(selectedShapeId) {
 		this.selectedShapeId = selectedShapeId;
 	}
 
