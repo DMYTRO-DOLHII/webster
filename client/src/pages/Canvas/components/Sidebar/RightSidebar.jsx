@@ -57,8 +57,6 @@ const RightSidebar = ({ layers, setShapes }) => {
                                 <Layers
                                     layers={layers}
                                     setShapes={setShapes}
-                                    setSelectedLayerId={setSelectedLayerId}
-                                    selectedLayerId={selectedLayerId}
                                 />
                             </Box>
                             <Box
@@ -69,7 +67,6 @@ const RightSidebar = ({ layers, setShapes }) => {
                                 }}
                             >
                                 <Properties
-                                    selectedLayerId={selectedLayerId}
                                     layers={layers}
                                     setShapes={setShapes}
                                 />

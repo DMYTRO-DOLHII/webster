@@ -17,7 +17,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
     const widthRef = useRef(0);
     const heightRef = useRef(0);
 
-    const [selectedShapeId, setSelectedShapeId] = useState(null);
     const [currentLineId, setCurrentLineId] = useState(null);
 
     const [width, setWidth] = useState(0);
@@ -217,7 +216,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [selectedShapeId]);
+    }, [editorStore.selectedShapeId]);
 
     const handleContextMenu = e => {
         const stage = e.target.getStage();
@@ -272,7 +271,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
     };
 
     const handleDoubleClick = id => {
-        setSelectedShapeId(id);
+        editorStore.setShape(id);
     };
 
     const handleShapesChange = useCallback(
@@ -288,7 +287,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
         if (e.target === stage) {
             const tool = editorStore.selectedTool;
             if (!SHAPE_DEFAULTS[tool] || tool === 'brush') {
-                setSelectedShapeId(null);
+                editorStore.setShape(null);
                 return;
             }
 
@@ -317,10 +316,16 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
             };
 
             handleShapesChange(prev => [...prev, newShape]);
-            setSelectedShapeId(newShape.id);
+            setTimeout(() => {
+                editorStore.setShape(newShape.id);
+            }, 0);
         } else {
-            const clickedId = e.target._id || e.target.attrs.id;
-            if (clickedId) setSelectedShapeId(clickedId);
+            const clickedId = e.target.attrs.id || e.target._id;
+            if (clickedId) {
+                editorStore.setShape(clickedId);
+                editorStore.setTool('move');
+                console.log(editorStore.selectedTool);
+            }
         }
     };
 
@@ -510,7 +515,8 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
                                 onDragEnd={debouncedSave}
                                 onTransformEnd={debouncedSave}
                                 onMouseUp={debouncedSave}
-                                onDblClick={() => handleDoubleClick(id)}
+                                onClick={() => editorStore.setShape(id)}
+                                // onDblClick={() => handleDoubleClick(id)}
                                 visible={shape.visible !== false}
                                 ref={el => {
                                     if (el) {
@@ -520,9 +526,10 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
                             />
                         );
                     })}
-                    {selectedShapeId && shapeRefs.current[selectedShapeId] && (
+
+                    {editorStore.selectedShapeId && shapeRefs.current[editorStore.selectedShapeId] && (
                         <Transformer
-                            nodes={[shapeRefs.current[selectedShapeId]]}
+                            nodes={[shapeRefs.current[editorStore.selectedShapeId]]}
                             resizeEnabled={true}
                             rotateEnabled={true}
                             borderStroke='black'
