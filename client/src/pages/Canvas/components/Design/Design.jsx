@@ -219,19 +219,26 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
     }, [editorStore.selectedShapeId]);
 
     const handleContextMenu = e => {
+        e.evt.preventDefault();
         const stage = e.target.getStage();
-        if (e.target === stage) {
-            e.evt.preventDefault();
-            const pointerPos = stage.getPointerPosition();
+        const pointerPos = stage.getPointerPosition();
 
-            setContextMenu({
-                visible: true,
-                x: e.evt.clientX,
-                y: e.evt.clientY,
-                stageX: pointerPos.x / zoom,
-                stageY: pointerPos.y / zoom,
-            });
-        }
+        const clickedOnShape = e.target !== stage;
+
+        setContextMenu({
+            visible: true,
+            x: e.evt.clientX,
+            y: e.evt.clientY,
+            stageX: pointerPos.x / zoom,
+            stageY: pointerPos.y / zoom,
+            shapeId: clickedOnShape ? e.target.attrs.id : null,
+        });
+    };
+
+    const handleDeleteShape = () => {
+        if (!contextMenu.shapeId) return;
+        setShapes(prev => prev.filter(shape => shape.id !== contextMenu.shapeId));
+        setContextMenu({ visible: false, x: 0, y: 0, stageX: 0, stageY: 0, shapeId: null });
     };
 
     const handleFileSelect = e => {
@@ -382,7 +389,11 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
             .map(shape => {
                 const { x, y, width = 0, height = 0 } = shape;
 
-                const intersects = x + width > cropRect.x && x < cropRect.x + cropRect.width && y + height > cropRect.y && y < cropRect.y + cropRect.height;
+                const intersects =
+                    x + width > cropRect.x &&
+                    x < cropRect.x + cropRect.width &&
+                    y + height > cropRect.y &&
+                    y < cropRect.y + cropRect.height;
 
                 if (!intersects) return null;
 
@@ -555,9 +566,15 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
                         zIndex: 1000,
                     }}
                 >
-                    <div style={{ padding: '8px 16px', cursor: 'pointer' }} onClick={() => fileInputRef.current.click()}>
-                        Add Image
-                    </div>
+                    {contextMenu.shapeId ? (
+                        <div style={{ padding: '8px 16px', cursor: 'pointer', color: 'red' }} onClick={handleDeleteShape}>
+                            Delete
+                        </div>
+                    ) : (
+                        <div style={{ padding: '8px 16px', cursor: 'pointer' }} onClick={() => fileInputRef.current.click()}>
+                            Add the image
+                        </div>
+                    )}
                 </div>
             )}
 
