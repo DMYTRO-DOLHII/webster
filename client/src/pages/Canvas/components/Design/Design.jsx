@@ -219,21 +219,28 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
         };
     }, [selectedShapeId]);
 
-    const handleContextMenu = e => {
-        const stage = e.target.getStage();
-        if (e.target === stage) {
-            e.evt.preventDefault();
-            const pointerPos = stage.getPointerPosition();
+	const handleContextMenu = e => {
+		e.evt.preventDefault();
+		const stage = e.target.getStage();
+		const pointerPos = stage.getPointerPosition();
 
-            setContextMenu({
-                visible: true,
-                x: e.evt.clientX,
-                y: e.evt.clientY,
-                stageX: pointerPos.x / zoom,
-                stageY: pointerPos.y / zoom,
-            });
-        }
-    };
+		const clickedOnShape = e.target !== stage;
+
+		setContextMenu({
+			visible: true,
+			x: e.evt.clientX,
+			y: e.evt.clientY,
+			stageX: pointerPos.x / zoom,
+			stageY: pointerPos.y / zoom,
+			shapeId: clickedOnShape ? e.target.attrs.id : null,
+		});
+	};
+
+	const handleDeleteShape = () => {
+		if (!contextMenu.shapeId) return;
+		setShapes(prev => prev.filter(shape => shape.id !== contextMenu.shapeId));
+		setContextMenu({ visible: false, x: 0, y: 0, stageX: 0, stageY: 0, shapeId: null });
+	};
 
     const handleFileSelect = e => {
         const file = e.target.files[0];
@@ -370,193 +377,229 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
         setCurrentLineId(null);
     };
 
-    const handleCrop = () => {
-        if (!cropRect) return;
+	const handleCrop = () => {
+		if (!cropRect) return;
+	
+		const croppedShapes = shapes
+			.map(shape => {
+				const { x, y, width = 0, height = 0 } = shape;
+	
+				const intersects =
+					x + width > cropRect.x &&
+					x < cropRect.x + cropRect.width &&
+					y + height > cropRect.y &&
+					y < cropRect.y + cropRect.height;
+	
+				if (!intersects) return null;
+	
+				return {
+					...shape,
+					x: shape.x - cropRect.x,
+					y: shape.y - cropRect.y,
+				};
+			})
+			.filter(Boolean);
+	
+		setShapes(croppedShapes);
+		setWidth(cropRect.width);
+		setHeight(cropRect.height);
+		editorStore.setWidth(cropRect.width);
+		editorStore.setHeight(cropRect.height);
+		editorStore.setTool("move");
+		setCropRect(null);
+	};
+	
+	return (
+		<div className='relative'>
+			{editorStore.selectedTool === 'crop' && (
+				<button
+					onClick={handleCrop}
+					style={{
+						position: 'absolute',
+						top: '10px',
+						right: '10px',
+						zIndex: 1000,
+						padding: '8px 16px',
+						backgroundColor: '#9B34BA',
+						color: 'white',
+						border: 'none',
+						borderRadius: '4px',
+						cursor: 'pointer',
+					}}
+				>
+					Apply Crop
+				</button>
+			)}
+			<Stage
+				ref={stageRef}
+				width={width * zoom}
+				height={height * zoom}
+				scaleX={zoom}
+				scaleY={zoom}
+				className='border-0 border-white shadow-[0px_0px_20px_0px_#9B34BA70]'
+				onClick={handleStageClick}
+				onDblClick={e => {}}
+				onMouseDown={handleMouseDown}
+				onMouseMove={handleMouseMove}
+				onMouseUp={handleMouseUp}
+				onContextMenu={handleContextMenu}
+			>
+				<Layer>
+					{editorStore.selectedTool === 'crop' && cropRect && (
+						<>
+							{/* затемнённые области вокруг cropRect */}
+							<Rect x={0} y={0} width={width} height={cropRect.y} fill='rgba(0, 0, 0, 0.5)' />
+							<Rect x={0} y={cropRect.y} width={cropRect.x} height={cropRect.height} fill='rgba(0, 0, 0, 0.5)' />
+							<Rect x={cropRect.x + cropRect.width} y={cropRect.y} width={width - cropRect.x - cropRect.width} height={cropRect.height} fill='rgba(0, 0, 0, 0.5)' />
+							<Rect x={0} y={cropRect.y + cropRect.height} width={width} height={height - cropRect.y - cropRect.height} fill='rgba(0, 0, 0, 0.5)' />
 
-        const croppedShapes = shapes
-            .map(shape => {
-                const { x, y, width = 0, height = 0 } = shape;
+							<Rect
+								ref={cropRef}
+								{...cropRect}
+								stroke='black'
+								strokeWidth={4}
+								dash={[10, 4]}
+								draggable
+								onDragEnd={e => {
+									const node = e.target;
+									const newX = Math.max(0, Math.min(node.x(), width - cropRect.width));
+									const newY = Math.max(0, Math.min(node.y(), height - cropRect.height));
 
-                const intersects = x + width > cropRect.x && x < cropRect.x + cropRect.width && y + height > cropRect.y && y < cropRect.y + cropRect.height;
+									setCropRect({
+										...cropRect,
+										x: newX,
+										y: newY,
+									});
 
-                if (!intersects) return null;
+									node.position({ x: newX, y: newY });
+								}}
+								onTransformEnd={e => {
+									const node = e.target;
+									const scaleX = node.scaleX();
+									const scaleY = node.scaleY();
 
-                return {
-                    ...shape,
-                    x: shape.x - cropRect.x,
-                    y: shape.y - cropRect.y,
-                };
-            })
-            .filter(Boolean);
+									let newWidth = Math.max(50, node.width() * scaleX);
+									let newHeight = Math.max(50, node.height() * scaleY);
+									let newX = Math.max(0, node.x());
+									let newY = Math.max(0, node.y());
 
-        setShapes(croppedShapes);
-        setWidth(cropRect.width);
-        setHeight(cropRect.height);
-        editorStore.setWidth(cropRect.width);
-        editorStore.setHeight(cropRect.height);
-        editorStore.setTool("move");
-        setCropRect(null);
-    };
+									if (newX + newWidth > width) {
+										newWidth = width - newX;
+									}
+									if (newY + newHeight > height) {
+										newHeight = height - newY;
+									}
 
-    return (
-        <div className='relative'>
-            {editorStore.selectedTool === 'crop' && (
-                <button
-                    onClick={handleCrop}
-                    style={{
-                        position: 'absolute',
-                        top: '10px',
-                        right: '10px',
-                        zIndex: 1000,
-                        padding: '8px 16px',
-                        backgroundColor: '#9B34BA',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                    }}
-                >
-                    Apply Crop
-                </button>
-            )}
-            <Stage
-                ref={stageRef}
-                width={width * zoom}
-                height={height * zoom}
-                scaleX={zoom}
-                scaleY={zoom}
-                className='border-0 border-white shadow-[0px_0px_20px_0px_#9B34BA70]'
-                onClick={handleStageClick}
-                onDblClick={e => { }}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onContextMenu={handleContextMenu}
-            >
-                <Layer>
-                    {editorStore.selectedTool === 'crop' && cropRect && (
-                        <>
-                            <Rect x={0} y={0} width={width} height={cropRect.y} fill='rgba(0, 0, 0, 0.5)' />
-                            <Rect x={0} y={cropRect.y} width={cropRect.x} height={cropRect.height} fill='rgba(0, 0, 0, 0.5)' />
-                            <Rect x={cropRect.x + cropRect.width} y={cropRect.y} width={width - cropRect.x - cropRect.width} height={cropRect.height} fill='rgba(0, 0, 0, 0.5)' />
-                            <Rect x={0} y={cropRect.y + cropRect.height} width={width} height={height - cropRect.y - cropRect.height} fill='rgba(0, 0, 0, 0.5)' />
+									setCropRect({
+										x: newX,
+										y: newY,
+										width: newWidth,
+										height: newHeight,
+									});
 
-                            <Rect
-                                ref={cropRef}
-                                {...cropRect}
-                                stroke='black'
-                                strokeWidth={4}
-                                dash={[10, 4]}
-                                draggable
-                                onDragEnd={e => {
-                                    setCropRect({
-                                        ...cropRect,
-                                        x: Math.max(0, Math.min(e.target.x(), width - cropRect.width)),
-                                        y: Math.max(0, Math.min(e.target.y(), height - cropRect.height)),
-                                    });
-                                }}
-                                onTransformEnd={e => {
-                                    const node = e.target;
-                                    const scaleX = node.scaleX();
-                                    const scaleY = node.scaleY();
+									node.scaleX(1);
+									node.scaleY(1);
+								}}
+							/>
 
-                                    setCropRect({
-                                        x: Math.max(0, node.x()),
-                                        y: Math.max(0, node.y()),
-                                        width: Math.max(50, Math.min(node.width() * scaleX, width - node.x())),
-                                        height: Math.max(50, Math.min(node.height() * scaleY, height - node.y())),
-                                    });
+							{/* визуальный контур cropRect */}
+							<Rect {...cropRect} stroke='black' strokeWidth={2} dash={[10, 4]} listening={false} />
+						</>
+					)}
+					{editorStore.selectedTool === 'crop' && cropRef.current && (
+						<Transformer
+							nodes={[cropRef.current]}
+							boundBoxFunc={(oldBox, newBox) => {
+								const boundedBox = { ...newBox };
 
-                                    node.scaleX(1);
-                                    node.scaleY(1);
-                                }}
-                            />
+								if (newBox.width < 50 || newBox.height < 50) return oldBox;
 
-                            <Rect
-                                {...cropRect}
-                                stroke='black'
-                                strokeWidth={2}
-                                dash={[10, 4]}
-                                listening={false}
-                            />
-                        </>
-                    )}
-                    {editorStore.selectedTool === 'crop' && cropRef.current && (
-                        <Transformer
-                            nodes={[cropRef.current]}
-                            boundBoxFunc={(oldBox, newBox) => {
-                                if (newBox.width < 50 || newBox.height < 50) return oldBox;
-                                return {
-                                    ...newBox,
-                                    x: Math.max(0, Math.min(newBox.x, width - newBox.width)),
-                                    y: Math.max(0, Math.min(newBox.y, height - newBox.height)),
-                                    width: Math.min(newBox.width, width - newBox.x),
-                                    height: Math.min(newBox.height, height - newBox.y),
-                                };
-                            }}
-                        />
-                    )}
-                    {shapes.map(shape => {
-                        const Component = SHAPE_COMPONENTS[shape.type];
-                        if (!Component) return null;
+								if (newBox.x < 0) {
+									boundedBox.width += newBox.x;
+									boundedBox.x = 0;
+								}
+								if (newBox.y < 0) {
+									boundedBox.height += newBox.y;
+									boundedBox.y = 0;
+								}
+								if (newBox.x + newBox.width > width) {
+									boundedBox.width = width - newBox.x;
+								}
+								if (newBox.y + newBox.height > height) {
+									boundedBox.height = height - newBox.y;
+								}
 
-                        const { id, type, ...shapeProps } = shape;
+								return boundedBox;
+							}}
+						/>
+					)}
+					{shapes.map(shape => {
+						const Component = SHAPE_COMPONENTS[shape.type];
+						if (!Component) return null;
 
-                        return (
-                            <Component
-                                key={id}
-                                id={id}
-                                {...shapeProps}
-                                onDragEnd={debouncedSave}
-                                onTransformEnd={debouncedSave}
-                                onMouseUp={debouncedSave}
-                                onDblClick={() => handleDoubleClick(id)}
-                                visible={shape.visible !== false}
-                                ref={el => {
-                                    if (el) {
-                                        shapeRefs.current[id] = el;
-                                    }
-                                }}
-                            />
-                        );
-                    })}
-                    {selectedShapeId && shapeRefs.current[selectedShapeId] && (
-                        <Transformer
-                            nodes={[shapeRefs.current[selectedShapeId]]}
-                            resizeEnabled={true}
-                            rotateEnabled={true}
-                            borderStroke='black'
-                            borderDash={[6, 2]}
-                            anchorStroke='black'
-                            anchorFill='white'
-                            anchorSize={10}
-                            flipEnabled={true}
-                            keepRatio={true}
-                        />
-                    )}
-                </Layer>
-            </Stage>
-            {contextMenu.visible && (
-                <div
-                    ref={menuRef}
-                    style={{
-                        position: 'fixed',
-                        left: contextMenu.x,
-                        top: contextMenu.y,
-                        backgroundColor: 'white',
-                        boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
-                        zIndex: 1000,
-                    }}
-                >
-                    <div style={{ padding: '8px 16px', cursor: 'pointer' }} onClick={() => fileInputRef.current.click()}>
-                        Add Image
-                    </div>
-                </div>
-            )}
+						const { id, type, ...shapeProps } = shape;
 
-            <input type='file' accept='image/*' ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileSelect} />
-        </div>
-    );
+						return (
+							<Component
+								key={id}
+								id={id}
+								{...shapeProps}
+								onDragEnd={debouncedSave}
+								onTransformEnd={debouncedSave}
+								onMouseUp={debouncedSave}
+								onDblClick={() => handleDoubleClick(id)}
+								visible={shape.visible !== false}
+								ref={el => {
+									if (el) {
+										shapeRefs.current[id] = el;
+									}
+								}}
+							/>
+						);
+					})}
+					{selectedShapeId && shapeRefs.current[selectedShapeId] && (
+						<Transformer
+							nodes={[shapeRefs.current[selectedShapeId]]}
+							resizeEnabled={true}
+							rotateEnabled={true}
+							borderStroke='black'
+							borderDash={[6, 2]}
+							anchorStroke='black'
+							anchorFill='white'
+							anchorSize={10}
+							flipEnabled={true}
+							keepRatio={true}
+						/>
+					)}
+				</Layer>
+			</Stage>
+			{contextMenu.visible && (
+				<div
+					ref={menuRef}
+					style={{
+						position: 'fixed',
+						left: contextMenu.x,
+						top: contextMenu.y,
+						backgroundColor: 'white',
+						boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+						zIndex: 1000,
+					}}
+				>
+					{contextMenu.shapeId ? (
+						<div style={{ padding: '8px 16px', cursor: 'pointer', color: 'red' }} onClick={handleDeleteShape}>
+							Delete
+						</div>
+					) : (
+						<div style={{ padding: '8px 16px', cursor: 'pointer' }} onClick={() => fileInputRef.current.click()}>
+							Add the image
+						</div>
+					)}
+				</div>
+			)}
+
+			<input type='file' accept='image/*' ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileSelect} />
+		</div>
+	);
 });
 
 export default Design;
