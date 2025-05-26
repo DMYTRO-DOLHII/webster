@@ -17,6 +17,10 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
     const widthRef = useRef(0);
     const heightRef = useRef(0);
 
+    const [editingTextId, setEditingTextId] = useState(null);
+	const [textValue, setTextValue] = useState('');
+	const textInputRef = useRef(null);
+
     const [selectedShapeId, setSelectedShapeId] = useState(null);
     const [currentLineId, setCurrentLineId] = useState(null);
 
@@ -279,8 +283,35 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
     };
 
     const handleDoubleClick = id => {
-        setSelectedShapeId(id);
-    };
+		const shape = shapes.find(s => s.id === id);
+		if (shape.type === 'text') {
+			setSelectedShapeId(null);
+			setEditingTextId(id);
+			setTextValue(shape.text || '');
+			setTimeout(() => {
+				textInputRef.current.focus();
+			}, 50);
+		} else {
+			setSelectedShapeId(id);
+		}
+	};
+
+	const handleTextChange = e => {
+		setTextValue(e.target.value);
+	};
+
+    const handleTextBlur = () => {
+		setShapes(prev =>
+			prev.map(shape => {
+				if (shape.id === editingTextId) {
+					return { ...shape, text: textValue };
+				}
+				return shape;
+			})
+		);
+		setEditingTextId(null);
+		debouncedSave();
+	};
 
     const handleShapesChange = useCallback(
         updatedShapes => {
@@ -547,6 +578,10 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
 								onDragEnd={debouncedSave}
 								onTransformEnd={debouncedSave}
 								onMouseUp={debouncedSave}
+								onClick={e => {
+									e.cancelBubble = true;
+									setSelectedShapeId(id);
+								}}
 								onDblClick={() => handleDoubleClick(id)}
 								visible={shape.visible !== false}
 								ref={el => {
@@ -598,6 +633,37 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
 			)}
 
 			<input type='file' accept='image/*' ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileSelect} />
+
+			{editingTextId &&
+				(() => {
+					const shape = shapes.find(s => s.id === editingTextId);
+					if (!shape) return null;
+
+					return (
+						<div
+							className='absolute z-[1001]'
+							style={{
+								top: shape.y * zoom + shape.fontSize + 11,
+								left: shape.x * zoom + 5,
+							}}
+						>
+							<input
+								ref={textInputRef}
+								type='text'
+								value={textValue}
+								onChange={handleTextChange}
+								onBlur={handleTextBlur}
+								className='px-2 py-1 bg-transparent border border-purple-600 outline-none'
+								style={{
+									fontSize: `${shape.fontSize}px`,
+									fontFamily: shape.fontFamily,
+									color: shape.fill,
+									width: `${shape.width * zoom}px`,
+								}}
+							/>
+						</div>
+					);
+				})()}
 		</div>
 	);
 });
