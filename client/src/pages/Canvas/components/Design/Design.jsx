@@ -8,6 +8,7 @@ import { editorStore } from '../../../../store/editorStore';
 import { api } from '../../../../services/api';
 import { SHAPE_COMPONENTS, SHAPE_DEFAULTS } from '../Shapes';
 import { TbVersionsOff } from 'react-icons/tb';
+import { ClipboardSignature } from 'lucide-react';
 
 const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setShapes }) => {
     const stageRef = useRef(null);
@@ -16,6 +17,10 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
     const lastSavedDesign = useRef(null);
     const widthRef = useRef(0);
     const heightRef = useRef(0);
+
+    const [editingTextId, setEditingTextId] = useState(null);
+    const [textValue, setTextValue] = useState('');
+    const textInputRef = useRef(null);
 
     const [currentLineId, setCurrentLineId] = useState(null);
 
@@ -171,12 +176,11 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
 
     useEffect(() => {
         const handleKeyDown = (e) => {
-            const selectedShape = Object.values(shapeRefs.current).find(
-                shape => shape._id === selectedShapeId
-            );
+            const selectedShape = shapeRefs.current[editorStore.selectedShapeId]
 
             if (!selectedShape) return;
 
+            console.log('penis')
             const step = e.shiftKey ? 10 : 1;
             let dx = 0;
             let dy = 0;
@@ -279,7 +283,33 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
     };
 
     const handleDoubleClick = id => {
-        editorStore.setShape(id);
+        // editorStore.setShape(id);
+        const shape = shapes.find(s => s.id === id);
+        if (shape.type === 'text') {
+            editorStore.setShape(null);
+            setEditingTextId(id);
+            setTextValue(shape.text || '');
+            setTimeout(() => {
+                textInputRef.current.focus();
+            }, 50);
+        }
+    };
+
+    const handleTextChange = e => {
+        setTextValue(e.target.value);
+    };
+
+    const handleTextBlur = () => {
+        setShapes(prev =>
+            prev.map(shape => {
+                if (shape.id === editingTextId) {
+                    return { ...shape, text: textValue };
+                }
+                return shape;
+            })
+        );
+        setEditingTextId(null);
+        debouncedSave();
     };
 
     const handleShapesChange = useCallback(
@@ -528,7 +558,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
                                 onTransformEnd={debouncedSave}
                                 onMouseUp={debouncedSave}
                                 onClick={() => editorStore.setShape(id)}
-                                // onDblClick={() => handleDoubleClick(id)}
+                                onDblClick={() => handleDoubleClick(id)} // TODO PENIS
                                 visible={shape.visible !== false}
                                 ref={el => {
                                     if (el) {
@@ -580,6 +610,36 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
             )}
 
             <input type='file' accept='image/*' ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileSelect} />
+            {editingTextId &&
+                (() => {
+                    const shape = shapes.find(s => s.id === editingTextId);
+                    if (!shape) return null;
+
+                    return (
+                        <div
+                            className='absolute z-[1001]'
+                            style={{
+                                top: shape.y * zoom + shape.fontSize + 11,
+                                left: shape.x * zoom + 5,
+                            }}
+                        >
+                            <input
+                                ref={textInputRef}
+                                type='text'
+                                value={textValue}
+                                onChange={handleTextChange}
+                                onBlur={handleTextBlur}
+                                className='px-2 py-1 bg-transparent border border-purple-600 outline-none'
+                                style={{
+                                    fontSize: `${shape.fontSize}px`,
+                                    fontFamily: shape.fontFamily,
+                                    color: shape.fill,
+                                    width: `${shape.width * zoom}px`,
+                                }}
+                            />
+                        </div>
+                    );
+                })()}
         </div>
     );
 });
