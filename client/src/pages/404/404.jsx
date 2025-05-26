@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
 
 const Error404 = () => {
     const navigate = useNavigate();
+
 
     return (
         <div className="h-screen relative flex gap-10 font-sans p-15 overflow-hidden bg-black">

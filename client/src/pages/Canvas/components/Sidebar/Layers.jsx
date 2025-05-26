@@ -15,7 +15,7 @@ const Layers = ({ layers, setShapes }) => {
 
     useEffect(() => {
         if (editorStore.selectedShapeId == null) {
-            const backgroundLayer = layers.find(layer => layer.name.toLowerCase() === 'background');
+            const backgroundLayer = layers.find(layer => layer.name?.toLowerCase() === 'background');
             if (backgroundLayer) {
                 editorStore.setShape(backgroundLayer.id);
             } else{
@@ -93,7 +93,7 @@ const Layers = ({ layers, setShapes }) => {
             <div
                 ref={node => drag(drop(node))}
                 key={layer.id}
-                className={`flex justify-between items-center text-xs mb-1 px-2 py-1 rounded cursor-pointer 
+                className={`flex justify-between items-center text-xs mb-1 px-2 py-2 rounded cursor-pointer 
                     ${editorStore.selectedShapeId === layer.id ? 'bg-blue-600' : 'opacity-70 hover:bg-[#2a2a2a]'}`}
                 onDoubleClick={() => startEditing(layer.id, layer.name)}
                 onClick={() => {

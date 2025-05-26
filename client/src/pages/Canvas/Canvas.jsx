@@ -26,6 +26,22 @@ const Canvas = () => {
         };
     }, []);
 
+    useEffect(() => {
+        const parent = containerRef.current;
+        if (!parent) return;
+
+        const { scrollLeft, scrollTop, clientWidth, clientHeight, scrollWidth, scrollHeight } = parent;
+
+        const centerX = scrollLeft + containerSize.width / 2;
+        const centerY = scrollTop + containerSize.height / 2;
+
+        const newScrollLeft = (centerX * zoom) - (containerSize.width / 2);
+        const newScrollTop = (centerY * zoom) - (containerSize.height / 2);
+
+        parent.scrollTo(newScrollLeft, newScrollTop);
+    }, [zoom]);
+
+
     const handleSaveClick = () => {
         if (getDesignJsonRef.current) {
             const json = getDesignJsonRef.current();
@@ -83,19 +99,21 @@ const Canvas = () => {
             <div className="flex flex-grow overflow-hidden">
                 <LeftSidebar />
                 <div
-                    className="bg-[#121212] flex items-center justify-center w-full overflow-hidden"
+                    className="bg-[#121212] flex items-center justify-center w-full h-full overflow-scroll scroll-style"
                     id="canvas-parent"
                     ref={containerRef}
                 >
-                    <Design
-                        onSaveRef={(fn) => (getDesignJsonRef.current = fn)}
-                        shapes={shapes}
-                        zoom={zoom}
-                        containerSize={containerSize}
-                        initialData={projectData.json}
-                        setZoom={handleZoomChange}
-                        setShapes={setShapes}
-                    />
+                    <div className="relative min-w-fit min-h-fit">
+                        <Design
+                            onSaveRef={(fn) => (getDesignJsonRef.current = fn)}
+                            shapes={shapes}
+                            zoom={zoom}
+                            containerSize={containerSize}
+                            initialData={projectData.json}
+                            setZoom={handleZoomChange}
+                            setShapes={setShapes}
+                        />
+                    </div>
                 </div>
                 <RightSidebar layers={shapes} setShapes={setShapes} /> {/* Передаем слои в сайдбар */}
             </div>

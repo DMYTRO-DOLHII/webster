@@ -105,6 +105,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
         }
     }, [editorStore.projectJSON, containerSize, setShapes]);
 
+
     const saveDesign = useCallback(async () => {
         if (!stageRef.current) return;
 

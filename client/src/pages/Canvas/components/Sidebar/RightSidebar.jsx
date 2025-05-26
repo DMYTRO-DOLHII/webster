@@ -14,7 +14,6 @@ const RightSidebar = ({ layers, setShapes }) => {
         <DndProvider backend={HTML5Backend}>
             <Box
                 sx={{
-                    pt: '48px',
                     width: '20rem',
                     bgcolor: '#1a1a1a',
                     borderLeft: '1px solid #2a2a2a',
