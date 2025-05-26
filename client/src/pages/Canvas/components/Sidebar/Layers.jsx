@@ -1,16 +1,33 @@
-import React, { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Eye, EyeOff, Trash2 } from "lucide-react";
 import { useDrag, useDrop } from "react-dnd";
+import { editorStore } from "../../../../store/editorStore";
+import { observer } from "mobx-react-lite";
 
 const ItemTypes = {
     LAYER: 'layer',
 };
 
-const Layers = ({ layers, setShapes, setSelectedLayerId, selectedLayerId }) => {
-    console.log(layers);
+const Layers = ({ layers, setShapes }) => {
     const [editingLayerId, setEditingLayerId] = useState(null);
     const [nameInputValue, setNameInputValue] = useState("");
     const [hoveredIndex, setHoveredIndex] = useState(null);
+
+    useEffect(() => {
+        if (editorStore.selectedShapeId == null) {
+            const backgroundLayer = layers.find(layer => layer.name.toLowerCase() === 'background');
+            if (backgroundLayer) {
+                editorStore.setShape(backgroundLayer.id);
+            } else{
+                editorStore.setShape(null);
+            }
+        }
+    }, [layers]);
+
+    const handleDeleteLayer = id => {
+        setShapes(prev => prev.filter(shape => shape.id !== id));
+        if (editorStore.selectedShapeId === id) editorStore.setShape(null);
+    };
 
     const handleToggleVisibility = (id) => {
         setShapes(prev =>
@@ -47,7 +64,7 @@ const Layers = ({ layers, setShapes, setSelectedLayerId, selectedLayerId }) => {
         setEditingLayerId(null);
     };
 
-    const LayerItem = ({ layer, index }) => {
+    const LayerItem = observer(({ layer, index }) => {
         const [{ isDragging }, drag] = useDrag({
             type: ItemTypes.LAYER,
             item: { index },
@@ -77,10 +94,10 @@ const Layers = ({ layers, setShapes, setSelectedLayerId, selectedLayerId }) => {
                 ref={node => drag(drop(node))}
                 key={layer.id}
                 className={`flex justify-between items-center text-xs mb-1 px-2 py-1 rounded cursor-pointer 
-                    ${selectedLayerId === layer.id ? 'bg-blue-600' : 'opacity-70 hover:bg-[#2a2a2a]'}`}
+                    ${editorStore.selectedShapeId === layer.id ? 'bg-blue-600' : 'opacity-70 hover:bg-[#2a2a2a]'}`}
                 onDoubleClick={() => startEditing(layer.id, layer.name)}
                 onClick={() => {
-                    setSelectedLayerId(layer.id);
+                    editorStore.setShape(layer.id);
                     setHoveredIndex(null);
                 }}
                 title={layer.name}
@@ -101,19 +118,31 @@ const Layers = ({ layers, setShapes, setSelectedLayerId, selectedLayerId }) => {
                 ) : (
                     <span className="truncate mr-2">{layer.name}</span>
                 )}
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        handleToggleVisibility(layer.id);
-                    }}
-                    title={layer.visible === false ? "Show layer" : "Hide layer"}
-                    className="ml-2 text-white hover:text-gray-400"
-                >
-                    {layer.visible === false ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
+                <div className='flex items-center gap-1'>
+                    <button
+                        onClick={e => {
+                            e.stopPropagation();
+                            handleToggleVisibility(layer.id);
+                        }}
+                        title={layer.visible === false ? 'Show layer' : 'Hide layer'}
+                        className='text-white hover:text-gray-400'
+                    >
+                        {layer.visible === false ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                    <button
+                        onClick={e => {
+                            e.stopPropagation();
+                            handleDeleteLayer(layer.id);
+                        }}
+                        title='Delete layer'
+                        className='text-white hover:text-red-500'
+                    >
+                        <Trash2 size={16} />
+                    </button>
+                </div>
             </div>
         );
-    };
+    });
 
     return (
         <div className="mb-6">
