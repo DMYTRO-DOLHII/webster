@@ -16,7 +16,7 @@ const Footer = ({ zoom, setZoom }) => {
 
   const commitChange = () => {
     const value = parseFloat(inputValue);
-    if (!isNaN(value) && value >= 50 && value <= 200) {
+    if (!isNaN(value) && value >= 1 && value <= 200) {
       setZoom(value / 100);
     }
     setIsEditing(false);
@@ -36,7 +36,7 @@ const Footer = ({ zoom, setZoom }) => {
       <input
         id="zoomSlider"
         type="range"
-        min="0.5"
+        min="0.01"
         max="2"
         step="0.01"
         value={zoom}
@@ -46,7 +46,7 @@ const Footer = ({ zoom, setZoom }) => {
       {isEditing ? (
         <input
           type="number"
-          min="50"
+          min="1"
           max="200"
           step="1"
           autoFocus

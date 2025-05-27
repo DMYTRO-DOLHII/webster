@@ -105,6 +105,31 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
         }
     }, [editorStore.projectJSON, containerSize, setShapes]);
 
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            const container = stageRef.current?.container();
+            if (container && !container.contains(event.target)) {
+                editorStore.setShape(null);
+            }
+        };
+
+        const handleKeyDown = (event) => {
+            if (event.key === "Escape") {
+                editorStore.setShape(null);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, []);
+
+
+
     const saveDesign = useCallback(async () => {
         if (!stageRef.current) return;
 
