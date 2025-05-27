@@ -10,7 +10,7 @@ import { SHAPE_COMPONENTS, SHAPE_DEFAULTS } from '../Shapes';
 import { TbVersionsOff } from 'react-icons/tb';
 import { ClipboardSignature } from 'lucide-react';
 
-const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setShapes }) => {
+const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef, setZoom, setShapes }) => {
     const stageRef = useRef(null);
     const shapeRefs = useRef({});
     const isDrawing = useRef(false);
@@ -107,10 +107,19 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
 
     useEffect(() => {
         const handleClickOutside = (event) => {
-            const container = stageRef.current?.container();
-            if (container && !container.contains(event.target)) {
-                editorStore.setShape(null);
-            }
+            const container = containerRef.current;
+            const stage = stageRef.current?.getStage()?.content;
+
+            if (!container) return;
+
+            // Если клик вне container — игнорируем
+            if (!container.contains(event.target)) return;
+
+            // Если клик по stage — тоже игнорируем
+            if (stage && stage.contains(event.target)) return;
+
+            // Если клик внутри container, но вне stage → снимаем выделение
+            editorStore.setShape(null);
         };
 
         const handleKeyDown = (event) => {
@@ -127,7 +136,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
             document.removeEventListener("keydown", handleKeyDown);
         };
     }, []);
-
 
 
     const saveDesign = useCallback(async () => {
