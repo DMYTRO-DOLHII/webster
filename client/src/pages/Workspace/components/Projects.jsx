@@ -28,7 +28,7 @@ const Projects = () => {
                 const data = await getUserProjects(userId);
                 setProjects(data);
             } catch (error) {
-                console.error('Ошибка при загрузке проектов:', error);
+                console.error('Error when downloading projects:', error);
             }
         };
 
