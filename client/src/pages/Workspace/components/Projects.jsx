@@ -68,7 +68,8 @@ const Projects = () => {
                                         height: newProjectData.height,
                                         fill: newProjectData.background.toLowerCase(),
                                         listening: false,
-                                        name: 'Background'
+                                        name: 'Background',
+                                        opacity: 1
                                     },
                                     className: 'Rect',
                                 },

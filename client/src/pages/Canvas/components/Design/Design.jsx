@@ -305,7 +305,8 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                     width: img.width * scale,
                     height: img.height * scale,
                     draggable: true,
-                    img64: event.target.result
+                    img64: event.target.result,
+                    opacity: 1
                 };
 
                 handleShapesChange(prev => [...prev, newImage]);
@@ -383,6 +384,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                 y: pointerPosition.y / zoom,
                 visible: true,
                 name,
+                opacity: 1,
                 ...baseProps,
             };
 
@@ -414,6 +416,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
             points: [point.x / zoom, point.y / zoom],
             ...SHAPE_DEFAULTS.brush,
             stroke: currentColor,
+            opacity: 1,
             name: 'Bruh',
         };
 
