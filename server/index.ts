@@ -1,6 +1,6 @@
 import express, { json } from 'express'
 import { createUserAndDatabase } from './src/database/db.create'
-import { AppDataSource } from './src/database/data-source'
+import { AppDataSource, seedDatabase } from './src/database/data-source'
 import cors from 'cors'
 import authRouter from './src/routes/auth.route'
 import projectRouter from './src/routes/project.route'
@@ -56,7 +56,8 @@ app.use('/api/stripe', stripeRouter)
 createUserAndDatabase()
     .then(() => {
         AppDataSource.initialize()
-            .then(() => {
+            .then(async () => {
+                await seedDatabase();
                 app.listen(PORT, () => {
                     console.log(`Server is running on http://localhost:${PORT}`)
                 })
