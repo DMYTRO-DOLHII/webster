@@ -113,7 +113,7 @@ const Projects = () => {
 
             <section
                 aria-label="Recent templates"
-                className="grid grid-cols-1 gap-5 py-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 "
+                className="grid grid-cols-1 gap-5 py-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 "
             >
                 {projects.map((project) => (
                     <DesignCard
