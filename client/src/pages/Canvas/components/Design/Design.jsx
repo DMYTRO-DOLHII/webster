@@ -204,7 +204,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
 
             e.preventDefault();
 
-            // Move the shape
             selectedShape.position({
                 x: selectedShape.x() + dx,
                 y: selectedShape.y() + dy,
@@ -212,7 +211,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
 
             selectedShape.getLayer().batchDraw();
 
-            // Save changes
             debouncedSave();
         };
 
@@ -256,7 +254,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
             img.src = event.target.result;
 
             img.onload = () => {
-                // Автоматическое масштабирование с сохранением пропорций
                 const maxWidth = SHAPE_DEFAULTS.image.width;
                 const maxHeight = SHAPE_DEFAULTS.image.height;
                 const scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
@@ -267,7 +264,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
                     type: 'image',
                     name: file.name,
                     image: img,
-                    x: point.x, // Центрирование относительно курсора
+                    x: point.x,
                     y: point.y / zoom,
                     width: img.width * scale,
                     height: img.height * scale,
@@ -283,7 +280,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
     };
 
     const handleDoubleClick = id => {
-        // editorStore.setShape(id);
         const shape = shapes.find(s => s.id === id);
         if (shape.type === 'text') {
             editorStore.setShape(null);
@@ -320,52 +316,82 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
         [setShapes]
     );
 
+    const handleZoomAtPoint = (stage, pointer, direction) => {
+		const scaleBy = 1.2;
+		const oldScale = zoom;
+		const newZoom = direction > 0 ? zoom * scaleBy : zoom / scaleBy;
+
+		stage.scale({ x: newZoom, y: newZoom });
+		stage.batchDraw();
+		setZoom(newZoom);
+		localStorage.setItem('zoomValue', newZoom);
+	};
+
     const handleStageClick = e => {
-        const stage = stageRef.current.getStage();
-        if (e.target === stage) {
-            const tool = editorStore.selectedTool;
-            if (!SHAPE_DEFAULTS[tool] || tool === 'brush') {
-                editorStore.setShape(null);
-                return;
-            }
+		const stage = stageRef.current.getStage();
+		const pointerPosition = stage.getPointerPosition();
+		const tool = editorStore.selectedTool;
 
-            const pointerPosition = stage.getPointerPosition();
-            const currentColor = editorStore.selectedColor ?? '#000000';
+        if (tool === 'picker') {
+			const clickedShape = e.target;
+			if (clickedShape && clickedShape !== stage) {
+				const shapeAttrs = clickedShape.attrs;
 
-            const baseProps = { ...SHAPE_DEFAULTS[tool] };
-            if ('fill' in baseProps) baseProps.fill = currentColor;
-            if ('stroke' in baseProps) baseProps.stroke = currentColor;
-            let name = 'Figure';
-            if (tool === 'text') {
-                name = baseProps.text || 'Text';
-            } else if (tool === 'image') {
-                name = baseProps.fileName || 'Image';
-            }
-            name += ` ${shapes.length}`;
+				const pickedColor = shapeAttrs.fill || shapeAttrs.stroke;
+				if (pickedColor) {
+					editorStore.setColor(pickedColor);
+				}
+			}
+			return;
+		}
 
-            const newShape = {
-                id: `${tool}-${Date.now()}`,
-                type: tool,
-                x: pointerPosition.x / zoom,
-                y: pointerPosition.y / zoom,
-                visible: true,
-                name,
-                ...baseProps,
-            };
+		if (tool === 'zoom') {
+			const direction = e.evt.altKey ? -1 : 1;
+			handleZoomAtPoint(stage, pointerPosition, direction);
+			return;
+		}
 
-            handleShapesChange(prev => [...prev, newShape]);
-            setTimeout(() => {
-                editorStore.setShape(newShape.id);
-            }, 0);
-        } else {
-            const clickedId = e.target.attrs.id || e.target._id;
-            if (clickedId) {
-                editorStore.setShape(clickedId);
-                editorStore.setTool('move');
-                console.log(editorStore.selectedTool);
-            }
-        }
-    };
+		if (e.target === stage) {
+			if (!SHAPE_DEFAULTS[tool] || tool === 'brush') {
+				editorStore.setShape(null);
+				return;
+			}
+
+			const currentColor = editorStore.selectedColor ?? '#000000';
+			const baseProps = { ...SHAPE_DEFAULTS[tool] };
+			if ('fill' in baseProps) baseProps.fill = currentColor;
+			if ('stroke' in baseProps) baseProps.stroke = currentColor;
+
+			let name = 'Figure';
+			if (tool === 'text') {
+				name = baseProps.text || 'Text';
+			} else if (tool === 'image') {
+				name = baseProps.fileName || 'Image';
+			}
+			name += ` ${shapes.length}`;
+
+			const newShape = {
+				id: `${tool}-${Date.now()}`,
+				type: tool,
+				x: pointerPosition.x / zoom,
+				y: pointerPosition.y / zoom,
+				visible: true,
+				name,
+				...baseProps,
+			};
+
+			handleShapesChange(prev => [...prev, newShape]);
+			setTimeout(() => {
+				editorStore.setShape(newShape.id);
+			}, 0);
+		} else {
+			const clickedId = e.target.attrs.id || e.target._id;
+			if (clickedId) {
+				editorStore.setShape(clickedId);
+				editorStore.setTool('move');
+			}
+		}
+	};
 
     const handleMouseDown = e => {
         if (editorStore.selectedTool !== 'brush') return;
@@ -558,7 +584,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
                                 onTransformEnd={debouncedSave}
                                 onMouseUp={debouncedSave}
                                 onClick={() => editorStore.setShape(id)}
-                                onDblClick={() => handleDoubleClick(id)} // TODO PENIS
+                                onDblClick={() => handleDoubleClick(id)}
                                 visible={shape.visible !== false}
                                 ref={el => {
                                     if (el) {
