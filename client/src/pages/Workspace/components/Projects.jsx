@@ -70,7 +70,7 @@ const Projects = () => {
                                         fill: newProjectData.background.toLowerCase(),
                                         listening: false,
                                         name: 'Background',
-                                        opacity: 1
+                                        opacity: 1.0
                                     },
                                     className: 'Rect',
                                 },

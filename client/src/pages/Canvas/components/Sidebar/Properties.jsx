@@ -65,7 +65,7 @@ const Properties = observer(({ layers, setShapes }) => {
 
     const handleOpacityDoubleClick = () => {
         setIsEditingOpacity(true);
-        setOpacityInputValue((selectedLayer.opacity || 1).toFixed(2)); // Set to 2 decimal places
+        setOpacityInputValue((selectedLayer.opacity ?? 1).toFixed(2)); // Set to 2 decimal places
     };
 
     const handleBorderWidthDoubleClick = () => {
@@ -154,7 +154,7 @@ const Properties = observer(({ layers, setShapes }) => {
                                     />
                                 ) : (
                                     <span onDoubleClick={handleOpacityDoubleClick} className="cursor-pointer select-none">
-                                        {parseInt((selectedLayer.opacity) * 100)}%
+                                        {parseInt((selectedLayer.opacity ?? 1) * 100)}%
                                     </span>
                                 )}
                             </div>
@@ -163,7 +163,7 @@ const Properties = observer(({ layers, setShapes }) => {
                                 min="0"
                                 max="1"
                                 step="0.01"
-                                value={selectedLayer.opacity}
+                                value={selectedLayer.opacity ?? 1}
                                 onChange={(e) => {
                                     const newValue = parseFloat(e.target.value);
                                     setOpacityInputValue(newValue.toFixed(2)); // Update input value to match slider

@@ -84,7 +84,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                     visible: shape.visible !== false,
                     ...shape.attrs,
                 })) || [];
-
             const shapedFromJSON = loadedShapes.map(shape => {
                 if (shape.type === 'image') {
                     const img = new window.Image();
@@ -143,7 +142,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 
         const jsonString = stageRef.current.toJSON();
         if (!jsonString || jsonString === lastSavedDesign.current) return;
-
+            console.log(jsonString);
         try {
             const jsonObject = JSON.parse(jsonString);
 
