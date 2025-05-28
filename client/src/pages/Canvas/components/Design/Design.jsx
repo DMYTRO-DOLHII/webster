@@ -76,9 +76,9 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                 editorStore.setHeight(json.attrs.height);
             }
 
-            const layer = json.children?.find(c => c.className === 'Layer');
+            const layer = json.children?.filter(c => c.className === 'Layer');
             const loadedShapes =
-                layer?.children?.map(shape => ({
+                layer[1]?.children?.map(shape => ({
                     id: shape.attrs?.id || `${shape.className}-${Date.now()}`,
                     type: shape.className.toLowerCase(),
                     visible: shape.visible !== false,
@@ -194,7 +194,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
         const scaleY = containerSize.height / height;
         const scale = Math.min(scaleX, scaleY, 1);
         setZoom(scale);
-        console.log(width, height, containerSize, scale);
     }, [width, height, containerSize, setZoom]);
 
     useEffect(() => {
@@ -212,8 +211,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
             const selectedShape = shapeRefs.current[editorStore.selectedShapeId]
 
             if (!selectedShape) return;
-
-            console.log('penis')
             const step = e.shiftKey ? 10 : 1;
             let dx = 0;
             let dy = 0;
@@ -387,6 +384,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                 opacity: 1,
                 ...baseProps,
             };
+            console.log(newShape);
 
             handleShapesChange(prev => [...prev, newShape]);
             setTimeout(() => {
@@ -548,6 +546,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                         width={editorStore?.width ?? 0}
                         height={editorStore?.height ?? 0}
                         fillPatternImage={createCheckerboardPattern(7, "#1D2023FF", "#2D2F34FF")}
+                        listening={false}
                     />
                 </Layer>
                 <Layer>

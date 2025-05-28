@@ -86,8 +86,6 @@ const Projects = () => {
             userId: userStore?.user?.id,
         });
 
-        console.log(response.data);
-
         const designData = JSON.stringify(designObject);
         localStorage.setItem('designData', designData);
         navigate(`/canvas/${response.data.id}`);

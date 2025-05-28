@@ -16,11 +16,11 @@ const Layers = ({ layers, setShapes }) => {
 
     useEffect(() => {
         if (editorStore.selectedShapeId == null) {
-            const backgroundLayer = layers.find(layer => layer.name.toLowerCase() === 'background');
+            const backgroundLayer = layers.find(layer => layer.name?.toLowerCase() === 'background');
             if (backgroundLayer) {
                 editorStore.setShape(backgroundLayer.id);
-            } else if (layers.length > 0) {
-                editorStore.setShape(layers[0].id);
+            } else {
+                editorStore.setShape(null);
             }
         }
     }, [layers]);
@@ -132,7 +132,7 @@ const Layers = ({ layers, setShapes }) => {
         <div className="mb-6">
             <h2 className="text-sm font-semibold mb-2 border-b border-[#333] pb-1">Layers</h2>
             {layers && layers.length > 0 ? (
-                [...layers].slice().reverse().map((layer, index) => (
+                [...layers].filter(l => l.type !== "transformer").slice().reverse().map((layer, index) => (
                     <React.Fragment key={layer.id}>
                         <LayerItem layer={layer} index={index} />
                         {hoveredIndex === index && (

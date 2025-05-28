@@ -17,7 +17,6 @@ const Properties = observer(({ layers, setShapes }) => {
             )
         );
     };
-    console.log(editorStore.selectedShapeId);
 
     const selectedLayer = layers.find(layer => layer.id === editorStore.selectedShapeId);
 
