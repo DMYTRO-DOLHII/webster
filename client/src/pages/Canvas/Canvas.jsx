@@ -5,6 +5,7 @@ import RightSidebar from "./components/Sidebar/RightSidebar";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Design from "./components/Design/Design";
+import Error404 from "../404/404";
 import { editorStore } from '../../store/editorStore';
 import { api } from "../../services/api";
 
@@ -15,10 +16,14 @@ const Canvas = () => {
     const containerRef = useRef(null);
     const [zoom, setZoom] = useState(1);
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState(false);
     const [projectData, setProjectData] = useState(null);
     const [shapes, setShapes] = useState([]); // Состояние для хранения слоев
+
+    const [message, setMessage] = useState('Something went wrong')
+    const [redirectPath, setRedirectPath] = useState('/');
+    const [buttonText, setButtonText] = useState('Go to Main');
+    const [errorCode, setErrorCode] = useState(404)
 
     useEffect(() => {
         return () => {
@@ -73,25 +78,30 @@ const Canvas = () => {
                 const res = await api.get(`/projects/${projectId}`);
                 setProjectData(res.data);
                 editorStore.setProject(res.data);
-                setLoading(false);
                 localStorage.setItem("designData", JSON.stringify(res.data.info));
             } catch (err) {
                 if (err.response?.status === 403) {
-                    setError("You do not have permission to access this project.");
+                    setMessage('You cannot view this project, upgrade your plan');
+                    setRedirectPath('/workspace')
+                    setButtonText('Go to Workspace')
+                    setErrorCode(403);
                 } else if (err.response?.status === 404) {
-                    setError("Project not found.");
-                } else {
-                    setError("Something went wrong.", err);
+                    setMessage('Project not found');
+                    setRedirectPath('/workspace')
+                    setButtonText('Go to Workspace')
                 }
-                setLoading(false);
+
+                console.log(error)
+                setError(true);
             }
         };
 
         fetchProject();
     }, [projectId]);
 
-    if (loading) return <div>Loading project...</div>;
-    if (error) return <div className="text-red-500">{error}</div>;
+    if (error) return <Error404 message={message} redirectPath={redirectPath} buttonText={buttonText} errorCode={errorCode} />;
+    if (!projectData) return null;
+
 
     return (
         <div className="flex flex-col h-screen">

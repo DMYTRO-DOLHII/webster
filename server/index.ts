@@ -33,10 +33,6 @@ const corsOptions = {
 
 app.use(cors(corsOptions))
 
-app.use(json({
-    limit: '20mb'
-}));
-
 // 👉 Stripe webhook: needs raw body middleware BEFORE express.json()
 app.use(
     '/webhook',
@@ -45,7 +41,7 @@ app.use(
 )
 
 // Now apply express.json() to the rest of the app
-app.use(express.json())
+app.use(express.json({ limit: '20mb' }))
 
 // Other API routes
 app.use('/api/auth', authRouter)

@@ -7,8 +7,7 @@ import { Rect } from 'react-konva';
 import { editorStore } from '../../../../store/editorStore';
 import { api } from '../../../../services/api';
 import { SHAPE_COMPONENTS, SHAPE_DEFAULTS } from '../Shapes';
-import { TbVersionsOff } from 'react-icons/tb';
-import { ClipboardSignature } from 'lucide-react';
+import isEqual from 'lodash.isequal';
 
 const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setShapes }) => {
     const stageRef = useRef(null);
@@ -47,6 +46,65 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
     const fileInputRef = useRef(null);
     const menuRef = useRef(null);
 
+    const [skipSaving, setSkipSaving] = useState(false);
+
+    // UNDO
+    const handleUndo = () => {
+        const history = editorStore.history;
+        if (history.length <= 1) return;
+
+        console.log('undo');
+
+        const last = history[history.length - 1];
+        const previous = history[history.length - 2];
+
+        editorStore.setRedo([last, ...editorStore.redo]);
+        editorStore.setProjectHistory(history.slice(0, -1));
+
+        setSkipSaving(true);
+        localStorage.setItem('designData', JSON.stringify(previous));
+        editorStore.setProjectJSON(previous);
+        loadProjectFromJSON().finally(() => setSkipSaving(false));
+    };
+
+    // REDO
+    const handleRedo = () => {
+        const redo = editorStore.redo;
+        if (redo.length === 0) return;
+
+        console.log('redo');
+
+        const next = redo[0];
+
+        editorStore.setRedo(redo.slice(1));
+        editorStore.setProjectHistory([...editorStore.history, next]);
+
+        setSkipSaving(true);
+        localStorage.setItem('designData', JSON.stringify(next));
+        editorStore.setProjectJSON(next);
+        loadProjectFromJSON().finally(() => setSkipSaving(false));
+    };
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.ctrlKey && e.key === 'z') {
+                if (e.shiftKey) {
+                    // Ctrl + Shift + Z -> Redo
+                    e.preventDefault();
+                    handleRedo();
+                } else {
+                    // Ctrl + Z -> Undo
+                    e.preventDefault();
+                    handleUndo();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [handleUndo, handleRedo]);
+
+
     useEffect(() => {
         widthRef.current = width;
     }, [width]);
@@ -56,12 +114,24 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
     }, [height]);
 
     useEffect(() => {
+        loadProjectFromJSON()
+    }, [editorStore.projectJSON, containerSize, setShapes]);
+
+
+    const loadProjectFromJSON = async () => {
         if (!containerSize.width || !containerSize.height) return;
 
         let jsonString = localStorage.getItem('designData');
+        // If it's accidentally already an object (e.g., in dev mode), stringify it now
         if (!jsonString && typeof editorStore.projectJSON === 'object') {
-            jsonString = JSON.stringify(editorStore.projectJSON);
+            try {
+                jsonString = JSON.stringify(editorStore.projectJSON);
+            } catch (e) {
+                console.error("Failed to stringify projectJSON", e);
+                return;
+            }
         }
+
         if (!jsonString) return;
 
         try {
@@ -103,11 +173,12 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
         } catch (err) {
             console.error('Failed to parse designData', err);
         }
-    }, [editorStore.projectJSON, containerSize, setShapes]);
-
+    }
 
     const saveDesign = useCallback(async () => {
         if (!stageRef.current) return;
+
+        saveState();
 
         const jsonString = stageRef.current.toJSON();
         if (!jsonString || jsonString === lastSavedDesign.current) return;
@@ -137,6 +208,26 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
         }
     }, [projectId]);
 
+    const saveState = useCallback(() => {
+        if (skipSaving || !stageRef.current) return;
+
+        console.log('saving history');
+
+        const jsonObject = JSON.parse(stageRef.current.toJSON());
+
+        if (widthRef.current) jsonObject.attrs.width = widthRef.current;
+        if (heightRef.current) jsonObject.attrs.height = heightRef.current;
+
+        const currentHistory = editorStore.history || [];
+
+        const last = currentHistory[currentHistory.length - 1];
+
+        if (last && isEqual(last, jsonObject)) return;
+
+        editorStore.setProjectHistory([...currentHistory, jsonObject]);
+        editorStore.setRedo([]);
+    }, []);
+
     const debouncedSave = useRef(debounce(saveDesign, 500)).current;
 
     useEffect(() => {
@@ -162,7 +253,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
         const scaleY = containerSize.height / height;
         const scale = Math.min(scaleX, scaleY, 1);
         setZoom(scale);
-        console.log(width, height, containerSize, scale);
     }, [width, height, containerSize, setZoom]);
 
     useEffect(() => {
@@ -181,7 +271,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
 
             if (!selectedShape) return;
 
-            console.log('penis')
             const step = e.shiftKey ? 10 : 1;
             let dx = 0;
             let dy = 0;
@@ -559,7 +648,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
                                 onTransformEnd={debouncedSave}
                                 onMouseUp={debouncedSave}
                                 onClick={() => editorStore.setShape(id)}
-                                onDblClick={() => handleDoubleClick(id)} // TODO PENIS
+                                onDblClick={() => handleDoubleClick(id)} // TODO 
                                 visible={shape.visible !== false}
                                 ref={el => {
                                     if (el) {

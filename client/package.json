@@ -25,6 +25,7 @@
     "jwt-decode": "^4.0.0",
     "konva": "^9.3.20",
     "lodash": "^4.17.21",
+    "lodash.isequal": "^4.5.0",
     "lucide-react": "^0.507.0",
     "mobx": "^6.13.7",
     "mobx-react-lite": "^4.1.0",
