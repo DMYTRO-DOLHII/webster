@@ -62,6 +62,7 @@ const Projects = () => {
                             attrs: {},
                             className: 'Layer',
                             children: [
+                                newProjectData.background.toLowerCase() !== "transparent" &&
                                 {
                                     attrs: {
                                         width: newProjectData.width,

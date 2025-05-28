@@ -79,7 +79,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
             const layer = json.children?.find(c => c.className === 'Layer');
             const loadedShapes =
                 layer?.children?.map(shape => ({
-                    id: shape.attrs.id || `${shape.className}-${Date.now()}`,
+                    id: shape.attrs?.id || `${shape.className}-${Date.now()}`,
                     type: shape.className.toLowerCase(),
                     visible: shape.visible !== false,
                     ...shape.attrs,
@@ -480,6 +480,30 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
         editorStore.setTool("move");
         setCropRect(null);
     };
+    const createCheckerboardPattern = (cellSize = 10, lightColor = "#ffffff", darkColor = "#eeeeee") => {
+        const patternCanvas = document.createElement("canvas");
+        const size = cellSize * 2;
+        patternCanvas.width = size;
+        patternCanvas.height = size;
+
+        const ctx = patternCanvas.getContext("2d");
+
+        if (ctx) {
+            // Фон — светлый цвет
+            ctx.fillStyle = lightColor;
+            ctx.fillRect(0, 0, size, size);
+
+            // Два тёмных квадрата
+            ctx.fillStyle = darkColor;
+            ctx.fillRect(0, 0, cellSize, cellSize);
+            ctx.fillRect(cellSize, cellSize, cellSize, cellSize);
+        }
+
+        const img = new Image();
+        img.src = patternCanvas.toDataURL();
+
+        return img;
+    }
 
     return (
         <div className='relative'>
@@ -516,6 +540,16 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                 onMouseUp={handleMouseUp}
                 onContextMenu={handleContextMenu}
             >
+                <Layer>
+                    <Rect
+                        name="background"
+                        x={0}
+                        y={0}
+                        width={editorStore?.width ?? 0}
+                        height={editorStore?.height ?? 0}
+                        fillPatternImage={createCheckerboardPattern(7, "#1D2023FF", "#2D2F34FF")}
+                    />
+                </Layer>
                 <Layer>
                     {editorStore.selectedTool === 'crop' && cropRect && (
                         <>
