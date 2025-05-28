@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; 
 import { isShape, isText } from "../Shapes";
-import { Bold, Italic, Underline, Strikethrough, AlignLeft, AlignCenter, AlignRight } from "lucide-react";
-import { editorStore } from '../../../../store/editorStore';
+import { Bold, Italic, Underline, Strikethrough, AlignLeft, AlignCenter, AlignRight, Plus, Minus } from "lucide-react";
+import { editorStore } from '../../../../store/editorStore'; 
 import { observer } from 'mobx-react-lite';
 
 const Properties = observer(({ layers, setShapes }) => {
@@ -10,6 +10,16 @@ const Properties = observer(({ layers, setShapes }) => {
     const [isEditingBorderWidth, setIsEditingBorderWidth] = useState(false);
     const [borderWidthInputValue, setBorderWidthInputValue] = useState(0);
 
+    const selectedLayer = layers.find(layer => layer.id === editorStore.selectedShapeId);
+
+    useEffect(() => {
+        if (selectedLayer) {
+            // Обновляем значения при переключении объекта
+            setBorderWidthInputValue(selectedLayer.strokeWidth || 0);
+            setOpacityInputValue((selectedLayer.opacity ?? 1).toFixed(2));
+        }
+    }, [selectedLayer]);
+
     const updateShape = (key, value, selectedLayer) => {
         setShapes(prev =>
             prev.map(shape =>
@@ -17,8 +27,6 @@ const Properties = observer(({ layers, setShapes }) => {
             )
         );
     };
-
-    const selectedLayer = layers.find(layer => layer.id === editorStore.selectedShapeId);
 
     if (!editorStore.selectedShapeId || !selectedLayer) {
         return (
@@ -65,12 +73,10 @@ const Properties = observer(({ layers, setShapes }) => {
 
     const handleOpacityDoubleClick = () => {
         setIsEditingOpacity(true);
-        setOpacityInputValue((selectedLayer.opacity ?? 1).toFixed(2)); // Set to 2 decimal places
     };
 
     const handleBorderWidthDoubleClick = () => {
         setIsEditingBorderWidth(true);
-        setBorderWidthInputValue(selectedLayer.strokeWidth || 0);
     };
 
     const commitOpacityChange = () => {
@@ -93,6 +99,97 @@ const Properties = observer(({ layers, setShapes }) => {
         <div className="mb-6">
             <h2 className="text-sm font-semibold mb-2 border-b border-[#333] pb-1">Properties</h2>
             <div className="text-xs space-y-4">
+
+                {/* Opacity */}
+                <div className="border-b border-gray-600 pb-2">
+                    <div className='flex items-center justify-between'>
+                        <label className="block text-xs font-medium text-gray-300 mb-1">Opacity</label>
+                        {isEditingOpacity ? (
+                            <input
+                                type="number"
+                                min="0"
+                                max="1"
+                                step="0.01"
+                                value={opacityInputValue}
+                                onChange={e => setOpacityInputValue(e.target.value)}
+                                onBlur={commitOpacityChange}
+                                onKeyDown={e => e.key === 'Enter' && commitOpacityChange()}
+                                className="w-16 text-white rounded px-1"
+                            />
+                        ) : (
+                            <span onDoubleClick={handleOpacityDoubleClick} className="cursor-pointer select-none">
+                                {parseInt((selectedLayer.opacity ?? 1) * 100)}%
+                            </span>
+                        )}
+                    </div>
+                    <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={selectedLayer.opacity ?? 1}
+                        onChange={e => {
+                            const newValue = parseFloat(e.target.value);
+                            setOpacityInputValue(newValue.toFixed(2));
+                            updateShape("opacity", newValue, selectedLayer);
+                        }}
+                        className="w-full"
+                    />
+                </div>
+
+                {/* Border Color and Width */}
+                <div className="border-b border-gray-600 pb-2">
+                    <div className="flex items-center justify-between">
+                        <label className="text-xs font-medium text-gray-300">Border Color</label>
+                        <input
+                            type="color"
+                            className="w-10 h-6 border-none rounded"
+                            value={selectedLayer.stroke || "#000000"}
+                            onChange={e => updateShape("stroke", e.target.value, selectedLayer)}
+                        />
+                    </div>
+
+                    <div className="flex items-center justify-between mt-2">
+                        <label className="text-xs font-medium text-gray-300">Border Width</label>
+                        <div className='flex items-center space-x-2'>
+                            <Minus onClick={() => {
+                                const value = parseInt(borderWidthInputValue, 10);
+                                if (!isNaN(value) && value > 0) {
+                                    const newValue = value - 1;
+                                    setBorderWidthInputValue(newValue);
+                                    updateShape("strokeWidth", newValue, selectedLayer);
+                                }
+                            }} />
+                            {isEditingBorderWidth ? (
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={borderWidthInputValue}
+                                    onChange={e => setBorderWidthInputValue(e.target.value)}
+                                    onBlur={commitBorderWidthChange}
+                                    onKeyDown={e => e.key === 'Enter' && commitBorderWidthChange()}
+                                    className="w-16 text-white rounded px-1"
+                                />
+                            ) : (
+                                <span 
+                                    onDoubleClick={handleBorderWidthDoubleClick} 
+                                    className="cursor-pointer select-none"
+                                >
+                                    {selectedLayer.strokeWidth || 0}px
+                                </span>
+                            )}
+                            <Plus onClick={() => {
+                                const value = parseInt(borderWidthInputValue, 10);
+                                if (!isNaN(value) && value >= 0) {
+                                    const newValue = value + 1;
+                                    setBorderWidthInputValue(newValue);
+                                    updateShape("strokeWidth", newValue, selectedLayer);
+                                }
+                            }} />
+                        </div>
+                    </div>
+                </div>
+
                 {/* Shape Properties */}
                 {isShape(selectedLayer.type) && (
                     <div className="space-y-2">
@@ -103,76 +200,10 @@ const Properties = observer(({ layers, setShapes }) => {
                                     type="color"
                                     className="w-10 h-6 border-none rounded"
                                     value={selectedLayer.fill === "white" ? "#ffffff" : selectedLayer.fill || "#000000"}
-                                    onChange={(e) => updateShape("fill", e.target.value, selectedLayer)}
+                                    onChange={e => updateShape("fill", e.target.value, selectedLayer)}
                                 />
                             </div>
                         )}
-                        {/* Border Properties */}
-                        <div className="border-b border-gray-600 pb-2">
-                            <div className="flex items-center justify-between">
-                                <label className="block text-xs font-medium text-gray-300 mb-1">Border Color</label>
-                                <input
-                                    type="color"
-                                    className="w-10 h-6 border-none rounded"
-                                    value={selectedLayer.stroke || "#000000"}
-                                    onChange={(e) => updateShape("stroke", e.target.value, selectedLayer)}
-                                />
-                            </div>
-                            <div className="flex items-center justify-between mt-2">
-                                <label className="text-xs font-medium text-gray-300">Border Width</label>
-                                {isEditingBorderWidth ? (
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={borderWidthInputValue}
-                                        onChange={(e) => setBorderWidthInputValue(e.target.value)}
-                                        onBlur={commitBorderWidthChange}
-                                        onKeyDown={(e) => e.key === 'Enter' && commitBorderWidthChange()}
-                                        className="w-16 text-white rounded px-1"
-                                    />
-                                ) : (
-                                    <span onDoubleClick={handleBorderWidthDoubleClick} className="cursor-pointer select-none">
-                                        {selectedLayer.strokeWidth || 0}px
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                        <div className="border-b border-gray-600 pb-2">
-                            <div className='flex items-center justify-between'>
-                                <label className="block text-xs font-medium text-gray-300 mb-1">Opacity</label>
-                                {isEditingOpacity ? (
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        max="1"
-                                        step="0.01"
-                                        value={opacityInputValue}
-                                        onChange={(e) => setOpacityInputValue(e.target.value)}
-                                        onBlur={commitOpacityChange}
-                                        onKeyDown={(e) => e.key === 'Enter' && commitOpacityChange()}
-                                        className="w-16 text-white rounded px-1"
-                                    />
-                                ) : (
-                                    <span onDoubleClick={handleOpacityDoubleClick} className="cursor-pointer select-none">
-                                        {parseInt((selectedLayer.opacity ?? 1) * 100)}%
-                                    </span>
-                                )}
-                            </div>
-                            <input
-                                type="range"
-                                min="0"
-                                max="1"
-                                step="0.01"
-                                value={selectedLayer.opacity ?? 1}
-                                onChange={(e) => {
-                                    const newValue = parseFloat(e.target.value);
-                                    setOpacityInputValue(newValue.toFixed(2)); // Update input value to match slider
-                                    updateShape("opacity", newValue, selectedLayer);
-                                }}
-                                className="w-full"
-                            />
-                        </div>
-                        {/* Shape-specific properties */}
                         {selectedLayer.type === "rect" && (
                             <>
                                 <div>
@@ -181,10 +212,7 @@ const Properties = observer(({ layers, setShapes }) => {
                                         type="number"
                                         className="bg-[#1f1f1f] text-white border border-[#444] rounded px-3 py-1 w-full text-sm"
                                         value={selectedLayer.width || 0}
-                                        onChange={(e) => {
-                                            const width = parseFloat(e.target.value);
-                                            updateShape("width", width, selectedLayer);
-                                        }}
+                                        onChange={e => updateShape("width", parseFloat(e.target.value), selectedLayer)}
                                     />
                                 </div>
                                 <div>
@@ -193,16 +221,11 @@ const Properties = observer(({ layers, setShapes }) => {
                                         type="number"
                                         className="bg-[#1f1f1f] text-white border border-[#444] rounded px-3 py-1 w-full text-sm"
                                         value={selectedLayer.height || 0}
-                                        onChange={(e) => {
-                                            const height = parseFloat(e.target.value);
-                                            updateShape("height", height, selectedLayer);
-                                        }}
+                                        onChange={e => updateShape("height", parseFloat(e.target.value), selectedLayer)}
                                     />
                                 </div>
                             </>
                         )}
-                        {/* Other shape types (circle, triangle, etc.) */}
-                        {/* ... (existing shape-specific properties) */}
                     </div>
                 )}
 
@@ -215,10 +238,10 @@ const Properties = observer(({ layers, setShapes }) => {
                                 type="color"
                                 className="w-10 h-6 border-none rounded"
                                 value={selectedLayer.fill}
-                                onChange={(e) => updateShape("fill", e.target.value, selectedLayer)}
+                                onChange={e => updateShape("fill", e.target.value, selectedLayer)}
                             />
                         </div>
-                        {/* Text Formatting Icons */}
+
                         <div className="flex space-x-2 mb-2">
                             <button
                                 onClick={toggleBold}
@@ -254,7 +277,6 @@ const Properties = observer(({ layers, setShapes }) => {
                             </button>
                         </div>
 
-                        {/* Text Alignment */}
                         <div className="flex space-x-2 mb-2">
                             <button
                                 onClick={() => updateShape("align", "left", selectedLayer)}
@@ -282,7 +304,6 @@ const Properties = observer(({ layers, setShapes }) => {
                             </button>
                         </div>
 
-                        {/* Font Family */}
                         <div>
                             <label className="block text-xs font-medium text-gray-300 mb-1">Font Family</label>
                             <select
@@ -296,7 +317,6 @@ const Properties = observer(({ layers, setShapes }) => {
                             </select>
                         </div>
 
-                        {/* Font Size */}
                         <div>
                             <label className="block text-xs font-medium text-gray-300 mb-1">Font Size</label>
                             <input

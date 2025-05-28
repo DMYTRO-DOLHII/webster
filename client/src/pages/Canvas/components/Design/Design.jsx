@@ -80,11 +80,10 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
             const loadedShapes =
                 (layer.length > 1 ? layer[1] : layer[0])?.children?.map(shape => ({
                     id: shape.attrs?.id || `${shape.className}-${Date.now()}`,
-                    type: shape.className.toLowerCase(),
+                    type: shape.className?.toLowerCase(),
                     visible: shape.visible !== false,
                     ...shape.attrs,
                 })) || [];
-            console.log(loadedShapes);
             const shapedFromJSON = loadedShapes.map(shape => {
                 if (shape.type === 'image') {
                     const img = new window.Image();
