@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react'; 
+import React, { useState, useEffect } from 'react';
 import { isShape, isText } from "../Shapes";
 import { Bold, Italic, Underline, Strikethrough, AlignLeft, AlignCenter, AlignRight, Plus, Minus } from "lucide-react";
-import { editorStore } from '../../../../store/editorStore'; 
+import { editorStore } from '../../../../store/editorStore';
 import { observer } from 'mobx-react-lite';
 
 const Properties = observer(({ layers, setShapes }) => {
@@ -89,6 +89,7 @@ const Properties = observer(({ layers, setShapes }) => {
 
     const commitBorderWidthChange = () => {
         const value = parseFloat(borderWidthInputValue);
+        if (!selectedLayer?.stroke) updateShape("stroke", "#000000", selectedLayer);
         if (!isNaN(value) && value >= 0) {
             updateShape("strokeWidth", value, selectedLayer);
         }
@@ -157,6 +158,7 @@ const Properties = observer(({ layers, setShapes }) => {
                                 if (!isNaN(value) && value > 0) {
                                     const newValue = value - 1;
                                     setBorderWidthInputValue(newValue);
+                                    if (!selectedLayer?.stroke) updateShape("stroke", "#000000", selectedLayer);
                                     updateShape("strokeWidth", newValue, selectedLayer);
                                 }
                             }} />
@@ -171,8 +173,8 @@ const Properties = observer(({ layers, setShapes }) => {
                                     className="w-16 text-white rounded px-1"
                                 />
                             ) : (
-                                <span 
-                                    onDoubleClick={handleBorderWidthDoubleClick} 
+                                <span
+                                    onDoubleClick={handleBorderWidthDoubleClick}
                                     className="cursor-pointer select-none"
                                 >
                                     {selectedLayer.strokeWidth || 0}px
@@ -183,6 +185,7 @@ const Properties = observer(({ layers, setShapes }) => {
                                 if (!isNaN(value) && value >= 0) {
                                     const newValue = value + 1;
                                     setBorderWidthInputValue(newValue);
+                                    if (!selectedLayer?.stroke) updateShape("stroke", "#000000", selectedLayer);
                                     updateShape("strokeWidth", newValue, selectedLayer);
                                 }
                             }} />
