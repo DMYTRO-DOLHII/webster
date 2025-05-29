@@ -11,6 +11,7 @@ class EditorStore {
 
     projectHistory = [];
     redo = [];
+    currentHistoryIndex = null;
 
     width = null;
     height = null;
@@ -66,10 +67,15 @@ class EditorStore {
         this.height = height;
     }
 
-    setProjectHistory(history) {
-        this.history = history;
+    setCurrentHistoryIndex(index) {
+        this.currentHistoryIndex = index;
     }
 
+    setProjectHistory(history) {
+        this.projectHistory = history;
+        this.currentHistoryIndex = history.length - 1;
+    }
+    
     setRedo(redo) {
         this.redo = redo;
     }

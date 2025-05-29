@@ -50,7 +50,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
 
     // UNDO
     const handleUndo = () => {
-        const history = editorStore.history;
+        const history = editorStore.projectHistory;
         if (history.length <= 1) return;
 
         console.log('undo');
@@ -77,7 +77,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
         const next = redo[0];
 
         editorStore.setRedo(redo.slice(1));
-        editorStore.setProjectHistory([...editorStore.history, next]);
+        editorStore.setProjectHistory([...editorStore.projectHistory, next]);
 
         setSkipSaving(true);
         localStorage.setItem('designData', JSON.stringify(next));
@@ -202,7 +202,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
             });
 
             lastSavedDesign.current = json;
-            console.log('Design saved');
         } catch (error) {
             console.error('Save failed:', error);
         }
@@ -211,21 +210,22 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
     const saveState = useCallback(() => {
         if (skipSaving || !stageRef.current) return;
 
-        console.log('saving history');
-
         const jsonObject = JSON.parse(stageRef.current.toJSON());
 
         if (widthRef.current) jsonObject.attrs.width = widthRef.current;
         if (heightRef.current) jsonObject.attrs.height = heightRef.current;
 
-        const currentHistory = editorStore.history || [];
+        const currentHistory = editorStore.projectHistory || [];
+        const currentIndex = editorStore.currentHistoryIndex ?? currentHistory.length - 1;
 
-        const last = currentHistory[currentHistory.length - 1];
+        const last = currentHistory[currentIndex];
 
         if (last && isEqual(last, jsonObject)) return;
 
-        editorStore.setProjectHistory([...currentHistory, jsonObject]);
-        editorStore.setRedo([]);
+        // Slice the history up to current index and add new state
+        const newHistory = [...currentHistory.slice(0, currentIndex + 1), jsonObject];
+        editorStore.setProjectHistory(newHistory);
+        editorStore.setCurrentHistoryIndex(newHistory.length - 1);
     }, []);
 
     const debouncedSave = useRef(debounce(saveDesign, 500)).current;
