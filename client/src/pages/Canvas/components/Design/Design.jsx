@@ -27,7 +27,8 @@ const ImageWithFilters = forwardRef(({ shapeObject, ...props }, ref) => {
 	if (shapeObject.filters?.brightness?.active) activeFilters.push(Konva.Filters.Brighten);
 	if (shapeObject.filters?.contrast?.active) activeFilters.push(Konva.Filters.Contrast);
 
-	const { image, filters, id, type, name, visible, ...imageProps } = shapeObject;
+	// Destructure only what we need, preserve id and name
+	const { image, filters, ...imageProps } = shapeObject;
 
 	return (
 		<SHAPE_COMPONENTS.image
@@ -36,6 +37,8 @@ const ImageWithFilters = forwardRef(({ shapeObject, ...props }, ref) => {
 				if (typeof ref === 'function') ref(node);
 				else if (ref) ref.current = node;
 			}}
+			id={shapeObject.id} // Explicitly pass id
+			name={shapeObject.name} // Explicitly pass name
 			image={image}
 			filters={activeFilters}
 			blurRadius={filters?.blur?.active ? filters.blur.value : 0}

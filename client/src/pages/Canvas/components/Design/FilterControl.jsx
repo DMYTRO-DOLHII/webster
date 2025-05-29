@@ -10,7 +10,7 @@ const FilterControl = ({ name, min, max, step, filters, setFilters }) => {
 					<input
 						type='checkbox'
 						id={name}
-						checked={filters[name].active}
+						checked={filters[name]?.active}
 						onChange={e => {
 							setFilters({
 								...filters,
@@ -23,15 +23,15 @@ const FilterControl = ({ name, min, max, step, filters, setFilters }) => {
 						{capitalizedName}
 					</label>
 				</div>
-				<span className='text-xs'>{name === 'brightness' ? filters[name].value.toFixed(1) : filters[name].value}</span>
+				<span className='text-xs'>{name === 'brightness' ? filters[name]?.value?.toFixed(1) : filters[name]?.value}</span>
 			</div>
 			<input
 				type='range'
 				min={min}
 				max={max}
 				step={step}
-				value={filters[name].value}
-				disabled={!filters[name].active}
+				value={filters[name]?.value}
+				disabled={!filters[name]?.active}
 				onChange={e => {
 					setFilters({
 						...filters,

@@ -101,7 +101,7 @@ const Layers = ({ layers, setShapes }) => {
             >
                 {editingLayerId === layer.id ? (
                     <input
-                        className="bg-transparent border-b border-white text-white focus:outline-none px-1 mr-2 w-full"
+                        className="w-full px-1 mr-2 text-white bg-transparent border-b border-white focus:outline-none"
                         value={nameInputValue}
                         autoFocus
                         onChange={(e) => setNameInputValue(e.target.value)}
@@ -112,7 +112,7 @@ const Layers = ({ layers, setShapes }) => {
                         }}
                     />
                 ) : (
-                    <span className="truncate mr-2">{layer.name}</span>
+                    <span className="mr-2 truncate">{layer.name}</span>
                 )}
                 <button
                     onClick={(e) => {
