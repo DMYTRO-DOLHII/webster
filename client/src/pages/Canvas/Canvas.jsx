@@ -92,6 +92,7 @@ const Canvas = () => {
                         shapes={shapes}
                         zoom={zoom}
                         containerSize={containerSize}
+                        containerRef={containerRef}
                         initialData={projectData.json}
                         setZoom={handleZoomChange}
                         setShapes={setShapes}

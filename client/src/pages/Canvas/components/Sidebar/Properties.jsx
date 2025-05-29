@@ -1,10 +1,25 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react'; 
 import { isShape, isText } from "../Shapes";
-import { Bold, Italic, Underline, Strikethrough, AlignLeft, AlignCenter, AlignRight } from "lucide-react";
-import { editorStore } from '../../../../store/editorStore';
+import { Bold, Italic, Underline, Strikethrough, AlignLeft, AlignCenter, AlignRight, Plus, Minus } from "lucide-react";
+import { editorStore } from '../../../../store/editorStore'; 
 import { observer } from 'mobx-react-lite';
 
 const Properties = observer(({ layers, setShapes }) => {
+    const [isEditingOpacity, setIsEditingOpacity] = useState(false);
+    const [opacityInputValue, setOpacityInputValue] = useState(1);
+    const [isEditingBorderWidth, setIsEditingBorderWidth] = useState(false);
+    const [borderWidthInputValue, setBorderWidthInputValue] = useState(0);
+
+    const selectedLayer = layers.find(layer => layer.id === editorStore.selectedShapeId);
+
+    useEffect(() => {
+        if (selectedLayer) {
+            // Обновляем значения при переключении объекта
+            setBorderWidthInputValue(selectedLayer.strokeWidth || 0);
+            setOpacityInputValue((selectedLayer.opacity ?? 1).toFixed(2));
+        }
+    }, [selectedLayer]);
+
     const updateShape = (key, value, selectedLayer) => {
         setShapes(prev =>
             prev.map(shape =>
@@ -13,7 +28,7 @@ const Properties = observer(({ layers, setShapes }) => {
         );
     };
 
-    if (!editorStore.selectedShapeId) {
+    if (!editorStore.selectedShapeId || !selectedLayer) {
         return (
             <div className="mb-6">
                 <h2 className="text-sm font-semibold mb-2 border-b border-[#333] pb-1">Properties</h2>
@@ -22,10 +37,7 @@ const Properties = observer(({ layers, setShapes }) => {
         )
     }
 
-    const selectedLayer = layers.find(layer => layer.id === editorStore.selectedShapeId);
-    if (!selectedLayer) return null;
-
-    // Because fontStyle might contain multiple styles e.g. "italic bold", we should handle toggling carefully for bold and italic separately.
+    // Font style handling
     const hasBold = selectedLayer.fontStyle ? selectedLayer.fontStyle.includes("bold") : false;
     const hasItalic = selectedLayer.fontStyle ? selectedLayer.fontStyle.includes("italic") : false;
 
@@ -59,24 +71,139 @@ const Properties = observer(({ layers, setShapes }) => {
         updateShape("textDecoration", current === "line-through" ? "" : "line-through", selectedLayer);
     };
 
+    const handleOpacityDoubleClick = () => {
+        setIsEditingOpacity(true);
+    };
+
+    const handleBorderWidthDoubleClick = () => {
+        setIsEditingBorderWidth(true);
+    };
+
+    const commitOpacityChange = () => {
+        const value = parseFloat(opacityInputValue);
+        if (!isNaN(value) && value >= 0 && value <= 1) {
+            updateShape("opacity", value, selectedLayer);
+        }
+        setIsEditingOpacity(false);
+    };
+
+    const commitBorderWidthChange = () => {
+        const value = parseFloat(borderWidthInputValue);
+        if (!isNaN(value) && value >= 0) {
+            updateShape("strokeWidth", value, selectedLayer);
+        }
+        setIsEditingBorderWidth(false);
+    };
+
     return (
         <div className="mb-6">
             <h2 className="text-sm font-semibold mb-2 border-b border-[#333] pb-1">Properties</h2>
             <div className="text-xs space-y-4">
+
+                {/* Opacity */}
+                <div className="border-b border-gray-600 pb-2">
+                    <div className='flex items-center justify-between'>
+                        <label className="block text-xs font-medium text-gray-300 mb-1">Opacity</label>
+                        {isEditingOpacity ? (
+                            <input
+                                type="number"
+                                min="0"
+                                max="1"
+                                step="0.01"
+                                value={opacityInputValue}
+                                onChange={e => setOpacityInputValue(e.target.value)}
+                                onBlur={commitOpacityChange}
+                                onKeyDown={e => e.key === 'Enter' && commitOpacityChange()}
+                                className="w-16 text-white rounded px-1"
+                            />
+                        ) : (
+                            <span onDoubleClick={handleOpacityDoubleClick} className="cursor-pointer select-none">
+                                {parseInt((selectedLayer.opacity ?? 1) * 100)}%
+                            </span>
+                        )}
+                    </div>
+                    <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={selectedLayer.opacity ?? 1}
+                        onChange={e => {
+                            const newValue = parseFloat(e.target.value);
+                            setOpacityInputValue(newValue.toFixed(2));
+                            updateShape("opacity", newValue, selectedLayer);
+                        }}
+                        className="w-full"
+                    />
+                </div>
+
+                {/* Border Color and Width */}
+                <div className="border-b border-gray-600 pb-2">
+                    <div className="flex items-center justify-between">
+                        <label className="text-xs font-medium text-gray-300">Border Color</label>
+                        <input
+                            type="color"
+                            className="w-10 h-6 border-none rounded"
+                            value={selectedLayer.stroke || "#000000"}
+                            onChange={e => updateShape("stroke", e.target.value, selectedLayer)}
+                        />
+                    </div>
+
+                    <div className="flex items-center justify-between mt-2">
+                        <label className="text-xs font-medium text-gray-300">Border Width</label>
+                        <div className='flex items-center space-x-2'>
+                            <Minus onClick={() => {
+                                const value = parseInt(borderWidthInputValue, 10);
+                                if (!isNaN(value) && value > 0) {
+                                    const newValue = value - 1;
+                                    setBorderWidthInputValue(newValue);
+                                    updateShape("strokeWidth", newValue, selectedLayer);
+                                }
+                            }} />
+                            {isEditingBorderWidth ? (
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={borderWidthInputValue}
+                                    onChange={e => setBorderWidthInputValue(e.target.value)}
+                                    onBlur={commitBorderWidthChange}
+                                    onKeyDown={e => e.key === 'Enter' && commitBorderWidthChange()}
+                                    className="w-16 text-white rounded px-1"
+                                />
+                            ) : (
+                                <span 
+                                    onDoubleClick={handleBorderWidthDoubleClick} 
+                                    className="cursor-pointer select-none"
+                                >
+                                    {selectedLayer.strokeWidth || 0}px
+                                </span>
+                            )}
+                            <Plus onClick={() => {
+                                const value = parseInt(borderWidthInputValue, 10);
+                                if (!isNaN(value) && value >= 0) {
+                                    const newValue = value + 1;
+                                    setBorderWidthInputValue(newValue);
+                                    updateShape("strokeWidth", newValue, selectedLayer);
+                                }
+                            }} />
+                        </div>
+                    </div>
+                </div>
+
                 {/* Shape Properties */}
                 {isShape(selectedLayer.type) && (
                     <div className="space-y-2">
-                        {selectedLayer.type !== 'line' &&
-                            (<div className="flex items-center justify-between">
+                        {selectedLayer.type !== 'line' && (
+                            <div className="flex items-center justify-between">
                                 <label className="text-xs font-medium text-gray-300">Color</label>
                                 <input
                                     type="color"
                                     className="w-10 h-6 border-none rounded"
                                     value={selectedLayer.fill === "white" ? "#ffffff" : selectedLayer.fill || "#000000"}
-                                    onChange={(e) => updateShape("fill", e.target.value, selectedLayer)}
+                                    onChange={e => updateShape("fill", e.target.value, selectedLayer)}
                                 />
                             </div>
-                            )}
+                        )}
                         {selectedLayer.type === "rect" && (
                             <>
                                 <div>
@@ -85,10 +212,7 @@ const Properties = observer(({ layers, setShapes }) => {
                                         type="number"
                                         className="bg-[#1f1f1f] text-white border border-[#444] rounded px-3 py-1 w-full text-sm"
                                         value={selectedLayer.width || 0}
-                                        onChange={(e) => {
-                                            const width = parseFloat(e.target.value);
-                                            updateShape("width", width, selectedLayer);
-                                        }}
+                                        onChange={e => updateShape("width", parseFloat(e.target.value), selectedLayer)}
                                     />
                                 </div>
                                 <div>
@@ -97,180 +221,7 @@ const Properties = observer(({ layers, setShapes }) => {
                                         type="number"
                                         className="bg-[#1f1f1f] text-white border border-[#444] rounded px-3 py-1 w-full text-sm"
                                         value={selectedLayer.height || 0}
-                                        onChange={(e) => {
-                                            const height = parseFloat(e.target.value);
-                                            updateShape("height", height, selectedLayer);
-                                        }}
-                                    />
-                                </div>
-                            </>
-                        )}
-                        {selectedLayer.type === "circle" && (
-                            <div>
-                                <label className="block text-xs font-medium text-gray-300 mb-1">Radius</label>
-                                <input
-                                    type="number"
-                                    className="bg-[#1f1f1f] text-white border border-[#444] rounded px-3 py-1 w-full text-sm"
-                                    value={selectedLayer.radius || 0}
-                                    onChange={(e) => {
-                                        const radius = parseFloat(e.target.value);
-                                        updateShape("radius", radius, selectedLayer);
-                                    }}
-                                />
-                            </div>
-                        )}
-                        {selectedLayer.type === "triangle" && (
-                            <div>
-                                <label className="block text-xs font-medium text-gray-300 mb-1">Sides</label>
-                                <input
-                                    type="number"
-                                    className="bg-[#1f1f1f] text-white border border-[#444] rounded px-3 py-1 w-full text-sm"
-                                    value={selectedLayer.sides || 0}
-                                    onChange={(e) => {
-                                        const sides = parseFloat(e.target.value);
-                                        updateShape("sides", sides, selectedLayer);
-                                    }}
-                                />
-                            </div>
-                        )}
-                        {selectedLayer.type === "pentagon" && (
-                            <div>
-                                <label className="block text-xs font-medium text-gray-300 mb-1">Sides</label>
-                                <input
-                                    type="number"
-                                    className="bg-[#1f1f1f] text-white border border-[#444] rounded px-3 py-1 w-full text-sm"
-                                    value={selectedLayer.sides || 0}
-                                    onChange={(e) => {
-                                        const sides = parseFloat(e.target.value);
-                                        updateShape("sides", sides, selectedLayer);
-                                    }}
-                                />
-                            </div>
-                        )}
-                        {selectedLayer.type === "hexagon" && (
-                            <div>
-                                <label className="block text-xs font-medium text-gray-300 mb-1">Sides</label>
-                                <input
-                                    type="number"
-                                    className="bg-[#1f1f1f] text-white border border-[#444] rounded px-3 py-1 w-full text-sm"
-                                    value={selectedLayer.sides || 0}
-                                    onChange={(e) => {
-                                        const sides = parseFloat(e.target.value);
-                                        updateShape("sides", sides, selectedLayer);
-                                    }}
-                                />
-                            </div>
-                        )}
-                        {selectedLayer.type === "star" && (
-                            <>
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-300 mb-1">Num Points</label>
-                                    <input
-                                        type="number"
-                                        className="bg-[#1f1f1f] text-white border border-[#444] rounded px-3 py-1 w-full text-sm"
-                                        value={selectedLayer.numPoints || 0}
-                                        onChange={(e) => {
-                                            const numPoints = parseFloat(e.target.value);
-                                            updateShape("numPoints", numPoints, selectedLayer);
-                                        }}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-300 mb-1">Inner Radius</label>
-                                    <input
-                                        type="number"
-                                        className="bg-[#1f1f1f] text-white border border-[#444] rounded px-3 py-1 w-full text-sm"
-                                        value={selectedLayer.innerRadius || 0}
-                                        onChange={(e) => {
-                                            const innerRadius = parseFloat(e.target.value);
-                                            updateShape("innerRadius", innerRadius, selectedLayer);
-                                        }}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-300 mb-1">Outer Radius</label>
-                                    <input
-                                        type="number"
-                                        className="bg-[#1f1f1f] text-white border border-[#444] rounded px-3 py-1 w-full text-sm"
-                                        value={selectedLayer.outerRadius || 0}
-                                        onChange={(e) => {
-                                            const outerRadius = parseFloat(e.target.value);
-                                            updateShape("outerRadius", outerRadius, selectedLayer);
-                                        }}
-                                    />
-                                </div>
-                            </>
-                        )}
-                        {selectedLayer.type === "line" && (
-                            <>
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-300 mb-1">Stroke</label>
-                                    <input
-                                        type="color"
-                                        className="w-10 h-6 border-none rounded"
-                                        value={selectedLayer.stroke || "#000000"}
-                                        onChange={(e) => updateShape("stroke", e.target.value, selectedLayer)}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-300 mb-1">Stroke Width</label>
-                                    <input
-                                        type="number"
-                                        className="bg-[#1f1f1f] text-white border border-[#444] rounded px-3 py-1 w-full text-sm"
-                                        value={selectedLayer.strokeWidth || 0}
-                                        onChange={(e) => {
-                                            const strokeWidth = parseFloat(e.target.value);
-                                            updateShape("strokeWidth", strokeWidth, selectedLayer);
-                                        }}
-                                    />
-                                </div>
-                            </>
-                        )}
-                        {selectedLayer.type === "arrow" && (
-                            <>
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-300 mb-1">Stroke</label>
-                                    <input
-                                        type="color"
-                                        className="w-10 h-6 border-none rounded"
-                                        value={selectedLayer.stroke || "#000000"}
-                                        onChange={(e) => updateShape("stroke", e.target.value, selectedLayer)}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-300 mb-1">Stroke Width</label>
-                                    <input
-                                        type="number"
-                                        className="bg-[#1f1f1f] text-white border border-[#444] rounded px-3 py-1 w-full text-sm"
-                                        value={selectedLayer.strokeWidth || 0}
-                                        onChange={(e) => {
-                                            const strokeWidth = parseFloat(e.target.value);
-                                            updateShape("strokeWidth", strokeWidth, selectedLayer);
-                                        }}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-300 mb-1">Pointer Length</label>
-                                    <input
-                                        type="number"
-                                        className="bg-[#1f1f1f] text-white border border-[#444] rounded px-3 py-1 w-full text-sm"
-                                        value={selectedLayer.pointerLength || 0}
-                                        onChange={(e) => {
-                                            const pointerLength = parseFloat(e.target.value);
-                                            updateShape("pointerLength", pointerLength, selectedLayer);
-                                        }}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-300 mb-1">Pointer Width</label>
-                                    <input
-                                        type="number"
-                                        className="bg-[#1f1f1f] text-white border border-[#444] rounded px-3 py-1 w-full text-sm"
-                                        value={selectedLayer.pointerWidth || 0}
-                                        onChange={(e) => {
-                                            const pointerWidth = parseFloat(e.target.value);
-                                            updateShape("pointerWidth", pointerWidth, selectedLayer);
-                                        }}
+                                        onChange={e => updateShape("height", parseFloat(e.target.value), selectedLayer)}
                                     />
                                 </div>
                             </>
@@ -287,10 +238,10 @@ const Properties = observer(({ layers, setShapes }) => {
                                 type="color"
                                 className="w-10 h-6 border-none rounded"
                                 value={selectedLayer.fill}
-                                onChange={(e) => updateShape("fill", e.target.value, selectedLayer)}
+                                onChange={e => updateShape("fill", e.target.value, selectedLayer)}
                             />
                         </div>
-                        {/* Text Formatting Icons */}
+
                         <div className="flex space-x-2 mb-2">
                             <button
                                 onClick={toggleBold}
@@ -326,7 +277,6 @@ const Properties = observer(({ layers, setShapes }) => {
                             </button>
                         </div>
 
-                        {/* Text Alignment */}
                         <div className="flex space-x-2 mb-2">
                             <button
                                 onClick={() => updateShape("align", "left", selectedLayer)}
@@ -354,7 +304,6 @@ const Properties = observer(({ layers, setShapes }) => {
                             </button>
                         </div>
 
-                        {/* Font Family */}
                         <div>
                             <label className="block text-xs font-medium text-gray-300 mb-1">Font Family</label>
                             <select
@@ -368,7 +317,6 @@ const Properties = observer(({ layers, setShapes }) => {
                             </select>
                         </div>
 
-                        {/* Font Size */}
                         <div>
                             <label className="block text-xs font-medium text-gray-300 mb-1">Font Size</label>
                             <input

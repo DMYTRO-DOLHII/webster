@@ -13,7 +13,6 @@ const Workspace = () => {
     const renderContent = () => {
         switch (activeTab) {
             case "templates":
-                console.log(userStore.user);
                 return <Templates />;
             case "trash":
                 return <Trash />;

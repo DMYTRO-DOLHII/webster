@@ -10,313 +10,341 @@ import { SHAPE_COMPONENTS, SHAPE_DEFAULTS } from '../Shapes';
 import { TbVersionsOff } from 'react-icons/tb';
 import { ClipboardSignature } from 'lucide-react';
 
-const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setShapes }) => {
-    const stageRef = useRef(null);
-    const shapeRefs = useRef({});
-    const isDrawing = useRef(false);
-    const lastSavedDesign = useRef(null);
-    const widthRef = useRef(0);
-    const heightRef = useRef(0);
+const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef, setZoom, setShapes }) => {
+	const stageRef = useRef(null);
+	const shapeRefs = useRef({});
+	const isDrawing = useRef(false);
+	const lastSavedDesign = useRef(null);
+	const widthRef = useRef(0);
+	const heightRef = useRef(0);
 
-    const [editingTextId, setEditingTextId] = useState(null);
-    const [textValue, setTextValue] = useState('');
-    const textInputRef = useRef(null);
+	const [editingTextId, setEditingTextId] = useState(null);
+	const [textValue, setTextValue] = useState('');
+	const textInputRef = useRef(null);
 
-    const [currentLineId, setCurrentLineId] = useState(null);
+	const [currentLineId, setCurrentLineId] = useState(null);
 
-    const [width, setWidth] = useState(0);
-    const [height, setHeight] = useState(0);
+	const [width, setWidth] = useState(0);
+	const [height, setHeight] = useState(0);
 
-    const [cropRect, setCropRect] = useState({
-        x: 100,
-        y: 100,
-        width: 300,
-        height: 300,
-    });
-    const cropRef = useRef(null);
+	const [cropRect, setCropRect] = useState({
+		x: 100,
+		y: 100,
+		width: 300,
+		height: 300,
+	});
+	const cropRef = useRef(null);
 
-    const { projectId } = useParams();
+	const { projectId } = useParams();
 
-    const [contextMenu, setContextMenu] = useState({
-        visible: false,
-        x: 0,
-        y: 0,
-        stageX: 0,
-        stageY: 0,
-    });
-    const fileInputRef = useRef(null);
-    const menuRef = useRef(null);
+	const [contextMenu, setContextMenu] = useState({
+		visible: false,
+		x: 0,
+		y: 0,
+		stageX: 0,
+		stageY: 0,
+	});
+	const fileInputRef = useRef(null);
+	const menuRef = useRef(null);
 
-    useEffect(() => {
-        widthRef.current = width;
-    }, [width]);
+	useEffect(() => {
+		widthRef.current = width;
+	}, [width]);
 
-    useEffect(() => {
-        heightRef.current = height;
-    }, [height]);
+	useEffect(() => {
+		heightRef.current = height;
+	}, [height]);
 
-    useEffect(() => {
-        if (!containerSize.width || !containerSize.height) return;
+	useEffect(() => {
+		if (!containerSize.width || !containerSize.height) return;
 
-        let jsonString = localStorage.getItem('designData');
-        if (!jsonString && typeof editorStore.projectJSON === 'object') {
-            jsonString = JSON.stringify(editorStore.projectJSON);
-        }
-        if (!jsonString) return;
+		let jsonString = localStorage.getItem('designData');
+		if (!jsonString && typeof editorStore.projectJSON === 'object') {
+			jsonString = JSON.stringify(editorStore.projectJSON);
+		}
+		if (!jsonString) return;
 
-        try {
-            const json = JSON.parse(jsonString);
+		try {
+			const json = JSON.parse(jsonString);
 
-            if (json.attrs?.width) {
-                setWidth(json.attrs.width);
-                editorStore.setWidth(json.attrs.width);
-            }
-            if (json.attrs?.height) {
-                setHeight(json.attrs.height);
-                editorStore.setHeight(json.attrs.height);
-            }
+			if (json.attrs?.width) {
+				setWidth(json.attrs.width);
+				editorStore.setWidth(json.attrs.width);
+			}
+			if (json.attrs?.height) {
+				setHeight(json.attrs.height);
+				editorStore.setHeight(json.attrs.height);
+			}
 
-            const layer = json.children?.find(c => c.className === 'Layer');
-            const loadedShapes =
-                layer?.children?.map(shape => ({
-                    id: shape.attrs.id || `${shape.className}-${Date.now()}`,
-                    type: shape.className.toLowerCase(),
-                    visible: shape.visible !== false,
-                    ...shape.attrs,
-                })) || [];
+			const layer = json.children?.filter(c => c.className === 'Layer');
+			const loadedShapes =
+				(layer.length > 1 ? layer[1] : layer[0])?.children?.map(shape => ({
+					id: shape.attrs?.id || `${shape.className}-${Date.now()}`,
+					type: shape.className?.toLowerCase(),
+					visible: shape.visible !== false,
+					...shape.attrs,
+				})) || [];
+			const shapedFromJSON = loadedShapes.map(shape => {
+				if (shape.type === 'image') {
+					const img = new window.Image();
+					img.src = shape.img64;
 
-            const shapedFromJSON = loadedShapes.map(shape => {
-                if (shape.type === 'image') {
-                    const img = new window.Image();
-                    img.src = shape.img64;
+					return {
+						...shape,
+						image: img,
+					};
+				}
 
-                    return {
-                        ...shape,
-                        image: img
-                    }
-                }
+				return shape;
+			});
 
-                return shape;
-            })
+			setShapes(shapedFromJSON);
+		} catch (err) {
+			console.error('Failed to parse designData', err);
+		}
+	}, [editorStore.projectJSON, containerSize, setShapes]);
 
-            setShapes(shapedFromJSON);
-        } catch (err) {
-            console.error('Failed to parse designData', err);
-        }
-    }, [editorStore.projectJSON, containerSize, setShapes]);
+	useEffect(() => {
+		const handleClickOutside = event => {
+			const container = containerRef.current;
+			const stage = stageRef.current?.getStage()?.content;
 
-    const saveDesign = useCallback(async () => {
-        if (!stageRef.current) return;
+			if (!container) return;
 
-        const jsonString = stageRef.current.toJSON();
-        if (!jsonString || jsonString === lastSavedDesign.current) return;
+			// Если клик вне container — игнорируем
+			if (!container.contains(event.target)) return;
 
-        try {
-            const jsonObject = JSON.parse(jsonString);
+			// Если клик по stage — тоже игнорируем
+			if (stage && stage.contains(event.target)) return;
 
-            if (widthRef.current) jsonObject.attrs.width = widthRef.current;
-            if (heightRef.current) jsonObject.attrs.height = heightRef.current;
+			// Если клик внутри container, но вне stage → снимаем выделение
+			editorStore.setShape(null);
+		};
 
-            const json = JSON.stringify(jsonObject);
-            localStorage.setItem('designData', json);
+		const handleKeyDown = event => {
+			if (event.key === 'Escape') {
+				editorStore.setShape(null);
+			}
+		};
 
-            editorStore.setStage(stageRef.current);
+		document.addEventListener('mousedown', handleClickOutside);
+		document.addEventListener('keydown', handleKeyDown);
 
-            const base64Image = stageRef.current.toDataURL({ pixelRatio: 1 });
+		return () => {
+			document.removeEventListener('mousedown', handleClickOutside);
+			document.removeEventListener('keydown', handleKeyDown);
+		};
+	}, []);
 
-            await api.patch(`/projects/${projectId}`, {
-                info: JSON.parse(json),
-                previewImage: base64Image,
-            });
+	const saveDesign = useCallback(async () => {
+		if (!stageRef.current) return;
 
-            lastSavedDesign.current = json;
-            console.log('Design saved');
-        } catch (error) {
-            console.error('Save failed:', error);
-        }
-    }, [projectId]);
+		const jsonString = stageRef.current.toJSON();
+		if (!jsonString || jsonString === lastSavedDesign.current) return;
+		try {
+			const jsonObject = JSON.parse(jsonString);
 
-    const debouncedSave = useRef(debounce(saveDesign, 500)).current;
+			if (widthRef.current) jsonObject.attrs.width = widthRef.current;
+			if (heightRef.current) jsonObject.attrs.height = heightRef.current;
 
-    useEffect(() => {
-        if (onSaveRef) {
-            onSaveRef(() => stageRef.current?.toJSON());
-        }
-    }, [onSaveRef]);
+			const json = JSON.stringify(jsonObject);
+			localStorage.setItem('designData', json);
 
-    useEffect(() => {
-        debouncedSave();
-    }, [shapes]);
+			editorStore.setStage(stageRef.current);
 
-    useEffect(() => {
-        if (!width || !height || !containerSize.width || !containerSize.height) return;
+			const base64Image = stageRef.current.toDataURL({ pixelRatio: 1 });
 
-        const savedZoom = localStorage.getItem('zoomValue');
-        if (savedZoom) {
-            setZoom(parseFloat(savedZoom));
-            return;
-        }
+			await api.patch(`/projects/${projectId}`, {
+				info: JSON.parse(json),
+				previewImage: base64Image,
+			});
 
-        const scaleX = containerSize.width / width;
-        const scaleY = containerSize.height / height;
-        const scale = Math.min(scaleX, scaleY, 1);
-        setZoom(scale);
-        console.log(width, height, containerSize, scale);
-    }, [width, height, containerSize, setZoom]);
+			lastSavedDesign.current = json;
+			console.log('Design saved');
+		} catch (error) {
+			console.error('Save failed:', error);
+		}
+	}, [projectId]);
 
-    useEffect(() => {
-        const handleClickOutside = e => {
-            if (menuRef.current && !menuRef.current.contains(e.target)) {
-                setContextMenu({ ...contextMenu, visible: false });
-            }
-        };
-        document.addEventListener('click', handleClickOutside);
-        return () => document.removeEventListener('click', handleClickOutside);
-    }, []);
+	const debouncedSave = useRef(debounce(saveDesign, 500)).current;
 
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            const selectedShape = shapeRefs.current[editorStore.selectedShapeId]
+	useEffect(() => {
+		if (onSaveRef) {
+			onSaveRef(() => stageRef.current?.toJSON());
+		}
+	}, [onSaveRef]);
 
-            if (!selectedShape) return;
+	useEffect(() => {
+		debouncedSave();
+	}, [shapes]);
 
-            console.log('penis')
-            const step = e.shiftKey ? 10 : 1;
-            let dx = 0;
-            let dy = 0;
+	useEffect(() => {
+		if (!width || !height || !containerSize.width || !containerSize.height) return;
 
-            switch (e.key) {
-                case 'ArrowUp':
-                    dy = -step;
-                    break;
-                case 'ArrowDown':
-                    dy = step;
-                    break;
-                case 'ArrowLeft':
-                    dx = -step;
-                    break;
-                case 'ArrowRight':
-                    dx = step;
-                    break;
-                default:
-                    return;
-            }
+		const savedZoom = localStorage.getItem('zoomValue');
+		if (savedZoom) {
+			setZoom(parseFloat(savedZoom));
+			return;
+		}
 
-            e.preventDefault();
+		const scaleX = containerSize.width / width;
+		const scaleY = containerSize.height / height;
+		const scale = Math.min(scaleX, scaleY, 1);
+		setZoom(scale);
+	}, [width, height, containerSize, setZoom]);
 
-            selectedShape.position({
-                x: selectedShape.x() + dx,
-                y: selectedShape.y() + dy,
-            });
+	useEffect(() => {
+		const handleClickOutside = e => {
+			if (menuRef.current && !menuRef.current.contains(e.target)) {
+				setContextMenu({ ...contextMenu, visible: false });
+			}
+		};
+		document.addEventListener('click', handleClickOutside);
+		return () => document.removeEventListener('click', handleClickOutside);
+	}, []);
 
-            selectedShape.getLayer().batchDraw();
+	useEffect(() => {
+		const handleKeyDown = e => {
+			const selectedShape = shapeRefs.current[editorStore.selectedShapeId];
 
-            debouncedSave();
-        };
+			if (!selectedShape) return;
+			const step = e.shiftKey ? 10 : 1;
+			let dx = 0;
+			let dy = 0;
 
-        window.addEventListener('keydown', handleKeyDown);
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [editorStore.selectedShapeId]);
+			switch (e.key) {
+				case 'ArrowUp':
+					dy = -step;
+					break;
+				case 'ArrowDown':
+					dy = step;
+					break;
+				case 'ArrowLeft':
+					dx = -step;
+					break;
+				case 'ArrowRight':
+					dx = step;
+					break;
+				default:
+					return;
+			}
 
-    const handleContextMenu = e => {
-        e.evt.preventDefault();
-        const stage = e.target.getStage();
-        const pointerPos = stage.getPointerPosition();
+			e.preventDefault();
 
-        const clickedOnShape = e.target !== stage;
+			selectedShape.position({
+				x: selectedShape.x() + dx,
+				y: selectedShape.y() + dy,
+			});
 
-        setContextMenu({
-            visible: true,
-            x: e.evt.clientX,
-            y: e.evt.clientY,
-            stageX: pointerPos.x / zoom,
-            stageY: pointerPos.y / zoom,
-            shapeId: clickedOnShape ? e.target.attrs.id : null,
-        });
-    };
+			selectedShape.getLayer().batchDraw();
 
-    const handleDeleteShape = () => {
-        if (!contextMenu.shapeId) return;
-        setShapes(prev => prev.filter(shape => shape.id !== contextMenu.shapeId));
-        if (editorStore.selectedShapeId === contextMenu.shapeId) editorStore.setShape(null);
-        setContextMenu({ visible: false, x: 0, y: 0, stageX: 0, stageY: 0, shapeId: null });
-    };
+			debouncedSave();
+		};
 
-    const handleFileSelect = e => {
-        const file = e.target.files[0];
-        if (!file?.type.startsWith('image/')) return;
+		window.addEventListener('keydown', handleKeyDown);
+		return () => {
+			window.removeEventListener('keydown', handleKeyDown);
+		};
+	}, [editorStore.selectedShapeId]);
 
-        const reader = new FileReader();
-        reader.onload = event => {
-            const img = new window.Image();
-            img.src = event.target.result;
+	const handleContextMenu = e => {
+		e.evt.preventDefault();
+		const stage = e.target.getStage();
+		const pointerPos = stage.getPointerPosition();
 
-            img.onload = () => {
-                const maxWidth = SHAPE_DEFAULTS.image.width;
-                const maxHeight = SHAPE_DEFAULTS.image.height;
-                const scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
-                const stage = stageRef.current.getStage();
-                const point = stage.getPointerPosition();
-                const newImage = {
-                    id: `image-${Date.now()}`,
-                    type: 'image',
-                    name: file.name,
-                    image: img,
-                    x: point.x,
-                    y: point.y / zoom,
-                    width: img.width * scale,
-                    height: img.height * scale,
-                    draggable: true,
-                    img64: event.target.result
-                };
+		const clickedOnShape = e.target !== stage;
 
-                handleShapesChange(prev => [...prev, newImage]);
-                setContextMenu({ ...contextMenu, visible: false });
-            };
-        };
-        reader.readAsDataURL(file);
-    };
+		setContextMenu({
+			visible: true,
+			x: e.evt.clientX,
+			y: e.evt.clientY,
+			stageX: pointerPos.x / zoom,
+			stageY: pointerPos.y / zoom,
+			shapeId: clickedOnShape ? e.target.attrs.id : null,
+		});
+	};
 
-    const handleDoubleClick = id => {
-        const shape = shapes.find(s => s.id === id);
-        if (shape.type === 'text') {
-            editorStore.setShape(null);
-            setEditingTextId(id);
-            setTextValue(shape.text || '');
-            setTimeout(() => {
-                textInputRef.current.focus();
-            }, 50);
-        }
-    };
+	const handleDeleteShape = () => {
+		if (!contextMenu.shapeId) return;
+		setShapes(prev => prev.filter(shape => shape.id !== contextMenu.shapeId));
+		if (editorStore.selectedShapeId === contextMenu.shapeId) editorStore.setShape(null);
+		setContextMenu({ visible: false, x: 0, y: 0, stageX: 0, stageY: 0, shapeId: null });
+	};
 
-    const handleTextChange = e => {
-        setTextValue(e.target.value);
-    };
+	const handleFileSelect = e => {
+		const file = e.target.files[0];
+		if (!file?.type.startsWith('image/')) return;
 
-    const handleTextBlur = () => {
-        setShapes(prev =>
-            prev.map(shape => {
-                if (shape.id === editingTextId) {
-                    return { ...shape, text: textValue };
-                }
-                return shape;
-            })
-        );
-        setEditingTextId(null);
-        debouncedSave();
-    };
+		const reader = new FileReader();
+		reader.onload = event => {
+			const img = new window.Image();
+			img.src = event.target.result;
 
-    const handleShapesChange = useCallback(
-        updatedShapes => {
-            setShapes(updatedShapes);
-            editorStore.setStage(stageRef.current);
-        },
-        [setShapes]
-    );
+			img.onload = () => {
+				const maxWidth = SHAPE_DEFAULTS.image.width;
+				const maxHeight = SHAPE_DEFAULTS.image.height;
+				const scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
+				const stage = stageRef.current.getStage();
+				const point = stage.getPointerPosition();
+				const newImage = {
+					id: `image-${Date.now()}`,
+					type: 'image',
+					name: file.name,
+					image: img,
+					x: point.x,
+					y: point.y / zoom,
+					width: img.width * scale,
+					height: img.height * scale,
+					draggable: true,
+					img64: event.target.result,
+					opacity: 1,
+				};
 
-    const handleZoomAtPoint = (stage, pointer, direction) => {
+				handleShapesChange(prev => [...prev, newImage]);
+				setContextMenu({ ...contextMenu, visible: false });
+			};
+		};
+		reader.readAsDataURL(file);
+	};
+
+	const handleDoubleClick = id => {
+		const shape = shapes.find(s => s.id === id);
+		if (shape.type === 'text') {
+			editorStore.setShape(null);
+			setEditingTextId(id);
+			setTextValue(shape.text || '');
+			setTimeout(() => {
+				textInputRef.current.focus();
+			}, 50);
+		}
+	};
+
+	const handleTextChange = e => {
+		setTextValue(e.target.value);
+	};
+
+	const handleTextBlur = () => {
+		setShapes(prev =>
+			prev.map(shape => {
+				if (shape.id === editingTextId) {
+					return { ...shape, text: textValue };
+				}
+				return shape;
+			})
+		);
+		setEditingTextId(null);
+		debouncedSave();
+	};
+
+	const handleShapesChange = useCallback(
+		updatedShapes => {
+			setShapes(updatedShapes);
+			editorStore.setStage(stageRef.current);
+		},
+		[setShapes]
+	);
+
+	const handleZoomAtPoint = (stage, pointer, direction) => {
 		const scaleBy = 1.2;
 		const oldScale = zoom;
 		const newZoom = direction > 0 ? zoom * scaleBy : zoom / scaleBy;
@@ -327,12 +355,12 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
 		localStorage.setItem('zoomValue', newZoom);
 	};
 
-    const handleStageClick = e => {
+	const handleStageClick = e => {
 		const stage = stageRef.current.getStage();
 		const pointerPosition = stage.getPointerPosition();
 		const tool = editorStore.selectedTool;
 
-        if (tool === 'picker') {
+		if (tool === 'picker') {
 			const clickedShape = e.target;
 			if (clickedShape && clickedShape !== stage) {
 				const shapeAttrs = clickedShape.attrs;
@@ -350,6 +378,17 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
 			handleZoomAtPoint(stage, pointerPosition, direction);
 			return;
 		}
+		const newShape = {
+			id: `${tool}-${Date.now()}`,
+			type: tool,
+			x: pointerPosition.x / zoom,
+			y: pointerPosition.y / zoom,
+			visible: true,
+			name,
+			opacity: 1,
+			...baseProps,
+		};
+		console.log(newShape);
 
 		if (e.target === stage) {
 			if (!SHAPE_DEFAULTS[tool] || tool === 'brush') {
@@ -393,282 +432,307 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
 		}
 	};
 
-    const handleMouseDown = e => {
-        if (editorStore.selectedTool !== 'brush') return;
+	const handleMouseDown = e => {
+		if (editorStore.selectedTool !== 'brush') return;
 
-        isDrawing.current = true;
-        const stage = stageRef.current.getStage();
-        const point = stage.getPointerPosition();
-        const currentColor = editorStore.selectedColor ?? 'black';
+		isDrawing.current = true;
+		const stage = stageRef.current.getStage();
+		const point = stage.getPointerPosition();
+		const currentColor = editorStore.selectedColor ?? 'black';
 
-        const newLine = {
-            id: `brush-${Date.now()}`,
-            type: 'brush',
-            points: [point.x / zoom, point.y / zoom],
-            ...SHAPE_DEFAULTS.brush,
-            stroke: currentColor,
-            name: 'Bruh',
-        };
+		const newLine = {
+			id: `brush-${Date.now()}`,
+			type: 'brush',
+			points: [point.x / zoom, point.y / zoom],
+			...SHAPE_DEFAULTS.brush,
+			stroke: currentColor,
+			opacity: 1,
+			name: 'Bruh',
+		};
 
-        handleShapesChange(prev => [...prev, newLine]);
-        setCurrentLineId(newLine.id);
-    };
+		handleShapesChange(prev => [...prev, newLine]);
+		setCurrentLineId(newLine.id);
+	};
 
-    const handleMouseMove = e => {
-        if (!isDrawing.current || editorStore.selectedTool !== 'brush') return;
+	const handleMouseMove = e => {
+		if (!isDrawing.current || editorStore.selectedTool !== 'brush') return;
 
-        const stage = stageRef.current.getStage();
-        const point = stage.getPointerPosition();
+		const stage = stageRef.current.getStage();
+		const point = stage.getPointerPosition();
 
-        handleShapesChange(prevShapes =>
-            prevShapes.map(shape => {
-                if (shape.id === currentLineId) {
-                    return {
-                        ...shape,
-                        points: [...shape.points, point.x / zoom, point.y / zoom],
-                    };
-                }
-                return shape;
-            })
-        );
-    };
+		handleShapesChange(prevShapes =>
+			prevShapes.map(shape => {
+				if (shape.id === currentLineId) {
+					return {
+						...shape,
+						points: [...shape.points, point.x / zoom, point.y / zoom],
+					};
+				}
+				return shape;
+			})
+		);
+	};
 
-    const handleMouseUp = () => {
-        if (editorStore.selectedTool !== 'brush') return;
-        isDrawing.current = false;
-        setCurrentLineId(null);
-    };
+	const handleMouseUp = () => {
+		if (editorStore.selectedTool !== 'brush') return;
+		isDrawing.current = false;
+		setCurrentLineId(null);
+	};
 
-    const handleCrop = () => {
-        if (!cropRect) return;
+	const handleCrop = () => {
+		if (!cropRect) return;
 
-        const croppedShapes = shapes
-            .map(shape => {
-                const { x, y, width = 0, height = 0 } = shape;
+		const croppedShapes = shapes
+			.map(shape => {
+				const { x, y, width = 0, height = 0 } = shape;
 
-                const intersects =
-                    x + width > cropRect.x &&
-                    x < cropRect.x + cropRect.width &&
-                    y + height > cropRect.y &&
-                    y < cropRect.y + cropRect.height;
+				const intersects = x + width > cropRect.x && x < cropRect.x + cropRect.width && y + height > cropRect.y && y < cropRect.y + cropRect.height;
 
-                if (!intersects) return null;
+				if (!intersects) return null;
 
-                return {
-                    ...shape,
-                    x: shape.x - cropRect.x,
-                    y: shape.y - cropRect.y,
-                };
-            })
-            .filter(Boolean);
+				return {
+					...shape,
+					x: shape.x - cropRect.x,
+					y: shape.y - cropRect.y,
+				};
+			})
+			.filter(Boolean);
 
-        setShapes(croppedShapes);
-        setWidth(cropRect.width);
-        setHeight(cropRect.height);
-        editorStore.setWidth(cropRect.width);
-        editorStore.setHeight(cropRect.height);
-        editorStore.setTool("move");
-        setCropRect(null);
-    };
+		setShapes(croppedShapes);
+		setWidth(cropRect.width);
+		setHeight(cropRect.height);
+		editorStore.setWidth(cropRect.width);
+		editorStore.setHeight(cropRect.height);
+		editorStore.setTool('move');
+		setCropRect(null);
+	};
+	const createCheckerboardPattern = (cellSize = 10, lightColor = '#ffffff', darkColor = '#eeeeee') => {
+		const patternCanvas = document.createElement('canvas');
+		const size = cellSize * 2;
+		patternCanvas.width = size;
+		patternCanvas.height = size;
 
-    return (
-        <div className='relative'>
-            {editorStore.selectedTool === 'crop' && (
-                <button
-                    onClick={handleCrop}
-                    style={{
-                        position: 'absolute',
-                        top: '10px',
-                        right: '10px',
-                        zIndex: 1000,
-                        padding: '8px 16px',
-                        backgroundColor: '#9B34BA',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                    }}
-                >
-                    Apply Crop
-                </button>
-            )}
-            <Stage
-                ref={stageRef}
-                width={width * zoom}
-                height={height * zoom}
-                scaleX={zoom}
-                scaleY={zoom}
-                className='border-0 border-white shadow-[0px_0px_20px_0px_#9B34BA70]'
-                onClick={handleStageClick}
-                onDblClick={e => { }}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onContextMenu={handleContextMenu}
-            >
-                <Layer>
-                    {editorStore.selectedTool === 'crop' && cropRect && (
-                        <>
-                            <Rect x={0} y={0} width={width} height={cropRect.y} fill='rgba(0, 0, 0, 0.5)' />
-                            <Rect x={0} y={cropRect.y} width={cropRect.x} height={cropRect.height} fill='rgba(0, 0, 0, 0.5)' />
-                            <Rect x={cropRect.x + cropRect.width} y={cropRect.y} width={width - cropRect.x - cropRect.width} height={cropRect.height} fill='rgba(0, 0, 0, 0.5)' />
-                            <Rect x={0} y={cropRect.y + cropRect.height} width={width} height={height - cropRect.y - cropRect.height} fill='rgba(0, 0, 0, 0.5)' />
+		const ctx = patternCanvas.getContext('2d');
 
-                            <Rect
-                                ref={cropRef}
-                                {...cropRect}
-                                stroke='black'
-                                strokeWidth={4}
-                                dash={[10, 4]}
-                                draggable
-                                onDragEnd={e => {
-                                    setCropRect({
-                                        ...cropRect,
-                                        x: Math.max(0, Math.min(e.target.x(), width - cropRect.width)),
-                                        y: Math.max(0, Math.min(e.target.y(), height - cropRect.height)),
-                                    });
-                                }}
-                                onTransformEnd={e => {
-                                    const node = e.target;
-                                    const scaleX = node.scaleX();
-                                    const scaleY = node.scaleY();
+		if (ctx) {
+			// Фон — светлый цвет
+			ctx.fillStyle = lightColor;
+			ctx.fillRect(0, 0, size, size);
 
-                                    setCropRect({
-                                        x: Math.max(0, node.x()),
-                                        y: Math.max(0, node.y()),
-                                        width: Math.max(50, Math.min(node.width() * scaleX, width - node.x())),
-                                        height: Math.max(50, Math.min(node.height() * scaleY, height - node.y())),
-                                    });
+			// Два тёмных квадрата
+			ctx.fillStyle = darkColor;
+			ctx.fillRect(0, 0, cellSize, cellSize);
+			ctx.fillRect(cellSize, cellSize, cellSize, cellSize);
+		}
 
-                                    node.scaleX(1);
-                                    node.scaleY(1);
-                                }}
-                            />
+		const img = new Image();
+		img.src = patternCanvas.toDataURL();
 
-                            <Rect
-                                {...cropRect}
-                                stroke='black'
-                                strokeWidth={2}
-                                dash={[10, 4]}
-                                listening={false}
-                            />
-                        </>
-                    )}
-                    {editorStore.selectedTool === 'crop' && cropRef.current && (
-                        <Transformer
-                            nodes={[cropRef.current]}
-                            boundBoxFunc={(oldBox, newBox) => {
-                                if (newBox.width < 50 || newBox.height < 50) return oldBox;
-                                return {
-                                    ...newBox,
-                                    x: Math.max(0, Math.min(newBox.x, width - newBox.width)),
-                                    y: Math.max(0, Math.min(newBox.y, height - newBox.height)),
-                                    width: Math.min(newBox.width, width - newBox.x),
-                                    height: Math.min(newBox.height, height - newBox.y),
-                                };
-                            }}
-                        />
-                    )}
-                    {shapes.map(shape => {
-                        const Component = SHAPE_COMPONENTS[shape.type];
-                        if (!Component) return null;
+		return img;
+	};
 
-                        const { id, type, ...shapeProps } = shape;
+	return (
+		<div className='relative'>
+			{editorStore.selectedTool === 'crop' && (
+				<button
+					onClick={handleCrop}
+					style={{
+						position: 'absolute',
+						top: '10px',
+						right: '10px',
+						zIndex: 1000,
+						padding: '8px 16px',
+						backgroundColor: '#9B34BA',
+						color: 'white',
+						border: 'none',
+						borderRadius: '4px',
+						cursor: 'pointer',
+					}}
+				>
+					Apply Crop
+				</button>
+			)}
+			<Stage
+				ref={stageRef}
+				width={width * zoom}
+				height={height * zoom}
+				scaleX={zoom}
+				scaleY={zoom}
+				className='border-0 border-white shadow-[0px_0px_20px_0px_#9B34BA70]'
+				onClick={handleStageClick}
+				onDblClick={e => {}}
+				onMouseDown={handleMouseDown}
+				onMouseMove={handleMouseMove}
+				onMouseUp={handleMouseUp}
+				onContextMenu={handleContextMenu}
+			>
+				<Layer>
+					<Rect
+						name='background'
+						x={0}
+						y={0}
+						width={editorStore?.width ?? 0}
+						height={editorStore?.height ?? 0}
+						fillPatternImage={createCheckerboardPattern(7, '#1D2023FF', '#2D2F34FF')}
+						listening={false}
+					/>
+				</Layer>
+				<Layer>
+					{editorStore.selectedTool === 'crop' && cropRect && (
+						<>
+							<Rect x={0} y={0} width={width} height={cropRect.y} fill='rgba(0, 0, 0, 0.5)' />
+							<Rect x={0} y={cropRect.y} width={cropRect.x} height={cropRect.height} fill='rgba(0, 0, 0, 0.5)' />
+							<Rect x={cropRect.x + cropRect.width} y={cropRect.y} width={width - cropRect.x - cropRect.width} height={cropRect.height} fill='rgba(0, 0, 0, 0.5)' />
+							<Rect x={0} y={cropRect.y + cropRect.height} width={width} height={height - cropRect.y - cropRect.height} fill='rgba(0, 0, 0, 0.5)' />
 
-                        return (
-                            <Component
-                                key={id}
-                                id={id}
-                                {...shapeProps}
-                                onDragEnd={debouncedSave}
-                                onTransformEnd={debouncedSave}
-                                onMouseUp={debouncedSave}
-                                onClick={() => editorStore.setShape(id)}
-                                onDblClick={() => handleDoubleClick(id)}
-                                visible={shape.visible !== false}
-                                ref={el => {
-                                    if (el) {
-                                        shapeRefs.current[id] = el;
-                                    }
-                                }}
-                            />
-                        );
-                    })}
+							<Rect
+								ref={cropRef}
+								{...cropRect}
+								stroke='black'
+								strokeWidth={4}
+								dash={[10, 4]}
+								draggable
+								onDragEnd={e => {
+									setCropRect({
+										...cropRect,
+										x: Math.max(0, Math.min(e.target.x(), width - cropRect.width)),
+										y: Math.max(0, Math.min(e.target.y(), height - cropRect.height)),
+									});
+								}}
+								onTransformEnd={e => {
+									const node = e.target;
+									const scaleX = node.scaleX();
+									const scaleY = node.scaleY();
 
-                    {editorStore.selectedShapeId && shapeRefs.current[editorStore.selectedShapeId] && (
-                        <Transformer
-                            nodes={[shapeRefs.current[editorStore.selectedShapeId]]}
-                            resizeEnabled={true}
-                            rotateEnabled={true}
-                            borderStroke='black'
-                            borderDash={[6, 2]}
-                            anchorStroke='black'
-                            anchorFill='white'
-                            anchorSize={10}
-                            flipEnabled={true}
-                            keepRatio={true}
-                        />
-                    )}
-                </Layer>
-            </Stage>
-            {contextMenu.visible && (
-                <div
-                    ref={menuRef}
-                    style={{
-                        position: 'fixed',
-                        left: contextMenu.x,
-                        top: contextMenu.y,
-                        backgroundColor: 'white',
-                        boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
-                        zIndex: 1000,
-                    }}
-                >
-                    {contextMenu.shapeId ? (
-                        <div style={{ padding: '8px 16px', cursor: 'pointer', color: 'red' }} onClick={handleDeleteShape}>
-                            Delete
-                        </div>
-                    ) : (
-                        <div style={{ padding: '8px 16px', cursor: 'pointer' }} onClick={() => fileInputRef.current.click()}>
-                            Add the image
-                        </div>
-                    )}
-                </div>
-            )}
+									setCropRect({
+										x: Math.max(0, node.x()),
+										y: Math.max(0, node.y()),
+										width: Math.max(50, Math.min(node.width() * scaleX, width - node.x())),
+										height: Math.max(50, Math.min(node.height() * scaleY, height - node.y())),
+									});
 
-            <input type='file' accept='image/*' ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileSelect} />
-            {editingTextId &&
-                (() => {
-                    const shape = shapes.find(s => s.id === editingTextId);
-                    if (!shape) return null;
+									node.scaleX(1);
+									node.scaleY(1);
+								}}
+							/>
 
-                    return (
-                        <div
-                            className='absolute z-[1001]'
-                            style={{
-                                top: shape.y * zoom + shape.fontSize + 11,
-                                left: shape.x * zoom + 5,
-                            }}
-                        >
-                            <input
-                                ref={textInputRef}
-                                type='text'
-                                value={textValue}
-                                onChange={handleTextChange}
-                                onBlur={handleTextBlur}
-                                className='px-2 py-1 bg-transparent border border-purple-600 outline-none'
-                                style={{
-                                    fontSize: `${shape.fontSize}px`,
-                                    fontFamily: shape.fontFamily,
-                                    color: shape.fill,
-                                    width: `${shape.width * zoom}px`,
-                                }}
-                            />
-                        </div>
-                    );
-                })()}
-        </div>
-    );
+							<Rect {...cropRect} stroke='black' strokeWidth={2} dash={[10, 4]} listening={false} />
+						</>
+					)}
+					{editorStore.selectedTool === 'crop' && cropRef.current && (
+						<Transformer
+							nodes={[cropRef.current]}
+							boundBoxFunc={(oldBox, newBox) => {
+								if (newBox.width < 50 || newBox.height < 50) return oldBox;
+								return {
+									...newBox,
+									x: Math.max(0, Math.min(newBox.x, width - newBox.width)),
+									y: Math.max(0, Math.min(newBox.y, height - newBox.height)),
+									width: Math.min(newBox.width, width - newBox.x),
+									height: Math.min(newBox.height, height - newBox.y),
+								};
+							}}
+						/>
+					)}
+					{shapes.map(shape => {
+						const Component = SHAPE_COMPONENTS[shape.type];
+						if (!Component) return null;
+
+						const { id, type, ...shapeProps } = shape;
+
+						return (
+							<Component
+								key={id}
+								id={id}
+								{...shapeProps}
+								onDragEnd={debouncedSave}
+								onTransformEnd={debouncedSave}
+								onMouseUp={debouncedSave}
+								onClick={() => editorStore.setShape(id)}
+								onDblClick={() => handleDoubleClick(id)}
+								visible={shape.visible !== false}
+								ref={el => {
+									if (el) {
+										shapeRefs.current[id] = el;
+									}
+								}}
+							/>
+						);
+					})}
+
+					{editorStore.selectedShapeId && shapeRefs.current[editorStore.selectedShapeId] && (
+						<Transformer
+							nodes={[shapeRefs.current[editorStore.selectedShapeId]]}
+							resizeEnabled={true}
+							rotateEnabled={true}
+							borderStroke='black'
+							borderDash={[6, 2]}
+							anchorStroke='black'
+							anchorFill='white'
+							anchorSize={10}
+							flipEnabled={true}
+							keepRatio={true}
+						/>
+					)}
+				</Layer>
+			</Stage>
+			{contextMenu.visible && (
+				<div
+					ref={menuRef}
+					style={{
+						position: 'fixed',
+						left: contextMenu.x,
+						top: contextMenu.y,
+						backgroundColor: 'white',
+						boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+						zIndex: 1000,
+					}}
+				>
+					{contextMenu.shapeId ? (
+						<div style={{ padding: '8px 16px', cursor: 'pointer', color: 'red' }} onClick={handleDeleteShape}>
+							Delete
+						</div>
+					) : (
+						<div style={{ padding: '8px 16px', cursor: 'pointer' }} onClick={() => fileInputRef.current.click()}>
+							Add the image
+						</div>
+					)}
+				</div>
+			)}
+
+			<input type='file' accept='image/*' ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileSelect} />
+			{editingTextId &&
+				(() => {
+					const shape = shapes.find(s => s.id === editingTextId);
+					if (!shape) return null;
+
+					return (
+						<div
+							className='absolute z-[1001]'
+							style={{
+								top: shape.y * zoom + shape.fontSize + 11,
+								left: shape.x * zoom + 5,
+							}}
+						>
+							<input
+								ref={textInputRef}
+								type='text'
+								value={textValue}
+								onChange={handleTextChange}
+								onBlur={handleTextBlur}
+								className='px-2 py-1 bg-transparent border border-purple-600 outline-none'
+								style={{
+									fontSize: `${shape.fontSize}px`,
+									fontFamily: shape.fontFamily,
+									color: shape.fill,
+									width: `${shape.width * zoom}px`,
+								}}
+							/>
+						</div>
+					);
+				})()}
+		</div>
+	);
 });
 
 export default Design;
-
