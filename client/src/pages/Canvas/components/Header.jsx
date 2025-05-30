@@ -272,7 +272,7 @@ const Header = ({ onSave }) => {
     };
 
     return (
-        <header className='flex justify-between items-center px-4 h-12 bg-[#1c1c1c] text-white border-b border-[#2a2a2a] fixed w-full z-50'>
+        <header className='py-3 flex justify-between items-center px-4 h-12 bg-[#1c1c1c] text-white border-b border-[#2a2a2a] w-full z-50'>
             <div className='relative flex items-center space-x-6' ref={menuRef}>
                 <LuBrainCircuit className='text-[#9b34ba] text-xl cursor-pointer' onClick={handleLogoClick} />
 

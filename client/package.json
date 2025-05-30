@@ -12,6 +12,7 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@hello-pangea/dnd": "^18.0.1",
     "@ilihub/ascii-to-hexadecimal": "^1.0.7",
     "@mui/material": "^7.1.0",
     "@react-oauth/google": "^0.12.1",
@@ -25,6 +26,7 @@
     "jwt-decode": "^4.0.0",
     "konva": "^9.3.20",
     "lodash": "^4.17.21",
+    "lodash.isequal": "^4.5.0",
     "lucide-react": "^0.507.0",
     "mobx": "^6.13.7",
     "mobx-react-lite": "^4.1.0",

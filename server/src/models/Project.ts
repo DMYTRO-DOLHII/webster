@@ -18,6 +18,9 @@ export class Project extends BaseEntity {
 	@Column({ default: false })
 	isTemplate: boolean;
 
+    @Column({nullable: true})
+    isPremium: boolean;
+
 	@CreateDateColumn()
 	createdAt: Date;
 

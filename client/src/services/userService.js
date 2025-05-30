@@ -119,6 +119,16 @@ export const getUserProjects = async userId => {
 	}
 };
 
+export const getUserTemplates = async userId => {
+	try {
+		const response = await api.get(`${API_URL}/users/${encodeURIComponent(userId)}/templates`);
+		return response.data;
+	} catch (error) {
+		console.error('Error fetching user projects:', error);
+		throw error;
+	}
+};
+
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');

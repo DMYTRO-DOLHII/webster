@@ -9,6 +9,10 @@ class EditorStore {
 	selectedColor = '#000000';
     projectJSON = null;
 
+    projectHistory = [];
+    redo = [];
+    currentHistoryIndex = null;
+
     width = null;
     height = null;
 
@@ -61,6 +65,19 @@ class EditorStore {
 
     setHeight(height) {
         this.height = height;
+    }
+
+    setCurrentHistoryIndex(index) {
+        this.currentHistoryIndex = index;
+    }
+
+    setProjectHistory(history) {
+        this.projectHistory = history;
+        this.currentHistoryIndex = history.length - 1;
+    }
+    
+    setRedo(redo) {
+        this.redo = redo;
     }
 }
 

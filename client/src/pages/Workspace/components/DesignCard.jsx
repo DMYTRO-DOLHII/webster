@@ -1,10 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { userStore } from "../../../store/userStore";
-import { MoreHorizontal } from "lucide-react"; // or use any 3-dot icon
-import clsx from "clsx";
+import { MoreHorizontal } from "lucide-react";
 import { api } from "../../../services/api";
-import { editorStore } from "../../../store/editorStore";
 
 const ProjectCard = ({ project, onDelete }) => {
     const navigate = useNavigate();
@@ -12,14 +9,12 @@ const ProjectCard = ({ project, onDelete }) => {
     const dropdownRef = useRef(null);
     const [editableTitle, setEditableTitle] = useState(project.title);
 
-    // Handle clicks outside dropdown
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setIsDropdownOpen(false);
             }
         };
-
         document.addEventListener("mousedown", handleClickOutside);
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
@@ -27,21 +22,18 @@ const ProjectCard = ({ project, onDelete }) => {
     }, []);
 
     const handleTitleChange = async (e) => {
-        setEditableTitle(e.target.value);
-        project.title = e.target.value;
-
-        await api.patch(`/projects/${project.id}`, { title: project.title });
-        // TODO: Optional: debounce update to backend
+        const newTitle = e.target.value;
+        setEditableTitle(newTitle);
+        project.title = newTitle;
+        await api.patch(`/projects/${project.id}`, { title: newTitle });
     };
 
     return (
         <article
-            className="relative group flex gap-4 p-3 border h-[150px] border-[#222222] rounded-md cursor-pointer duration-300 hover:border-[#414141] hover:shadow-lg hover:shadow-[#a020f0]/30"
-            onClick={() => {
-                navigate(`/canvas/${project.id}`)
-            }}
+            className="relative group p-3 border border-[#222] rounded-md cursor-pointer duration-300 hover:border-[#414141] hover:shadow-lg hover:shadow-[#a020f0]/30 w-[220px]"
+            onClick={() => navigate(`/canvas/${project.id}`)}
         >
-            {/* Three dots icon (only visible on hover) */}
+            {/* Three Dots Button */}
             <button
                 className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
                 onClick={(e) => {
@@ -55,23 +47,17 @@ const ProjectCard = ({ project, onDelete }) => {
             {/* Preview Image */}
             <img
                 alt="project preview"
-                className="object-cover w-40 h-30 rounded"
+                className="w-full h-[120px] object-cover rounded mb-2"
                 src={project.imageUrl}
             />
 
             {/* Info Section */}
-            <div className="flex flex-col justify-between flex-1">
-                <div>
-                    <h2 className="text-xs font-normal text-white">{project.title}</h2>
-                    <p className="text-[9px] text-[#666666] mt-1">{project.editedText}</p>
-                </div>
-                <div>
-                    <img
-                        src={userStore?.user?.profilePicture}
-                        className={`w-7 h-7 rounded-full ${project.userBgColor} ${project.userTextColor} text-xs font-semibold flex items-center justify-center ml-auto`}
-                        alt=""
-                    />
-                </div>
+            <div className="flex flex-col justify-between text-white text-xs">
+                <h2 className="font-medium">{project.title}</h2>
+                <p className="text-[#888] text-[10px] mt-1">{project.editedText}</p>
+                <p className="text-[#555] mt-1">
+                    {project.info.attrs.width} x {project.info.attrs.height} {project.units || "px"}
+                </p>
             </div>
 
             {/* Dropdown Menu */}
@@ -81,7 +67,6 @@ const ProjectCard = ({ project, onDelete }) => {
                     className="absolute top-10 right-2 w-56 z-50 bg-[#1e1e1e] border border-[#333] rounded-md p-3 shadow-xl"
                     onClick={(e) => e.stopPropagation()}
                 >
-                    {/* Editable Title */}
                     <input
                         type="text"
                         value={editableTitle}
@@ -89,7 +74,6 @@ const ProjectCard = ({ project, onDelete }) => {
                         className="w-full bg-[#2a2a2a] text-white text-sm px-2 py-1 rounded mb-2 focus:outline-none"
                     />
 
-                    {/* Project Size */}
                     <div className="text-xs text-gray-400 mb-3">
                         {project.info.attrs.width} x {project.info.attrs.height} {project.units || "px"}
                     </div>
@@ -103,10 +87,13 @@ const ProjectCard = ({ project, onDelete }) => {
                     <div className="border-t border-[#444] mt-2 pt-2 text-sm text-red-400">
                         <button
                             onClick={() => {
-                                onDelete?.(); // safe optional chaining
+                                onDelete?.();
                                 setIsDropdownOpen(false);
                             }}
-                            className="w-full text-left hover:text-red-600">Delete Project</button>
+                            className="w-full text-left hover:text-red-600"
+                        >
+                            Delete Project
+                        </button>
                     </div>
                 </div>
             )}

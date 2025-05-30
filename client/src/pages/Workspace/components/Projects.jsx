@@ -28,7 +28,7 @@ const Projects = () => {
                 const data = await getUserProjects(userId);
                 setProjects(data);
             } catch (error) {
-                console.error('Ошибка при загрузке проектов:', error);
+                console.error('Error when downloading projects:', error);
             }
         };
 
@@ -47,7 +47,6 @@ const Projects = () => {
         }
 
         editorStore.setProject(newProjectData);
-
         const designObject =
             newProjectData.info && typeof newProjectData.info === 'object' && Object.keys(newProjectData.info).length > 0
                 ? newProjectData.info
@@ -62,13 +61,15 @@ const Projects = () => {
                             attrs: {},
                             className: 'Layer',
                             children: [
+                                newProjectData.background.toLowerCase() !== "transparent" &&
                                 {
                                     attrs: {
                                         width: newProjectData.width,
                                         height: newProjectData.height,
                                         fill: newProjectData.background.toLowerCase(),
                                         listening: false,
-                                        name: 'Background'
+                                        name: 'Background',
+                                        opacity: 1
                                     },
                                     className: 'Rect',
                                 },
@@ -76,15 +77,12 @@ const Projects = () => {
                         },
                     ],
                 };
-
         const response = await api.post('/projects', {
             title: newProjectData.title,
             previewImage: 'https://t4.ftcdn.net/jpg/02/01/98/73/360_F_201987380_YjR3kPM0PS3hF7Wvn7IBMmW1FWrMwruL.jpg',
             info: designObject,
             userId: userStore?.user?.id,
         });
-
-        console.log(response.data);
 
         const designData = JSON.stringify(designObject);
         localStorage.setItem('designData', designData);
@@ -113,7 +111,7 @@ const Projects = () => {
 
             <section
                 aria-label="Recent templates"
-                className="grid grid-cols-1 gap-4 py-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 "
+                className="grid grid-cols-1 gap-5 py-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 "
             >
                 {projects.map((project) => (
                     <DesignCard

@@ -3,6 +3,7 @@
 
 body {
     background: #0f0f0f;
+    scrollbar-color: gray rgba(255, 255, 255, 0);
 }
 
 .cursor-section {
@@ -264,4 +265,8 @@ h6 {
     border: none;
     border-radius: 50%;
     padding: 0;
+}
+
+.scroll-style {
+    scrollbar-color: rgb(74, 74, 74) rgba(255, 0, 0, 0);
 }
