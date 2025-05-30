@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { useRef, useEffect, useState, useCallback, forwardRef } from 'react';
+import FilterControl from './FilterControl';
 import { Stage, Layer, Transformer } from 'react-konva';
 import { useParams } from 'react-router-dom';
 import { debounce } from 'lodash';
@@ -10,38 +11,41 @@ import { SHAPE_COMPONENTS, SHAPE_DEFAULTS } from '../Shapes';
 import isEqual from 'lodash.isequal';
 
 const ImageWithFilters = forwardRef(({ shapeObject, ...props }, ref) => {
-    const imageRef = useRef(null);
+	const imageRef = useRef(null);
 
-    useEffect(() => {
-        if (imageRef.current) {
-            imageRef.current.cache();
-            imageRef.current.getLayer().batchDraw();
-        }
-    }, [shapeObject.filters, shapeObject.image]);
+	useEffect(() => {
+		if (imageRef.current) {
+			imageRef.current.cache();
+			imageRef.current.getLayer().batchDraw();
+		}
+	}, [shapeObject.filters, shapeObject.image]);
 
-    const activeFilters = [];
-    if (shapeObject.filters?.blur?.active) activeFilters.push(Konva.Filters.Blur);
-    if (shapeObject.filters?.brightness?.active) activeFilters.push(Konva.Filters.Brighten);
-    if (shapeObject.filters?.contrast?.active) activeFilters.push(Konva.Filters.Contrast);
+	const activeFilters = [];
+	if (shapeObject.filters?.blur?.active) activeFilters.push(Konva.Filters.Blur);
+	if (shapeObject.filters?.brightness?.active) activeFilters.push(Konva.Filters.Brighten);
+	if (shapeObject.filters?.contrast?.active) activeFilters.push(Konva.Filters.Contrast);
 
-    const { image, filters, ...imageProps } = shapeObject;
+	// Destructure only what we need, preserve id and name
+	const { image, filters, ...imageProps } = shapeObject;
 
-    return (
-        <SHAPE_COMPONENTS.image
-            ref={node => {
-                imageRef.current = node;
-                if (typeof ref === 'function') ref(node);
-                else if (ref) ref.current = node;
-            }}
-            image={image}
-            filters={activeFilters}
-            blurRadius={filters?.blur?.active ? filters.blur.value : 0}
-            brightness={filters?.brightness?.active ? filters.brightness.value : 0}
-            contrast={filters?.contrast?.active ? filters.contrast.value : 0}
-            {...imageProps}
-            {...props}
-        />
-    );
+	return (
+		<SHAPE_COMPONENTS.image
+			ref={node => {
+				imageRef.current = node;
+				if (typeof ref === 'function') ref(node);
+				else if (ref) ref.current = node;
+			}}
+			id={shapeObject.id} // Explicitly pass id
+			name={shapeObject.name} // Explicitly pass name
+			image={image}
+			filters={activeFilters}
+			blurRadius={filters?.blur?.active ? filters.blur.value : 0}
+			brightness={filters?.brightness?.active ? filters.brightness.value : 0}
+			contrast={filters?.contrast?.active ? filters.contrast.value : 0}
+			{...imageProps}
+			{...props}
+		/>
+	);
 });
 
 const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef, setZoom, setShapes }) => {
@@ -934,4 +938,3 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 });
 
 export default Design;
-

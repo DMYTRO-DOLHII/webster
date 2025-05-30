@@ -20,17 +20,17 @@ const Layers = ({ layers, setShapes }) => {
         }
     }, [layers]);
 
+    const handleDeleteLayer = id => {
+        setShapes(prev => prev.filter(shape => shape.id !== id));
+        if (editorStore.selectedShapeId === id) editorStore.setShape(null);
+    };
+
     const handleToggleVisibility = (id) => {
         setShapes(prev =>
             prev.map(shape =>
                 shape.id === id ? { ...shape, visible: !shape.visible } : shape
             )
         );
-    };
-
-    const handleDeleteLayer = id => {
-        setShapes(prev => prev.filter(shape => shape.id !== id));
-        if (editorStore.selectedShapeId === id) editorStore.setShape(null);
     };
 
     const handleNameChange = (id, name) => {
@@ -141,4 +141,3 @@ const Layers = ({ layers, setShapes }) => {
 };
 
 export default Layers;
-
