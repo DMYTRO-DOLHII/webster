@@ -11,6 +11,7 @@ const RightSidebar = ({ layers, setShapes }) => {
     return (
         <Box
             sx={{
+                pb: '90px',
                 width: '20rem',
                 bgcolor: '#1a1a1a',
                 borderLeft: '1px solid #2a2a2a',

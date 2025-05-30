@@ -79,6 +79,8 @@ const Canvas = () => {
                 setProjectData(res.data);
                 editorStore.setProject(res.data);
                 localStorage.setItem("designData", JSON.stringify(res.data.info));
+                editorStore.setProjectHistory([]);
+                editorStore.setRedo([])
             } catch (err) {
                 if (err.response?.status === 403) {
                     setMessage('You cannot view this project, upgrade your plan');

@@ -146,7 +146,9 @@ const Properties = observer(({ layers, setShapes }) => {
                             type="color"
                             className="w-10 h-6 border-none rounded"
                             value={selectedLayer.stroke || "#000000"}
-                            onChange={e => updateShape("stroke", e.target.value, selectedLayer)}
+                            onChange={e => {
+                                if (borderWidthInputValue != 0) updateShape("stroke", e.target.value, selectedLayer)
+                            }}
                         />
                     </div>
 

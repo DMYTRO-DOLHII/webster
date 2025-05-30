@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Trash2 } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { editorStore } from "../../../../store/editorStore";
@@ -26,6 +26,11 @@ const Layers = ({ layers, setShapes }) => {
                 shape.id === id ? { ...shape, visible: !shape.visible } : shape
             )
         );
+    };
+
+    const handleDeleteLayer = id => {
+        setShapes(prev => prev.filter(shape => shape.id !== id));
+        if (editorStore.selectedShapeId === id) editorStore.setShape(null);
     };
 
     const handleNameChange = (id, name) => {
@@ -65,7 +70,7 @@ const Layers = ({ layers, setShapes }) => {
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
-                        className={`flex justify-between items-center text-xs mb-1 px-2 py-1 rounded cursor-pointer 
+                        className={`flex justify-between items-center text-xs mb-1 px-2 py-2 rounded cursor-pointer 
                         ${selectedId === layer.id ? 'bg-blue-600' : 'opacity-70 hover:bg-[#2a2a2a]'}`}
                         onDoubleClick={() => startEditing(layer.id, layer.name)}
                         onClick={() => editorStore.setShape(layer.id)}
@@ -86,16 +91,28 @@ const Layers = ({ layers, setShapes }) => {
                         ) : (
                             <span className="truncate mr-2">{layer.name}</span>
                         )}
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleToggleVisibility(layer.id);
-                            }}
-                            title={layer.visible === false ? "Show layer" : "Hide layer"}
-                            className="ml-2 text-white hover:text-gray-400"
-                        >
-                            {layer.visible === false ? <EyeOff size={16} /> : <Eye size={16} />}
-                        </button>
+                        <div className='flex items-center gap-1'>
+                            <button
+                                onClick={e => {
+                                    e.stopPropagation();
+                                    handleToggleVisibility(layer.id);
+                                }}
+                                title={layer.visible === false ? 'Show layer' : 'Hide layer'}
+                                className='text-white hover:text-gray-400 mr-2'
+                            >
+                                {layer.visible === false ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                            <button
+                                onClick={e => {
+                                    e.stopPropagation();
+                                    handleDeleteLayer(layer.id);
+                                }}
+                                title='Delete layer'
+                                className='text-white hover:text-red-500'
+                            >
+                                <Trash2 size={16} />
+                            </button>
+                        </div>
                     </div>
                 )}
             </Draggable >)

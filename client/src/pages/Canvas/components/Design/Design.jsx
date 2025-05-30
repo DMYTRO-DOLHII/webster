@@ -9,6 +9,41 @@ import { api } from '../../../../services/api';
 import { SHAPE_COMPONENTS, SHAPE_DEFAULTS } from '../Shapes';
 import isEqual from 'lodash.isequal';
 
+const ImageWithFilters = forwardRef(({ shapeObject, ...props }, ref) => {
+    const imageRef = useRef(null);
+
+    useEffect(() => {
+        if (imageRef.current) {
+            imageRef.current.cache();
+            imageRef.current.getLayer().batchDraw();
+        }
+    }, [shapeObject.filters, shapeObject.image]);
+
+    const activeFilters = [];
+    if (shapeObject.filters?.blur?.active) activeFilters.push(Konva.Filters.Blur);
+    if (shapeObject.filters?.brightness?.active) activeFilters.push(Konva.Filters.Brighten);
+    if (shapeObject.filters?.contrast?.active) activeFilters.push(Konva.Filters.Contrast);
+
+    const { image, filters, ...imageProps } = shapeObject;
+
+    return (
+        <SHAPE_COMPONENTS.image
+            ref={node => {
+                imageRef.current = node;
+                if (typeof ref === 'function') ref(node);
+                else if (ref) ref.current = node;
+            }}
+            image={image}
+            filters={activeFilters}
+            blurRadius={filters?.blur?.active ? filters.blur.value : 0}
+            brightness={filters?.brightness?.active ? filters.brightness.value : 0}
+            contrast={filters?.contrast?.active ? filters.contrast.value : 0}
+            {...imageProps}
+            {...props}
+        />
+    );
+});
+
 const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef, setZoom, setShapes }) => {
     const stageRef = useRef(null);
     const shapeRefs = useRef({});
@@ -87,16 +122,26 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 
     useEffect(() => {
         const handleKeyDown = (e) => {
-            if (e.ctrlKey && e.key === 'z') {
+            // Check for Mac's Command key or Windows' Ctrl key
+            const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+            const modifierKey = isMac ? e.metaKey : e.ctrlKey;
+
+            if (!modifierKey) return;
+
+            if (e.key === 'z') {
                 if (e.shiftKey) {
-                    // Ctrl + Shift + Z -> Redo
+                    // Command/Ctrl + Shift + Z -> Redo
                     e.preventDefault();
                     handleRedo();
                 } else {
-                    // Ctrl + Z -> Undo
+                    // Command/Ctrl + Z -> Undo
                     e.preventDefault();
                     handleUndo();
                 }
+            } else if (e.key === 'y' && !e.shiftKey) {
+                // Command/Ctrl + Y -> Redo (alternative)
+                e.preventDefault();
+                handleRedo();
             }
         };
 
@@ -155,14 +200,19 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                     ...shape.attrs,
                 })) || [];
             const shapedFromJSON = loadedShapes.map(shape => {
-                if (shape.type === 'image') {
+                if (shape.type === 'image' && shape.img64) {
                     const img = new window.Image();
                     img.src = shape.img64;
 
                     return {
                         ...shape,
-                        image: img
-                    }
+                        image: img,
+                        filters: shape.filters || {
+                            blur: { active: false, value: 10 },
+                            brightness: { active: false, value: 0.3 },
+                            contrast: { active: false, value: 50 },
+                        }
+                    };
                 }
 
                 return shape;
@@ -217,6 +267,21 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
         try {
             const jsonObject = JSON.parse(jsonString);
 
+            if (jsonObject.children && jsonObject.children.length > 0) {
+                for (const layer of jsonObject.children) {
+                    if (layer.className === 'Layer' && layer.children) {
+                        for (const shape of layer.children) {
+                            if (shape.className === 'Image') {
+                                const originalShape = shapes.find(s => s.id === shape.attrs.id);
+                                if (originalShape && originalShape.img64) {
+                                    shape.attrs.img64 = originalShape.img64;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             if (widthRef.current) jsonObject.attrs.width = widthRef.current;
             if (heightRef.current) jsonObject.attrs.height = heightRef.current;
 
@@ -236,7 +301,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
         } catch (error) {
             console.error('Save failed:', error);
         }
-    }, [projectId]);
+    }, [projectId, shapes]);
 
     const saveState = useCallback(() => {
         if (skipSaving || !stageRef.current) return;
@@ -393,7 +458,12 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                     height: img.height * scale,
                     draggable: true,
                     img64: event.target.result,
-                    opacity: 1
+                    opacity: 1,
+                    filters: {
+                        blur: { active: false, value: 10 },
+                        brightness: { active: false, value: 0.3 },
+                        contrast: { active: false, value: 50 },
+                    },
                 };
 
                 handleShapesChange(prev => [...prev, newImage]);
@@ -433,6 +503,17 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
         debouncedSave();
     };
 
+    const handleZoomAtPoint = (stage, pointer, direction) => {
+        const scaleBy = 1.2;
+        const oldScale = zoom;
+        const newZoom = direction > 0 ? zoom * scaleBy : zoom / scaleBy;
+
+        stage.scale({ x: newZoom, y: newZoom });
+        stage.batchDraw();
+        setZoom(newZoom);
+        localStorage.setItem('zoomValue', newZoom);
+    };
+
     const handleShapesChange = useCallback(
         updatedShapes => {
             setShapes(updatedShapes);
@@ -443,19 +524,51 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 
     const handleStageClick = e => {
         const stage = stageRef.current.getStage();
+        const pointerPosition = stage.getPointerPosition();
+        const baseProps = { ...SHAPE_DEFAULTS };
+        const tool = editorStore.selectedTool;
+
+        if (tool === 'picker') {
+            const clickedShape = e.target;
+            if (clickedShape && clickedShape !== stage) {
+                const shapeAttrs = clickedShape.attrs;
+
+                const pickedColor = shapeAttrs.fill || shapeAttrs.stroke;
+                if (pickedColor) {
+                    editorStore.setColor(pickedColor);
+                }
+            }
+            return;
+        }
+
+        if (tool === 'zoom') {
+            const direction = e.evt.altKey ? -1 : 1;
+            handleZoomAtPoint(stage, pointerPosition, direction);
+            return;
+        }
+        const newShape = {
+            id: `${tool}-${Date.now()}`,
+            type: tool,
+            x: pointerPosition.x / zoom,
+            y: pointerPosition.y / zoom,
+            visible: true,
+            name,
+            opacity: 1,
+            ...baseProps,
+        };
+        console.log(newShape);
+
         if (e.target === stage) {
-            const tool = editorStore.selectedTool;
             if (!SHAPE_DEFAULTS[tool] || tool === 'brush') {
                 editorStore.setShape(null);
                 return;
             }
 
-            const pointerPosition = stage.getPointerPosition();
             const currentColor = editorStore.selectedColor ?? '#000000';
-
             const baseProps = { ...SHAPE_DEFAULTS[tool] };
             if ('fill' in baseProps) baseProps.fill = currentColor;
             if ('stroke' in baseProps) baseProps.stroke = currentColor;
+
             let name = 'Figure';
             if (tool === 'text') {
                 name = baseProps.text || 'Text';
@@ -471,10 +584,8 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                 y: pointerPosition.y / zoom,
                 visible: true,
                 name,
-                opacity: 1,
                 ...baseProps,
             };
-            console.log(newShape);
 
             handleShapesChange(prev => [...prev, newShape]);
             setTimeout(() => {
@@ -485,7 +596,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
             if (clickedId) {
                 editorStore.setShape(clickedId);
                 editorStore.setTool('move');
-                console.log(editorStore.selectedTool);
             }
         }
     };
@@ -568,6 +678,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
         editorStore.setTool("move");
         setCropRect(null);
     };
+
     const createCheckerboardPattern = (cellSize = 10, lightColor = "#ffffff", darkColor = "#eeeeee") => {
         const patternCanvas = document.createElement("canvas");
         const size = cellSize * 2;
@@ -707,6 +818,25 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                         if (!Component) return null;
 
                         const { id, type, ...shapeProps } = shape;
+
+                        if (shape.type === 'image') {
+                            return (
+                                <ImageWithFilters
+                                    key={shape.id}
+                                    id={shape.id}
+                                    shapeObject={shape}
+                                    ref={el => {
+                                        if (el) shapeRefs.current[shape.id] = el;
+                                    }}
+                                    onDragEnd={debouncedSave}
+                                    onTransformEnd={debouncedSave}
+                                    onMouseUp={debouncedSave}
+                                    onClick={() => editorStore.setShape(shape.id)}
+                                    onDblClick={() => handleDoubleClick(shape.id)}
+                                    draggable={shape.draggable}
+                                />
+                            );
+                        }
 
                         return (
                             <Component
