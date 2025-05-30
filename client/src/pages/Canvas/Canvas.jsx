@@ -109,7 +109,7 @@ const Canvas = () => {
             <div className="flex flex-grow overflow-hidden">
                 <LeftSidebar />
                 <div
-                    className="bg-[#121212] flex items-center justify-center w-full h-full overflow-scroll scroll-style"
+                    className="bg-[#121212] flex flex-col items-center justify-center w-full h-full overflow-scroll scroll-style"
                     id="canvas-parent"
                     ref={containerRef}
                 >
@@ -119,6 +119,7 @@ const Canvas = () => {
                             shapes={shapes}
                             zoom={zoom}
                             containerSize={containerSize}
+                            containerRef={containerRef}
                             initialData={projectData.json}
                             setZoom={handleZoomChange}
                             setShapes={setShapes}

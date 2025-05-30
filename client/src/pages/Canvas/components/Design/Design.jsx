@@ -9,7 +9,7 @@ import { api } from '../../../../services/api';
 import { SHAPE_COMPONENTS, SHAPE_DEFAULTS } from '../Shapes';
 import isEqual from 'lodash.isequal';
 
-const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setShapes }) => {
+const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef, setZoom, setShapes }) => {
     const stageRef = useRef(null);
     const shapeRefs = useRef({});
     const isDrawing = useRef(false);
@@ -146,15 +146,14 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
                 editorStore.setHeight(json.attrs.height);
             }
 
-            const layer = json.children?.find(c => c.className === 'Layer');
+            const layer = json.children?.filter(c => c.className === 'Layer');
             const loadedShapes =
-                layer?.children?.map(shape => ({
-                    id: shape.attrs.id || `${shape.className}-${Date.now()}`,
-                    type: shape.className.toLowerCase(),
+                (layer.length > 1 ? layer[1] : layer[0])?.children?.map(shape => ({
+                    id: shape.attrs?.id || `${shape.className}-${Date.now()}`,
+                    type: shape.className?.toLowerCase(),
                     visible: shape.visible !== false,
                     ...shape.attrs,
                 })) || [];
-
             const shapedFromJSON = loadedShapes.map(shape => {
                 if (shape.type === 'image') {
                     const img = new window.Image();
@@ -175,6 +174,39 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
         }
     }
 
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            const container = containerRef.current;
+            const stage = stageRef.current?.getStage()?.content;
+
+            if (!container) return;
+
+            // Если клик вне container — игнорируем
+            if (!container.contains(event.target)) return;
+
+            // Если клик по stage — тоже игнорируем
+            if (stage && stage.contains(event.target)) return;
+
+            // Если клик внутри container, но вне stage → снимаем выделение
+            editorStore.setShape(null);
+        };
+
+        const handleKeyDown = (event) => {
+            if (event.key === "Escape") {
+                editorStore.setShape(null);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, []);
+
+
     const saveDesign = useCallback(async () => {
         if (!stageRef.current) return;
 
@@ -182,7 +214,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
 
         const jsonString = stageRef.current.toJSON();
         if (!jsonString || jsonString === lastSavedDesign.current) return;
-
         try {
             const jsonObject = JSON.parse(jsonString);
 
@@ -270,7 +301,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
             const selectedShape = shapeRefs.current[editorStore.selectedShapeId]
 
             if (!selectedShape) return;
-
             const step = e.shiftKey ? 10 : 1;
             let dx = 0;
             let dy = 0;
@@ -362,7 +392,8 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
                     width: img.width * scale,
                     height: img.height * scale,
                     draggable: true,
-                    img64: event.target.result
+                    img64: event.target.result,
+                    opacity: 1
                 };
 
                 handleShapesChange(prev => [...prev, newImage]);
@@ -440,8 +471,10 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
                 y: pointerPosition.y / zoom,
                 visible: true,
                 name,
+                opacity: 1,
                 ...baseProps,
             };
+            console.log(newShape);
 
             handleShapesChange(prev => [...prev, newShape]);
             setTimeout(() => {
@@ -471,6 +504,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
             points: [point.x / zoom, point.y / zoom],
             ...SHAPE_DEFAULTS.brush,
             stroke: currentColor,
+            opacity: 1,
             name: 'Bruh',
         };
 
@@ -534,6 +568,30 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
         editorStore.setTool("move");
         setCropRect(null);
     };
+    const createCheckerboardPattern = (cellSize = 10, lightColor = "#ffffff", darkColor = "#eeeeee") => {
+        const patternCanvas = document.createElement("canvas");
+        const size = cellSize * 2;
+        patternCanvas.width = size;
+        patternCanvas.height = size;
+
+        const ctx = patternCanvas.getContext("2d");
+
+        if (ctx) {
+            // Фон — светлый цвет
+            ctx.fillStyle = lightColor;
+            ctx.fillRect(0, 0, size, size);
+
+            // Два тёмных квадрата
+            ctx.fillStyle = darkColor;
+            ctx.fillRect(0, 0, cellSize, cellSize);
+            ctx.fillRect(cellSize, cellSize, cellSize, cellSize);
+        }
+
+        const img = new Image();
+        img.src = patternCanvas.toDataURL();
+
+        return img;
+    }
 
     return (
         <div className='relative'>
@@ -570,6 +628,17 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, setZoom, setS
                 onMouseUp={handleMouseUp}
                 onContextMenu={handleContextMenu}
             >
+                <Layer>
+                    <Rect
+                        name="background"
+                        x={0}
+                        y={0}
+                        width={editorStore?.width ?? 0}
+                        height={editorStore?.height ?? 0}
+                        fillPatternImage={createCheckerboardPattern(7, "#1D2023FF", "#2D2F34FF")}
+                        listening={false}
+                    />
+                </Layer>
                 <Layer>
                     {editorStore.selectedTool === 'crop' && cropRect && (
                         <>
