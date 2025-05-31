@@ -20,12 +20,16 @@ class EditorStore {
 
 	selectedShapeId = null;
 
+	selectedShapes = [];
+
 	constructor() {
 		makeAutoObservable(this);
 	}
-
-	setShape(selectedShapeId) {
+	setShape(selectedShapeId, event) {
 		this.selectedShapeId = selectedShapeId;
+		if(selectedShapeId === null) this.selectedShapes = [];
+		else if ((event?.shiftKey || event?.evt?.shiftKey) && !this.selectedShapes.includes(selectedShapeId)) this.selectedShapes = [...this.selectedShapes, selectedShapeId];
+		else this.selectedShapes = [selectedShapeId];
 	}
 
     setStage(stage) {

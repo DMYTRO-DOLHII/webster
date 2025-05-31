@@ -73,7 +73,7 @@ const Layers = ({ layers, setShapes }) => {
                         className={`flex justify-between items-center text-xs mb-1 px-2 py-2 rounded cursor-pointer 
                         ${selectedId === layer.id ? 'bg-blue-600' : 'opacity-70 hover:bg-[#2a2a2a]'}`}
                         onDoubleClick={() => startEditing(layer.id, layer.name)}
-                        onClick={() => editorStore.setShape(layer.id)}
+                        onClick={(e) => editorStore.setShape(layer.id, e)}
                         title={layer.name}
                     >
                         {editingLayerId === layer.id ? (

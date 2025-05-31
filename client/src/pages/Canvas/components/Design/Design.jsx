@@ -587,8 +587,10 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
         } else {
             const clickedId = e.target.attrs.id || e.target._id;
             if (clickedId) {
-                editorStore.setShape(clickedId);
+                console.log("gandon");
+                editorStore.setShape(clickedId, e);
                 editorStore.setTool('move');
+                console.log({...editorStore.selectedShapes})
             }
         }
     };
@@ -824,7 +826,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                                     onDragEnd={debouncedSave}
                                     onTransformEnd={debouncedSave}
                                     onMouseUp={debouncedSave}
-                                    onClick={() => editorStore.setShape(shape.id)}
+                                    // onClick={(e) => editorStore.setShape(shape.id, e)}
                                     onDblClick={() => handleDoubleClick(shape.id)}
                                     draggable={shape.draggable}
                                 />
@@ -839,7 +841,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                                 onDragEnd={debouncedSave}
                                 onTransformEnd={debouncedSave}
                                 onMouseUp={debouncedSave}
-                                onClick={() => editorStore.setShape(id)}
+                                // onClick={(e) => editorStore.setShape(id, e)}
                                 onDblClick={() => handleDoubleClick(id)} // TODO 
                                 visible={shape.visible !== false}
                                 ref={el => {
@@ -851,9 +853,11 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                         );
                     })}
 
-                    {editorStore.selectedShapeId && shapeRefs.current[editorStore.selectedShapeId] && (
+                    {editorStore.selectedShapes.length > 0 && (
                         <Transformer
-                            nodes={[shapeRefs.current[editorStore.selectedShapeId]]}
+                            nodes={editorStore.selectedShapes
+                                .map(id => shapeRefs.current[id])
+                                .filter(Boolean)}
                             resizeEnabled={true}
                             rotateEnabled={true}
                             borderStroke='black'
