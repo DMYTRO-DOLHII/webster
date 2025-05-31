@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { use, useState, useEffect } from "react";
 import Sidebar from "./components/Sidebar";
 import Projects from "./components/Projects";
 import Templates from "./components/Templates";
 import Trash from "./components/Trash";
 import SettingWindow from "./components/SettingWindow";
 import { userStore } from "../../store/userStore";
+import { api } from "../../services/api";
 
 const Workspace = () => {
     const [activeTab, setActiveTab] = useState("projects");

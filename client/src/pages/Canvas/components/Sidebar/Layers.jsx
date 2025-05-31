@@ -11,7 +11,7 @@ const Layers = ({ layers, setShapes }) => {
 
     useEffect(() => {
         if (editorStore.selectedShapeId == null) {
-            const backgroundLayer = layers.find(layer => layer.name?.toLowerCase() === 'background');
+            const backgroundLayer = layers.ind(layer => layer.name?.toLowerCase() === 'background');
             if (backgroundLayer) {
                 editorStore.setShape(backgroundLayer.id);
             } else {
