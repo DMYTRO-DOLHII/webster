@@ -38,7 +38,7 @@ const menuStructure = {
             submenu: ['PNG', 'JPG', 'PDF', 'SVG'],
         },
     ],
-    Edit: ['Step forward', 'Step backward', '---', 'Copy', 'Paste', '---', 'Transform'],
+    Edit: ['Step forward', 'Step backward', '---', 'Copy', 'Paste', '---', 'Resize Canvas'],
 };
 
 const Header = ({ onSave }) => {
@@ -51,6 +51,7 @@ const Header = ({ onSave }) => {
     const { projectId } = useParams();
 
     const [projectName, setProjectName] = useState('');
+    const [isResizeModalOpen, setIsResizeModalOpen] = useState(false);
     const shareUrl = window.location.href;
 
     const handleCopy = async () => {
@@ -108,6 +109,15 @@ const Header = ({ onSave }) => {
     const handleMenuItemClick = async (menu, item) => {
         setOpenMenu(null);
         setOpenSubMenu(null);
+        if (menu === 'Edit') {
+			switch (item) {
+				case 'Resize Canvas':
+					await handleResize();
+					break;
+				default:
+					console.log(`${menu} → ${item}`);
+			}
+		}
 
         if (menu === 'File') {
             switch (item) {
@@ -137,6 +147,26 @@ const Header = ({ onSave }) => {
             }
         }
     };
+
+    const handleResize = async () => {
+		setIsResizeModalOpen(true);
+	};      
+
+    const changeSize = async (width, height) => {
+        const savedData = localStorage.getItem('designData');
+        if (savedData) {
+			const parsed = JSON.parse(savedData);
+            if (parsed.attrs) {
+				parsed.attrs.width = width;
+				parsed.attrs.height = height;
+                const json = JSON.stringify(parsed);
+				localStorage.setItem('designData', json);
+                await api.patch(`/projects/${projectId}`, {
+					info: JSON.parse(json),
+				});
+			}
+		}
+    }
 
     const handleOpenMcOksterClick = async () => {
         try {
@@ -272,114 +302,156 @@ const Header = ({ onSave }) => {
     };
 
     return (
-        <header className='py-3 flex justify-between items-center px-4 h-12 bg-[#1c1c1c] text-white border-b border-[#2a2a2a] w-full z-50'>
-            <div className='relative flex items-center space-x-6' ref={menuRef}>
-                <LuBrainCircuit className='text-[#9b34ba] text-xl cursor-pointer' onClick={handleLogoClick} />
+		<header className='py-3  flex justify-between items-center px-4 h-12 bg-[#1c1c1c] text-white border-b border-[#2a2a2a] w-full z-50'>
+			<div className='relative flex items-center space-x-6' ref={menuRef}>
+				<LuBrainCircuit className='text-[#9b34ba] text-xl cursor-pointer' onClick={handleLogoClick} />
 
-                <nav className='flex space-x-5 text-sm'>
-                    {Object.entries(menuStructure).map(([menuName, items]) => (
-                        <div key={menuName} className='relative'>
-                            <div className='px-3 py-1 hover:bg-[#3a3a3a] cursor-pointer rounded' onClick={() => handleMenuToggle(menuName)}>
-                                {menuName}
-                            </div>
-                            {openMenu === menuName && (
-                                <div className='absolute left-0 top-full mt-1 bg-[#2a2a2a] border border-[#444] rounded shadow-md z-50 min-w-[160px]'>
-                                    {items.map((item, idx) => {
-                                        if (item === '---') {
-                                            return <div key={idx} className='border-t border-[#444] my-1' />;
-                                        }
+				<nav className='flex space-x-5 text-sm'>
+					{Object.entries(menuStructure).map(([menuName, items]) => (
+						<div key={menuName} className='relative'>
+							<div className='px-3 py-1 hover:bg-[#3a3a3a] cursor-pointer rounded' onClick={() => handleMenuToggle(menuName)}>
+								{menuName}
+							</div>
+							{openMenu === menuName && (
+								<div className='absolute left-0 top-full mt-1 bg-[#2a2a2a] border border-[#444] rounded shadow-md z-50 min-w-[160px]'>
+									{items.map((item, idx) => {
+										if (item === '---') {
+											return <div key={idx} className='border-t border-[#444] my-1' />;
+										}
 
-                                        if (typeof item === 'string') {
-                                            return (
-                                                <div key={item} onClick={() => handleMenuItemClick(menuName, item)} className='px-4 py-2 hover:bg-[#3a3a3a] cursor-pointer'>
-                                                    {item}
-                                                </div>
-                                            );
-                                        }
+										if (typeof item === 'string') {
+											return (
+												<div key={item} onClick={() => handleMenuItemClick(menuName, item)} className='px-4 py-2 hover:bg-[#3a3a3a] cursor-pointer'>
+													{item}
+												</div>
+											);
+										}
 
-                                        if (typeof item === 'object' && item.submenu) {
-                                            return (
-                                                <div key={item.label} className='relative'>
-                                                    <div
-                                                        className='px-4 py-2 hover:bg-[#3a3a3a] cursor-pointer flex justify-between items-center'
-                                                        onClick={() => setOpenSubMenu(prev => (prev === item.label ? null : item.label))}
-                                                    >
-                                                        {item.label}
-                                                        <span className='ml-2'>&#9654;</span>
-                                                    </div>
-                                                    {openSubMenu === item.label && (
-                                                        <div className='absolute left-full top-0 ml-1 min-w-[120px] bg-[#363636] border border-[#444] rounded shadow-lg z-50'>
-                                                            {item.submenu.map(subItem => (
-                                                                <div
-                                                                    key={subItem}
-                                                                    onClick={() => handleMenuItemClick(menuName, `${item.label} → ${subItem}`)}
-                                                                    className='px-3 py-1 hover:bg-[#3a3a3a] cursor-pointer'
-                                                                >
-                                                                    {subItem}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            );
-                                        }
+										if (typeof item === 'object' && item.submenu) {
+											return (
+												<div key={item.label} className='relative'>
+													<div
+														className='px-4 py-2 hover:bg-[#3a3a3a] cursor-pointer flex justify-between items-center'
+														onClick={() => setOpenSubMenu(prev => (prev === item.label ? null : item.label))}
+													>
+														{item.label}
+														<span className='ml-2'>&#9654;</span>
+													</div>
+													{openSubMenu === item.label && (
+														<div className='absolute left-full top-0 ml-1 min-w-[120px] bg-[#363636] border border-[#444] rounded shadow-lg z-50'>
+															{item.submenu.map(subItem => (
+																<div
+																	key={subItem}
+																	onClick={() => handleMenuItemClick(menuName, `${item.label} → ${subItem}`)}
+																	className='px-3 py-1 hover:bg-[#3a3a3a] cursor-pointer'
+																>
+																	{subItem}
+																</div>
+															))}
+														</div>
+													)}
+												</div>
+											);
+										}
 
-                                        return null;
-                                    })}
-                                </div>
-                            )}
-                        </div>
-                    ))}
-                </nav>
-            </div>
+										return null;
+									})}
+								</div>
+							)}
+						</div>
+					))}
+				</nav>
+			</div>
 
-            <div className='relative' ref={shareRef}>
-                <button onClick={() => setShowShare(prev => !prev)} className='px-3 py-1 text-sm text-white bg-purple-600 rounded hover:bg-purple-700'>
-                    Share
-                </button>
+			{isResizeModalOpen && (
+				<div className='fixed inset-0 z-50 flex items-center justify-center bg-black'>
+					<div className='p-6 bg-[#2a2a2a] rounded-lg w-80 border border-[#444] text-white shadow-xl'>
+						<h2 className='mb-4 text-lg font-semibold'>Change the size</h2>
+						<form
+							onSubmit={e => {
+								e.preventDefault();
+								const width = Number(e.target.width.value);
+								const height = Number(e.target.height.value);
+								changeSize(width, height);
+								setIsResizeModalOpen(false);
+							}}
+						>
+							<div className='mb-4'>
+								<label className='block text-sm font-medium text-gray-300'>Width</label>
+								<input
+									name='width'
+									type='number'
+									className='w-full px-3 py-2 bg-[#1c1c1c] border border-[#444] rounded text-white focus:outline-none focus:ring-2 focus:ring-purple-600'
+								/>
+							</div>
+							<div className='mb-4'>
+								<label className='block text-sm font-medium text-gray-300'>Height</label>
+								<input
+									name='height'
+									type='number'
+									className='w-full px-3 py-2 bg-[#1c1c1c] border border-[#444] rounded text-white focus:outline-none focus:ring-2 focus:ring-purple-600'
+								/>
+							</div>
+							<div className='flex justify-end space-x-2'>
+								<button type='button' onClick={() => setIsResizeModalOpen(false)} className='px-4 py-2 bg-[#3a3a3a] text-white rounded hover:bg-[#4a4a4a]'>
+									Cancel
+								</button>
+								<button type='submit' className='px-4 py-2 text-white bg-purple-600 rounded hover:bg-purple-700'>
+									Apply
+								</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			)}
 
-                {showShare && (
-                    <div className='absolute right-0 mt-2 bg-[#2a2a2a] border border-[#444] rounded p-3 flex flex-wrap gap-3 z-50 max-w-xs'>
-                        <FacebookShareButton url={shareUrl} quote={projectName}>
-                            <FacebookIcon size={32} round />
-                        </FacebookShareButton>
+			<div className='relative' ref={shareRef}>
+				<button onClick={() => setShowShare(prev => !prev)} className='px-3 py-1 text-sm text-white bg-purple-600 rounded hover:bg-purple-700'>
+					Share
+				</button>
 
-                        <TwitterShareButton url={shareUrl} title={projectName}>
-                            <TwitterIcon size={32} round />
-                        </TwitterShareButton>
+				{showShare && (
+					<div className='absolute right-0 mt-2 bg-[#2a2a2a] border border-[#444] rounded p-3 flex flex-wrap gap-3 max-w-xs z-999999'>
+						<FacebookShareButton url={shareUrl} quote={projectName}>
+							<FacebookIcon size={32} round />
+						</FacebookShareButton>
 
-                        <LinkedinShareButton url={shareUrl} title={projectName}>
-                            <LinkedinIcon size={32} round />
-                        </LinkedinShareButton>
+						<TwitterShareButton url={shareUrl} title={projectName}>
+							<TwitterIcon size={32} round />
+						</TwitterShareButton>
 
-                        <TelegramShareButton url={shareUrl} title={projectName}>
-                            <TelegramIcon size={32} round />
-                        </TelegramShareButton>
+						<LinkedinShareButton url={shareUrl} title={projectName}>
+							<LinkedinIcon size={32} round />
+						</LinkedinShareButton>
 
-                        <WhatsappShareButton url={shareUrl} title={projectName}>
-                            <WhatsappIcon size={32} round />
-                        </WhatsappShareButton>
+						<TelegramShareButton url={shareUrl} title={projectName}>
+							<TelegramIcon size={32} round />
+						</TelegramShareButton>
 
-                        <RedditShareButton url={shareUrl} title={projectName}>
-                            <RedditIcon size={32} round />
-                        </RedditShareButton>
+						<WhatsappShareButton url={shareUrl} title={projectName}>
+							<WhatsappIcon size={32} round />
+						</WhatsappShareButton>
 
-                        <EmailShareButton url={shareUrl} subject={projectName} body={`Check this out: ${shareUrl}`}>
-                            <EmailIcon size={32} round />
-                        </EmailShareButton>
+						<RedditShareButton url={shareUrl} title={projectName}>
+							<RedditIcon size={32} round />
+						</RedditShareButton>
 
-                        <button
-                            onClick={handleCopy}
-                            className='flex items-center justify-center w-8 h-8 text-black transition bg-white rounded-full hover:opacity-80'
-                            title='Copy link'
-                        >
-                            <FiLink size={18} />
-                        </button>
-                    </div>
-                )}
-            </div>
-        </header>
-    );
+						<EmailShareButton url={shareUrl} subject={projectName} body={`Check this out: ${shareUrl}`}>
+							<EmailIcon size={32} round />
+						</EmailShareButton>
+
+						<button
+							onClick={handleCopy}
+							className='flex items-center justify-center w-8 h-8 text-black transition bg-white rounded-full hover:opacity-80'
+							title='Copy link'
+						>
+							<FiLink size={18} />
+						</button>
+					</div>
+				)}
+			</div>
+		</header>
+	);
 };
 
 export default Header;

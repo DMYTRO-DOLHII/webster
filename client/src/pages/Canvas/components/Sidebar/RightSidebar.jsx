@@ -20,7 +20,7 @@ const RightSidebar = ({ layers, setShapes }) => {
                 overflow: 'hidden',
                 display: 'flex',
                 flexDirection: 'column',
-                zIndex: '999'
+                zIndex: '8'
             }}
         >
             <Tabs
