@@ -62,7 +62,7 @@ const Layers = ({ layers, setShapes }) => {
     };
 
     const LayerItem = observer(({ layer, index }) => {
-        const selectedId = editorStore.selectedShapeId;
+        const selectedIds = editorStore.selectedShapes;
         return (
             <Draggable draggableId={layer.id} index={index} >
                 {(provided) => (
@@ -71,7 +71,7 @@ const Layers = ({ layers, setShapes }) => {
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
                         className={`flex justify-between items-center text-xs mb-1 px-2 py-2 rounded cursor-pointer 
-                        ${selectedId === layer.id ? 'bg-blue-600' : 'opacity-70 hover:bg-[#2a2a2a]'}`}
+                        ${selectedIds.includes(layer.id) ? 'bg-blue-600' : 'opacity-70 hover:bg-[#2a2a2a]'}`}
                         onDoubleClick={() => startEditing(layer.id, layer.name)}
                         onClick={(e) => editorStore.setShape(layer.id, e)}
                         title={layer.name}
