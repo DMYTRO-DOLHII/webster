@@ -60,8 +60,7 @@ const Projects = () => {
                         {
                             attrs: {},
                             className: 'Layer',
-                            children: [
-                                newProjectData.background.toLowerCase() !== "transparent" &&
+                            children: newProjectData.background.toLowerCase() !== "transparent" ? [
                                 {
                                     attrs: {
                                         width: newProjectData.width,
@@ -72,11 +71,11 @@ const Projects = () => {
                                         opacity: 1
                                     },
                                     className: 'Rect',
-                                },
-                            ],
+                                }] : []
                         },
                     ],
                 };
+        console.log(designObject);
         const response = await api.post('/projects', {
             title: newProjectData.title,
             previewImage: 'https://t4.ftcdn.net/jpg/02/01/98/73/360_F_201987380_YjR3kPM0PS3hF7Wvn7IBMmW1FWrMwruL.jpg',
