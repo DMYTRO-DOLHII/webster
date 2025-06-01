@@ -25,7 +25,6 @@ const ImageWithFilters = forwardRef(({ shapeObject, ...props }, ref) => {
     if (shapeObject.filters?.brightness?.active) activeFilters.push(Konva.Filters.Brighten);
     if (shapeObject.filters?.contrast?.active) activeFilters.push(Konva.Filters.Contrast);
 
-    // Destructure only what we need, preserve id and name
     const { image, filters, ...imageProps } = shapeObject;
 
     return (
@@ -35,8 +34,8 @@ const ImageWithFilters = forwardRef(({ shapeObject, ...props }, ref) => {
                 if (typeof ref === 'function') ref(node);
                 else if (ref) ref.current = node;
             }}
-            id={shapeObject.id} // Explicitly pass id
-            name={shapeObject.name} // Explicitly pass name
+            id={shapeObject.id}
+            name={shapeObject.name}
             image={image}
             filters={activeFilters}
             blurRadius={filters?.blur?.active ? filters.blur.value : 0}
@@ -87,7 +86,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 
     const [skipSaving, setSkipSaving] = useState(false);
 
-    // UNDO
     const handleUndo = () => {
         const history = editorStore.projectHistory;
         if (history.length <= 1) return;
@@ -106,7 +104,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
         loadProjectFromJSON().finally(() => setSkipSaving(false));
     };
 
-    // REDO
     const handleRedo = () => {
         const redo = editorStore.redo;
         if (redo.length === 0) return;
@@ -126,7 +123,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 
     useEffect(() => {
         const handleKeyDown = (e) => {
-            // Check for Mac's Command key or Windows' Ctrl key
             const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform);
             const modifierKey = isMac ? e.metaKey : e.ctrlKey;
 
@@ -134,16 +130,13 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 
             if (e.key === 'z') {
                 if (e.shiftKey) {
-                    // Command/Ctrl + Shift + Z -> Redo
                     e.preventDefault();
                     handleRedo();
                 } else {
-                    // Command/Ctrl + Z -> Undo
                     e.preventDefault();
                     handleUndo();
                 }
             } else if (e.key === 'y' && !e.shiftKey) {
-                // Command/Ctrl + Y -> Redo (alternative)
                 e.preventDefault();
                 handleRedo();
             }
@@ -171,7 +164,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
         if (!containerSize.width || !containerSize.height) return;
 
         let jsonString = localStorage.getItem('designData');
-        // If it's accidentally already an object (e.g., in dev mode), stringify it now
         if (!jsonString && typeof editorStore.projectJSON === 'object') {
             try {
                 jsonString = JSON.stringify(editorStore.projectJSON);
@@ -182,7 +174,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
         }
 
         if (!jsonString) return;
-
         try {
             const json = JSON.parse(jsonString);
 
@@ -221,6 +212,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 
                 return shape;
             })
+            console.log(shapedFromJSON);
 
             setShapes(shapedFromJSON);
         } catch (err) {
@@ -235,13 +227,10 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 
             if (!container) return;
 
-            // Если клик вне container — игнорируем
             if (!container.contains(event.target)) return;
 
-            // Если клик по stage — тоже игнорируем
             if (stage && stage.contains(event.target)) return;
 
-            // Если клик внутри container, но вне stage → снимаем выделение
             editorStore.setShape(null);
         };
 
@@ -322,7 +311,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 
         if (last && isEqual(last, jsonObject)) return;
 
-        // Slice the history up to current index and add new state
         const newHistory = [...currentHistory.slice(0, currentIndex + 1), jsonObject];
         editorStore.setProjectHistory(newHistory);
         editorStore.setCurrentHistoryIndex(newHistory.length - 1);
@@ -393,7 +381,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 
             e.preventDefault();
 
-            // Move the shape
             selectedShape.position({
                 x: selectedShape.x() + dx,
                 y: selectedShape.y() + dy,
@@ -401,7 +388,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 
             selectedShape.getLayer().batchDraw();
 
-            // Save changes
             debouncedSave();
         };
 
@@ -445,7 +431,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
             img.src = event.target.result;
 
             img.onload = () => {
-                // Автоматическое масштабирование с сохранением пропорций
                 const maxWidth = SHAPE_DEFAULTS.image.width;
                 const maxHeight = SHAPE_DEFAULTS.image.height;
                 const scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
@@ -456,7 +441,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                     type: 'image',
                     name: file.name,
                     image: img,
-                    x: point.x, // Центрирование относительно курсора
+                    x: point.x,
                     y: point.y / zoom,
                     width: img.width * scale,
                     height: img.height * scale,
@@ -478,7 +463,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
     };
 
     const handleDoubleClick = id => {
-        // editorStore.setShape(id);
         const shape = shapes.find(s => s.id === id);
         if (shape.type === 'text') {
             editorStore.setShape(null);
@@ -587,10 +571,24 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
         } else {
             const clickedId = e.target.attrs.id || e.target._id;
             if (clickedId) {
-                console.log("gandon");
-                editorStore.setShape(clickedId, e);
+                const groupShape = shapes.find(shape =>
+                    shape.type === 'group' &&
+                    shape.layers?.some(child => child.id === clickedId)
+                );
+
+                if (groupShape) {
+                    if (!e.evt.shiftKey) editorStore.setShape(null);
+                    e.shiftKey = true;
+                    groupShape.layers.map(s => s.id).forEach(element => {
+                        editorStore.setShape(element, e);
+                    });
+                    editorStore.setShape(groupShape.id, e);
+                }
+                else {
+                    editorStore.setShape(clickedId, e);
+                }
                 editorStore.setTool('move');
-                console.log({ ...editorStore.selectedShapes })
+                // console.log({ ...editorStore.selectedShapes });
             }
         }
     };
@@ -683,11 +681,9 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
         const ctx = patternCanvas.getContext("2d");
 
         if (ctx) {
-            // Фон — светлый цвет
             ctx.fillStyle = lightColor;
             ctx.fillRect(0, 0, size, size);
 
-            // Два тёмных квадрата
             ctx.fillStyle = darkColor;
             ctx.fillRect(0, 0, cellSize, cellSize);
             ctx.fillRect(cellSize, cellSize, cellSize, cellSize);
@@ -703,6 +699,8 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
         if (!Component) return null;
 
         if (shape.type === 'image') {
+            // Для изображений внутри группы делаем draggable false,
+            // а если это не внутри группы (т.е. нет свойства parentGroup), draggable по shape.draggable
             return (
                 <ImageWithFilters
                     key={shape.id}
@@ -715,19 +713,36 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                     onTransformEnd={debouncedSave}
                     onMouseUp={debouncedSave}
                     onDblClick={() => handleDoubleClick(shape.id)}
-                    draggable={shape.draggable}
+                    // Запретить перетаскивание если есть родительская группа
+                    draggable={!!shape.parentGroup ? false : shape.draggable}
                 />
             );
         }
 
         if (shape.type === 'group') {
             return (
-                <Component key={shape.id} {...shape} visible={shape.visible !== false}>
-                    {shape.layers.map(layer => renderShape(layer))}
+                <Component
+                    key={shape.id}
+                    {...shape}
+                    visible={shape.visible !== false}
+                    draggable={true} // Группа draggable
+                    onDragEnd={debouncedSave}
+                    onTransformEnd={debouncedSave}
+                    onMouseUp={debouncedSave}
+                    onDblClick={() => handleDoubleClick(shape.id)}
+                    ref={el => {
+                        if (el) shapeRefs.current[shape.id] = el;
+                    }}
+                >
+                    {shape.layers.map(layer => {
+                        // Помечаем у вложенных фигур что они внутри группы
+                        return renderShape({ ...layer, parentGroup: shape.id });
+                    })}
                 </Component>
             );
         }
 
+        // Для остальных фигур
         return (
             <Component
                 key={shape.id}
@@ -738,12 +753,14 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                 onMouseUp={debouncedSave}
                 onDblClick={() => handleDoubleClick(shape.id)}
                 visible={shape.visible !== false}
+                draggable={!!shape.parentGroup ? false : shape.draggable} // Запрет drag если внутри группы
                 ref={el => {
                     if (el) shapeRefs.current[shape.id] = el;
                 }}
             />
         );
     };
+
 
     return (
         <div className='relative'>

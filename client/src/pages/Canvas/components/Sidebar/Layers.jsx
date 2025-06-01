@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Eye, EyeOff, Trash2 } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
@@ -8,23 +8,26 @@ const Layers = ({ layers, setShapes }) => {
     const [editingLayerId, setEditingLayerId] = useState(null);
     const [nameInputValue, setNameInputValue] = useState("");
     const [contextMenu, setContextMenu] = useState({ open: false, x: 0, y: 0, layerId: null });
+    const contextMenuRef = useRef(null);
 
     layers = layers.filter(l => l.type !== "transformer").reverse();
-    console.log(layers);
+    // console.log(layers);
+    // useEffect(() => {
+    //     if (editorStore.selectedShapeId === null && editorStore.selectedShapes.length === 0) {
+    //         const backgroundLayer = layers.find(layer => layer.name?.toLowerCase() === 'background');
+    //         if (backgroundLayer) {
+    //             editorStore.setShape(backgroundLayer.id);
+    //         } else {
+    //             editorStore.setShape(null);
+    //         }
+    //     }
+    // }, [layers]);    
     useEffect(() => {
-        if (editorStore.selectedShapeId === null && editorStore.selectedShapes.length === 0) {
-            const backgroundLayer = layers.find(layer => layer.name?.toLowerCase() === 'background');
-            if (backgroundLayer) {
-                editorStore.setShape(backgroundLayer.id);
-            } else {
-                editorStore.setShape(null);
+        const handleClickOutside = (e) => {
+            // Проверяем, был ли клик вне контекстного меню
+            if (contextMenuRef.current && !contextMenuRef.current.contains(e.target)) {
+                setContextMenu({ open: false, x: 0, y: 0, layerId: null });
             }
-        }
-    }, [layers]);
-
-    useEffect(() => {
-        const handleClickOutside = () => {
-            setContextMenu({ open: false, x: 0, y: 0, layerId: null });
         };
         document.addEventListener("click", handleClickOutside);
         return () => {
@@ -54,6 +57,7 @@ const Layers = ({ layers, setShapes }) => {
     };
 
     const onDragEnd = (result) => {
+        console.log(result.source.index, result.destination.index)
         if (!result.destination) return;
         const reorderedLayers = Array.from(layers);
         const [movedLayer] = reorderedLayers.splice(result.source.index, 1);
@@ -79,37 +83,73 @@ const Layers = ({ layers, setShapes }) => {
 
         setShapes(prev => {
             const newShapes = [...prev];
+
+            const duplicateShape = (shape) => {
+                const newId = `${shape.id.split("-")[0]}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+                const newName = `${shape.name || "Untitled"} copy`;
+
+                if (shape.type === 'group' && Array.isArray(shape.layers)) {
+                    // Дублируем каждую вложенную фигуру рекурсивно
+                    const duplicatedLayers = shape.layers.map(layer => duplicateShape(layer));
+                    return {
+                        ...shape,
+                        id: newId,
+                        name: newName,
+                        layers: duplicatedLayers,
+                    };
+                }
+
+                return {
+                    ...shape,
+                    id: newId,
+                    name: newName,
+                };
+            };
+
             selectedIds.forEach(selId => {
                 const original = prev.find(shape => shape.id === selId);
                 if (original) {
-                    const duplicated = {
-                        ...original,
-                        id: `${original.id.split("-")[0]}-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
-                        name: `${original.name || "Untitled"} copy`,
-                    };
+                    const duplicated = duplicateShape(original);
                     newShapes.push(duplicated);
                 }
             });
+
             return newShapes;
         });
     };
-
 
     const handleGroup = () => {
         const selectedIds = editorStore.selectedShapes;
         if (selectedIds.length <= 1) return;
 
         setShapes(prev => {
+            // Найти выбранные фигуры по id
             const selectedShapes = prev.filter(shape => selectedIds.includes(shape.id));
             if (selectedShapes.length <= 1) return prev;
 
+            // Функция для рекурсивного раскрытия фигур внутри групп
+            const flattenShapes = (shapes) => {
+                return shapes.flatMap(shape => {
+                    if (shape.type === 'group' && Array.isArray(shape.layers)) {
+                        // Рекурсивно раскрываем вложенные группы
+                        return flattenShapes(shape.layers);
+                    }
+                    return shape;
+                });
+            };
+
+            // Получить все фигуры для новой группы, раскрывая вложенные группы
+            const allShapesForGroup = flattenShapes(selectedShapes);
+
+            // Оставшиеся фигуры - все, кроме выбранных (группы и не-группы)
             const remainingShapes = prev.filter(shape => !selectedIds.includes(shape.id));
 
+            // Создаем новую группу, состоящую из всех раскрытых фигур
             const groupLayer = {
                 id: `group-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
-                name: `Group of ${selectedShapes.length} layers`,
+                name: `Group of ${allShapesForGroup.length} layers`,
                 type: 'group',
-                layers: selectedShapes, // сохраняем полные объекты, не только id
+                layers: allShapesForGroup,
                 visible: true,
             };
 
@@ -121,10 +161,12 @@ const Layers = ({ layers, setShapes }) => {
 
     const LayerItem = observer(({ layer, index }) => {
         const selectedIds = editorStore.selectedShapes;
-        const isSelected = selectedIds.includes(layer.id);
-
+        // const isSelected = selectedIds.includes(layer.id);
+        // console.log(selectedIds, isSelected);
         const handleContextMenu = (e) => {
             e.preventDefault();
+            if(!editorStore.selectedShapes.includes(layer.id)) handleLayerClick()
+            // if (editorStore.selectedShapes.length <= 1) handleLayerClick();
             setContextMenu({
                 open: true,
                 x: e.clientX,
@@ -132,6 +174,23 @@ const Layers = ({ layers, setShapes }) => {
                 layerId: layer.id
             });
         };
+
+        const handleLayerClick = (e) => {
+            const groupShape = layers.find(shape =>
+                shape.type === 'group' &&
+                shape.id === layer.id
+            );
+            if (groupShape) {
+                if (!e.shiftKey) editorStore.setShape(null);
+                e.shiftKey = true;
+                groupShape.layers.map(s => s.id).forEach(element => {
+                    editorStore.setShape(element, e);
+                });
+                editorStore.setShape(groupShape.id, e);
+            } else {
+                editorStore.setShape(layer.id, e);
+            }
+        }
 
         return (
             <Draggable draggableId={layer.id} index={index}>
@@ -141,9 +200,9 @@ const Layers = ({ layers, setShapes }) => {
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
                         className={`flex justify-between items-center text-xs mb-1 px-2 py-2 rounded cursor-pointer 
-                        ${isSelected ? 'bg-blue-600' : 'opacity-70 hover:bg-[#2a2a2a]'}`}
+                            ${selectedIds.includes(layer.id) ? 'bg-blue-600' : 'opacity-70 hover:bg-[#2a2a2a]'}`}
                         onDoubleClick={() => startEditing(layer.id, layer.name)}
-                        onClick={(e) => editorStore.setShape(layer.id, e)}
+                        onClick={handleLayerClick}
                         onContextMenu={handleContextMenu}
                         title={layer.name}
                     >
@@ -187,15 +246,16 @@ const Layers = ({ layers, setShapes }) => {
 
                         {contextMenu.open && contextMenu.layerId === layer.id && (
                             <div
-                                className="absolute z-20 w-24 bg-[#1f1f1f] border border-[#333] rounded shadow"
+                                ref={contextMenuRef}
+                                className="absolute z-50 w-24 bg-[#1f1f1f] border border-[#333] rounded shadow"
                                 style={{ top: contextMenu.y, left: contextMenu.x }}
                             >
                                 <button
                                     disabled={editorStore.selectedShapes.length === 0}
                                     className="w-full text-left px-3 py-1 text-xs 
-                                                           hover:bg-[#2a2a2a] hover:text-purple-400 
-                                                           disabled:cursor-not-allowed disabled:opacity-50
-                                                         disabled:hover:text-gray-400"
+                                                            hover:bg-[#2a2a2a] hover:text-purple-400 
+                                                            disabled:cursor-not-allowed disabled:opacity-50
+                                                            disabled:hover:text-gray-400"
                                     onClick={() => {
                                         handleDuplicate();
                                         setContextMenu({ open: false, x: 0, y: 0, layerId: null });
@@ -206,9 +266,9 @@ const Layers = ({ layers, setShapes }) => {
                                 <button
                                     disabled={editorStore.selectedShapes.length <= 1}
                                     className="w-full text-left px-3 py-1 text-xs 
-                                                           hover:bg-[#2a2a2a] hover:text-purple-400 
-                                                           disabled:cursor-not-allowed disabled:opacity-50
-                                                         disabled:hover:text-gray-400"
+                                                            hover:bg-[#2a2a2a] hover:text-purple-400 
+                                                            disabled:cursor-not-allowed disabled:opacity-50
+                                                            disabled:hover:text-gray-400"
                                     onClick={() => {
                                         handleGroup();
                                         setContextMenu({ open: false, x: 0, y: 0, layerId: null });
