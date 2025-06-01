@@ -28,7 +28,7 @@ import { FiLink } from 'react-icons/fi';
 import { exportStageSVG } from 'react-konva-to-svg'
 
 const TEMPLATE_LIMITS = {
-    'basic': 3,
+    'basic': 1,
     'advanced': 10,
     'premium': Infinity
 };
@@ -188,7 +188,7 @@ const Header = ({ onSave }) => {
             const designJson = localStorage.getItem('designData');
             if (!designJson) return alert('No design data to save!');
             const parsed = JSON.parse(designJson);
-            
+
             parsed.attrs.width = editorStore.width;
             parsed.attrs.height = editorStore.height;
 
@@ -265,19 +265,21 @@ const Header = ({ onSave }) => {
     const handleSaveAsTemplateClick = async () => {
         try {
             const userSubscription = userStore?.user?.subscription || 'basic';
-            
+
             // Get user's templates count
-            const response = await api.get(`/projects?userId=${userStore?.user?.id}&isTemplate=true`);
-            const templatesCount = response.data.length;
+            const response = await api.get(`/projects/user-templates/${userStore?.user?.id}`);
             
+            console.log(response.data);
+
             const limit = TEMPLATE_LIMITS[userSubscription];
-            
+            const templatesCount = response.data.length;
+
             if (templatesCount >= limit) {
                 toast.error(
                     (t) => (
                         <div className="flex flex-col gap-1">
                             <span>Template limit reached for {userSubscription} plan</span>
-                            <button 
+                            <button
                                 className="bg-[#9B34BA] text-white px-2 py-1 rounded text-sm"
                                 onClick={() => {
                                     toast.dismiss(t.id);
@@ -303,8 +305,8 @@ const Header = ({ onSave }) => {
             await api.patch(`/projects/${projectId}`, { isTemplate: true });
             toast.success('Project saved as template!', {
                 icon: '🗂️',
-                style: { 
-                    background: '#333', 
+                style: {
+                    background: '#333',
                     color: '#fff',
                     padding: '16px'
                 },
@@ -313,8 +315,8 @@ const Header = ({ onSave }) => {
             console.error('Error saving template:', error);
             toast.error('Failed to save template.', {
                 icon: '⚠️',
-                style: { 
-                    background: '#333', 
+                style: {
+                    background: '#333',
                     color: '#fff',
                     padding: '16px'
                 },

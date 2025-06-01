@@ -5,7 +5,7 @@ import { api } from "../../../services/api";
 import { jsPDF } from 'jspdf';
 window.jspdf = { jsPDF };
 
-const ProjectCard = ({ project, onDelete }) => {
+const ProjectCard = ({ project, onDelete, onCardClick }) => {
     const navigate = useNavigate();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
@@ -84,7 +84,8 @@ const ProjectCard = ({ project, onDelete }) => {
     return (
         <article
             className="relative group p-2 border border-[#222] rounded-md cursor-pointer duration-300 hover:border-[#414141] hover:shadow-lg hover:shadow-[#a020f0]/30 w-[220px]"
-            onClick={() => navigate(`/canvas/${project.id}`)}
+            // onClick={() => navigate(`/canvas/${project.id}`)}
+            onClick={onCardClick}
         >
             {/* Three Dots Button */}
             <button

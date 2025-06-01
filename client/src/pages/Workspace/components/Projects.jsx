@@ -165,7 +165,7 @@ const Projects = () => {
             </div>
 
             <section
-                aria-label="Recent templates"
+                aria-label="Projects"
                 className="grid grid-cols-1 gap-5 py-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 "
             >
                 {projects.map((project) => (
@@ -181,7 +181,9 @@ const Projects = () => {
                             userBgColor: 'bg-blue-500',
                             userTextColor: 'text-white',
                         }}
+                        onCardClick={() => navigate(`/canvas/${project.id}`)}
                         onDelete={() => handleDeleteProject(project.id)}
+
                     />
                 ))}
             </section>

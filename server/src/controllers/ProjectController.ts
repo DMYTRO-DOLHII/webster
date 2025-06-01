@@ -86,6 +86,17 @@ export const ProjectController = {
         }
     },
 
+    async getUserTemplates(req: Request, res: Response): Promise<Response> {
+        const { userId } = req.params;
+        try {
+            const projects = await Project.find({ where: { user: { id: userId }, isTemplate: true } });
+            return res.status(200).json(projects);
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ message: 'Failed to fetch user templates' });
+        }
+    },
+
     // async getOne(req: Request, res: Response): Promise<Response> {
     //     const { id } = req.params;
     //     const userId = req.user.id;
@@ -155,6 +166,46 @@ export const ProjectController = {
         } catch (error) {
             console.error('Make template error:', error);
             return res.status(500).json({ message: 'Failed to mark project as template' });
+        }
+    },
+
+    async getUserProjects(req: Request, res: Response): Promise<Response> {
+        const { userId } = req.params;
+
+        try {
+            console.log(userId);
+            const user = await User.findOne({
+                where: { id: userId },
+                relations: ['projects']
+            });
+
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            return res.status(200).json(user.projects);
+        } catch (error) {
+            console.error('Get user projects error:', error);
+            return res.status(500).json({ message: 'Failed to fetch user projects' });
+        }
+    },
+
+    async getMcoksterProjects(req: Request, res: Response): Promise<Response> {
+        try {
+            const mcokster = await User.findOne({
+                where: { login: 'mcokster' },
+                relations: ['projects']
+            });
+            
+
+            if (!mcokster) {
+                return res.status(404).json({ message: 'Mcokster user not found' });
+            }
+
+            return res.status(200).json(mcokster.projects);
+        } catch (error) {
+            console.error('Get mcokster projects error:', error);
+            return res.status(500).json({ message: 'Failed to fetch mcokster projects' });
         }
     },
 };
