@@ -1,10 +1,8 @@
-import { useState } from "react";
+import { use, useState, useEffect } from "react";
 import Sidebar from "./components/Sidebar";
 import Projects from "./components/Projects";
 import Templates from "./components/Templates";
-import Trash from "./components/Trash";
 import SettingWindow from "./components/SettingWindow";
-import { userStore } from "../../store/userStore";
 
 const Workspace = () => {
     const [activeTab, setActiveTab] = useState("projects");
@@ -14,8 +12,6 @@ const Workspace = () => {
         switch (activeTab) {
             case "templates":
                 return <Templates />;
-            case "trash":
-                return <Trash />;
             case "projects":
             default:
                 return <Projects />;

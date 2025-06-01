@@ -1,6 +1,4 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ToggleButtonGroup, ToggleButton } from "@mui/material";
 import { RxRadiobutton } from "react-icons/rx";
 import clsx from "clsx";
 import { Button } from "@mui/material";
@@ -9,18 +7,11 @@ import { api } from "../../../services/api";
 import { redirectToStripeCheckout } from '../../../utils/stripe'
 import Swal from "sweetalert2";
 
-const pricingData = {
-    monthly: [
-        { title: "Basic", price: "$0", oldPrice: null, features: ["Unlimited designs", "Basic templates", "Watermarked exports"] },
-        { title: "Advanced", price: "$9.99", oldPrice: null, features: ["Everything in Basic", "HD export", "Team collaboration", "More templates"] },
-        { title: "Premium", price: "$19.99", oldPrice: null, features: ["Everything in Advanced", "AI design assist", "Brand kit", "Priority support"] },
-    ],
-    annually: [
-        { title: "Basic", price: "$0", oldPrice: null, features: ["Unlimited designs", "Basic templates", "Watermarked exports"] },
-        { title: "Advanced", price: "$7.99", oldPrice: "$9.99", features: ["Everything in Basic", "HD export", "Team collaboration", "More templates"] },
-        { title: "Premium", price: "$14.99", oldPrice: "$19.99", features: ["Everything in Advanced", "AI design assist", "Brand kit", "Priority support"] },
-    ],
-};
+const pricingData = [
+    { title: "Basic", price: "$0", oldPrice: null, features: ["3 projects", "No templates"] },
+    { title: "Advanced", price: "$9.99", oldPrice: null, features: ["10 projects", "10 templates"] },
+    { title: "Premium", price: "$19.99", oldPrice: null, features: ["Unlimited projects", "Unlimited templates"] },
+];
 
 const cardStyles = [
     "defaultGradient bg-[#0a171f]",
@@ -28,10 +19,7 @@ const cardStyles = [
     "purpleGradient"
 ];
 
-
-
 const Pricing = () => {
-    const [billing, setBilling] = useState("monthly");
     const navigate = useNavigate();
 
     const handlePlanSelect = async (planTitle) => {
@@ -93,49 +81,11 @@ const Pricing = () => {
                 </div>
             </div>
 
-
             <h2 className="text-4xl mb-10 text-center relative z-10">Pricing</h2>
-
-            {/* Toggle */}
-            <div className="flex justify-center mb-12 relative z-10">
-                {/* Toggle */}
-                <ToggleButtonGroup
-                    value={billing}
-                    exclusive
-                    onChange={(e, newBilling) => newBilling && setBilling(newBilling)}
-                    sx={{
-                        backgroundColor: "transparent",
-                        borderRadius: "9999px",
-                        "& .MuiToggleButton-root": {
-                            color: "#fff",
-                            border: "none",
-                            padding: "0.5rem 1.5rem",
-                            borderRadius: "5px",
-                            transition: "background 0.3s, color 0.3s",
-                            "&:hover": {
-                                backgroundColor: "transparent",
-                                color: "#9b34ba",
-                            },
-                            "&.Mui-selected": {
-                                backgroundColor: "white",
-                                color: "#000",
-                                "&:hover": {
-                                    backgroundColor: "white", // keep same as selected
-                                    color: "#000",
-                                },
-                            },
-                        },
-                    }}
-                >
-                    <ToggleButton value="monthly">Monthly</ToggleButton>
-                    <ToggleButton value="annually">Annually</ToggleButton>
-                </ToggleButtonGroup>
-
-            </div>
 
             {/* Cards */}
             <div className="relative z-10 flex justify-center flex-wrap gap-10">
-                {pricingData[billing].map((plan, index) => (
+                {pricingData.map((plan, index) => (
                     <div
                         key={index}
                         className={clsx(

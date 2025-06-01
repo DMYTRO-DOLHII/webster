@@ -21,9 +21,6 @@ const ProfileDropdown = ({ onOpenSettings }) => {
                 >
                     <FaCog /> Settings
                 </button>
-                <button className="flex items-center cursor-pointer px-3 py-2 gap-2 rounded-sm hover:text-[#fff] transition hover:bg-white/10">
-                    <FaUserPlus /> Add Account
-                </button>
                 <button
                     onClick={() => {
                         userStore?.logout();

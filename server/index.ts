@@ -10,6 +10,7 @@ import stripeRouter from './src/routes/stripe.route'
 // Import stripeWebhookRouter (but apply raw body below)
 import stripeWebhookRouter from './src/utils/stripeWebhook'
 import { clear } from 'console'
+import path from 'path'
 
 export const app = express()
 const PORT = process.env.PORT
@@ -42,6 +43,9 @@ app.use(
 
 // Now apply express.json() to the rest of the app
 app.use(express.json({ limit: '20mb' }))
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Other API routes
 app.use('/api/auth', authRouter)

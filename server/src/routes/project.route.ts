@@ -6,6 +6,9 @@ const router = Router();
 
 router.post('/', authMiddleware, ProjectController.create.bind(ProjectController));
 router.get('/', ProjectController.getAll.bind(ProjectController));
+router.get('/user/:userId', ProjectController.getUserProjects.bind(ProjectController));
+router.get('/user-templates/:userId', ProjectController.getUserTemplates.bind(ProjectController));
+router.get('/mcokster-projects', ProjectController.getMcoksterProjects.bind(ProjectController));
 router.get('/:id', authMiddleware, ProjectController.getOne.bind(ProjectController));
 router.patch('/:id', ProjectController.update.bind(ProjectController));
 router.patch('/:id/make-template', ProjectController.makeTemplate.bind(ProjectController));
