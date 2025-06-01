@@ -590,7 +590,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                 console.log("gandon");
                 editorStore.setShape(clickedId, e);
                 editorStore.setTool('move');
-                console.log({...editorStore.selectedShapes})
+                console.log({ ...editorStore.selectedShapes })
             }
         }
     };
@@ -698,6 +698,52 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 
         return img;
     }
+    const renderShape = (shape) => {
+        const Component = SHAPE_COMPONENTS[shape.type];
+        if (!Component) return null;
+
+        if (shape.type === 'image') {
+            return (
+                <ImageWithFilters
+                    key={shape.id}
+                    id={shape.id}
+                    shapeObject={shape}
+                    ref={el => {
+                        if (el) shapeRefs.current[shape.id] = el;
+                    }}
+                    onDragEnd={debouncedSave}
+                    onTransformEnd={debouncedSave}
+                    onMouseUp={debouncedSave}
+                    onDblClick={() => handleDoubleClick(shape.id)}
+                    draggable={shape.draggable}
+                />
+            );
+        }
+
+        if (shape.type === 'group') {
+            return (
+                <Component key={shape.id} {...shape} visible={shape.visible !== false}>
+                    {shape.layers.map(layer => renderShape(layer))}
+                </Component>
+            );
+        }
+
+        return (
+            <Component
+                key={shape.id}
+                id={shape.id}
+                {...shape}
+                onDragEnd={debouncedSave}
+                onTransformEnd={debouncedSave}
+                onMouseUp={debouncedSave}
+                onDblClick={() => handleDoubleClick(shape.id)}
+                visible={shape.visible !== false}
+                ref={el => {
+                    if (el) shapeRefs.current[shape.id] = el;
+                }}
+            />
+        );
+    };
 
     return (
         <div className='relative'>
@@ -808,50 +854,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                             }}
                         />
                     )}
-                    {shapes.map(shape => {
-                        const Component = SHAPE_COMPONENTS[shape.type];
-                        if (!Component) return null;
-
-                        const { id, type, ...shapeProps } = shape;
-
-                        if (shape.type === 'image') {
-                            return (
-                                <ImageWithFilters
-                                    key={shape.id}
-                                    id={shape.id}
-                                    shapeObject={shape}
-                                    ref={el => {
-                                        if (el) shapeRefs.current[shape.id] = el;
-                                    }}
-                                    onDragEnd={debouncedSave}
-                                    onTransformEnd={debouncedSave}
-                                    onMouseUp={debouncedSave}
-                                    // onClick={(e) => editorStore.setShape(shape.id, e)}
-                                    onDblClick={() => handleDoubleClick(shape.id)}
-                                    draggable={shape.draggable}
-                                />
-                            );
-                        }
-
-                        return (
-                            <Component
-                                key={id}
-                                id={id}
-                                {...shapeProps}
-                                onDragEnd={debouncedSave}
-                                onTransformEnd={debouncedSave}
-                                onMouseUp={debouncedSave}
-                                // onClick={(e) => editorStore.setShape(id, e)}
-                                onDblClick={() => handleDoubleClick(id)} // TODO 
-                                visible={shape.visible !== false}
-                                ref={el => {
-                                    if (el) {
-                                        shapeRefs.current[id] = el;
-                                    }
-                                }}
-                            />
-                        );
-                    })}
+                    {shapes.map(shape => renderShape(shape))}
 
                     {editorStore.selectedShapes.length > 0 && (
                         <Transformer

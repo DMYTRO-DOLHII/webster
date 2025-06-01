@@ -1,4 +1,4 @@
-import { Circle, Rect, Line, Text, RegularPolygon, Star, Arrow, Image, Ellipse } from 'react-konva';
+import { Circle, Rect, Line, Text, RegularPolygon, Star, Arrow, Image, Ellipse, Group } from 'react-konva';
 export const SHAPE_COMPONENTS = {
     circle: Circle,
     rect: Rect,
@@ -11,7 +11,8 @@ export const SHAPE_COMPONENTS = {
     arrow: Arrow,
     brush: Line,
     image: Image,
-    ellipse: Ellipse
+    ellipse: Ellipse,
+	group: Group
 };
 
 export const SHAPE_DEFAULTS = {

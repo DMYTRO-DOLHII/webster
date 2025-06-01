@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { Eye, EyeOff, Trash2 } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
@@ -10,7 +10,7 @@ const Layers = ({ layers, setShapes }) => {
     const [contextMenu, setContextMenu] = useState({ open: false, x: 0, y: 0, layerId: null });
 
     layers = layers.filter(l => l.type !== "transformer").reverse();
-
+    console.log(layers);
     useEffect(() => {
         if (editorStore.selectedShapeId === null && editorStore.selectedShapes.length === 0) {
             const backgroundLayer = layers.find(layer => layer.name?.toLowerCase() === 'background');
@@ -71,6 +71,52 @@ const Layers = ({ layers, setShapes }) => {
             handleNameChange(id, nameInputValue.trim());
         }
         setEditingLayerId(null);
+    };
+
+    const handleDuplicate = () => {
+        const selectedIds = editorStore.selectedShapes;
+        if (selectedIds.length === 0) return;
+
+        setShapes(prev => {
+            const newShapes = [...prev];
+            selectedIds.forEach(selId => {
+                const original = prev.find(shape => shape.id === selId);
+                if (original) {
+                    const duplicated = {
+                        ...original,
+                        id: `${original.id.split("-")[0]}-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+                        name: `${original.name || "Untitled"} copy`,
+                    };
+                    newShapes.push(duplicated);
+                }
+            });
+            return newShapes;
+        });
+    };
+
+
+    const handleGroup = () => {
+        const selectedIds = editorStore.selectedShapes;
+        if (selectedIds.length <= 1) return;
+
+        setShapes(prev => {
+            const selectedShapes = prev.filter(shape => selectedIds.includes(shape.id));
+            if (selectedShapes.length <= 1) return prev;
+
+            const remainingShapes = prev.filter(shape => !selectedIds.includes(shape.id));
+
+            const groupLayer = {
+                id: `group-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+                name: `Group of ${selectedShapes.length} layers`,
+                type: 'group',
+                layers: selectedShapes, // сохраняем полные объекты, не только id
+                visible: true,
+            };
+
+            return [...remainingShapes, groupLayer];
+        });
+
+        editorStore.setShape(null);
     };
 
     const LayerItem = observer(({ layer, index }) => {
@@ -151,7 +197,7 @@ const Layers = ({ layers, setShapes }) => {
                                                            disabled:cursor-not-allowed disabled:opacity-50
                                                          disabled:hover:text-gray-400"
                                     onClick={() => {
-                                        console.log("Duplicate", layer.id);
+                                        handleDuplicate();
                                         setContextMenu({ open: false, x: 0, y: 0, layerId: null });
                                     }}
                                 >
@@ -164,7 +210,7 @@ const Layers = ({ layers, setShapes }) => {
                                                            disabled:cursor-not-allowed disabled:opacity-50
                                                          disabled:hover:text-gray-400"
                                     onClick={() => {
-                                        console.log("Group", layer.id);
+                                        handleGroup();
                                         setContextMenu({ open: false, x: 0, y: 0, layerId: null });
                                     }}
                                 >
@@ -203,3 +249,4 @@ const Layers = ({ layers, setShapes }) => {
 };
 
 export default Layers;
+
