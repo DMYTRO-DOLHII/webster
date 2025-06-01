@@ -23,9 +23,9 @@ export const SHAPE_DEFAULTS = {
 		height: 200,
 		draggable: true,
 		filters: {
-			blur: { active: false, value: 10 },
-			brightness: { active: false, value: 0.3 },
-			contrast: { active: false, value: 50 },
+			blur: { value: 0 },
+			brightness: { value: 0 },
+			contrast: { value: 50 },
 		},
 	},
 	line: {
