@@ -36,7 +36,7 @@ export class User extends BaseEntity {
     @Column({ nullable: true })
     profilePicture: string;
 
-    @Column({ default: true })
+    @Column({ default: false })
     isEmailConfirmed: boolean;
 
     @Column({
