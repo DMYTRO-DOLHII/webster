@@ -6,6 +6,7 @@ import { editorStore } from '../../../store/editorStore';
 import { api } from '../../../services/api';
 import toast from 'react-hot-toast';
 import { jsPDF } from 'jspdf';
+import { userStore } from '../../../store/userStore';
 window.jspdf = { jsPDF };
 import {
     FacebookShareButton,
@@ -25,6 +26,12 @@ import {
 } from 'react-share';
 import { FiLink } from 'react-icons/fi';
 import { exportStageSVG } from 'react-konva-to-svg'
+
+const TEMPLATE_LIMITS = {
+    'basic': 3,
+    'advanced': 10,
+    'premium': Infinity
+};
 
 const menuStructure = {
     File: [
@@ -257,16 +264,60 @@ const Header = ({ onSave }) => {
 
     const handleSaveAsTemplateClick = async () => {
         try {
+            const userSubscription = userStore?.user?.subscription || 'basic';
+            
+            // Get user's templates count
+            const response = await api.get(`/projects?userId=${userStore?.user?.id}&isTemplate=true`);
+            const templatesCount = response.data.length;
+            
+            const limit = TEMPLATE_LIMITS[userSubscription];
+            
+            if (templatesCount >= limit) {
+                toast.error(
+                    (t) => (
+                        <div className="flex flex-col gap-1">
+                            <span>Template limit reached for {userSubscription} plan</span>
+                            <button 
+                                className="bg-[#9B34BA] text-white px-2 py-1 rounded text-sm"
+                                onClick={() => {
+                                    toast.dismiss(t.id);
+                                    navigate('/pricing');
+                                }}
+                            >
+                                Upgrade Plan
+                            </button>
+                        </div>
+                    ),
+                    {
+                        duration: 5000,
+                        style: {
+                            background: '#333',
+                            color: '#fff',
+                            padding: '16px',
+                        },
+                    }
+                );
+                return;
+            }
+
             await api.patch(`/projects/${projectId}`, { isTemplate: true });
             toast.success('Project saved as template!', {
                 icon: '🗂️',
-                style: { background: '#333', color: '#fff' },
+                style: { 
+                    background: '#333', 
+                    color: '#fff',
+                    padding: '16px'
+                },
             });
         } catch (error) {
             console.error('Error saving template:', error);
             toast.error('Failed to save template.', {
                 icon: '⚠️',
-                style: { background: '#333', color: '#fff' },
+                style: { 
+                    background: '#333', 
+                    color: '#fff',
+                    padding: '16px'
+                },
             });
         }
     };

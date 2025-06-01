@@ -47,13 +47,6 @@ const Sidebar = ({ activeTab, setActiveTab, onOpenSettings }) => {
                 </div>
             )}
 
-            <div className="px-4 py-2">
-                <input
-                    className="w-full bg-[#1c1c1c] text-[#3a3a3a] text-xs rounded-md px-3 py-2 placeholder-[#3a3a3a] focus:outline-none"
-                    placeholder="Search for anything"
-                    type="text"
-                />
-            </div>
 
             <nav className="flex flex-col mt-2 text-[14px] font-normal text-[#b3b3b3]">
                 <button onClick={() => setActiveTab("projects")} className={`flex items-center gap-2 px-4 py-3 ${activeTab === 'projects' ? 'bg-[#3a1a5a] text-white' : 'hover:bg-[#222222]'} transition-colors`}>
@@ -63,10 +56,6 @@ const Sidebar = ({ activeTab, setActiveTab, onOpenSettings }) => {
                 <button onClick={() => setActiveTab("templates")} className={`flex items-center gap-2 px-4 py-3 ${activeTab === 'templates' ? 'bg-[#3a1a5a] text-white' : 'hover:bg-[#222222]'} transition-colors`}>
                     <FaFileAlt className="text-[10px]" />
                     Templates
-                </button>
-                <button onClick={() => setActiveTab("trash")} className={`flex items-center gap-2 px-4 py-3 ${activeTab === 'trash' ? 'bg-[#3a1a5a] text-white' : 'hover:bg-[#222222]'} transition-colors`}>
-                    <FaTrashAlt className="text-[10px]" />
-                    Trash
                 </button>
             </nav>
 
@@ -110,10 +99,6 @@ const Sidebar = ({ activeTab, setActiveTab, onOpenSettings }) => {
 
             <div className="flex-grow"></div>
 
-            <div className="px-4 py-3 border-t border-[#222222] text-[#b3b3b3] text-xs flex items-center gap-2">
-                <FaFolder />
-                Main project
-            </div>
         </aside>
     );
 };
