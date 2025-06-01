@@ -7,16 +7,16 @@ class EditorStore {
 	error = null;
 	selectedTool = null;
 	selectedColor = '#000000';
-    projectJSON = null;
+	projectJSON = null;
 
-    projectHistory = [];
-    redo = [];
-    currentHistoryIndex = null;
+	projectHistory = [];
+	redo = [];
+	currentHistoryIndex = null;
 
-    width = null;
-    height = null;
+	width = null;
+	height = null;
 
-    stage = null;
+	stage = null;
 
 	selectedShapeId = null;
 
@@ -27,22 +27,25 @@ class EditorStore {
 	}
 	setShape(selectedShapeId, event) {
 		this.selectedShapeId = selectedShapeId;
-		if(selectedShapeId === null) this.selectedShapes = [];
-		else if ((event?.shiftKey || event?.evt?.shiftKey) && !this.selectedShapes.includes(selectedShapeId)) this.selectedShapes = [...this.selectedShapes, selectedShapeId];
+		if (selectedShapeId === null) this.selectedShapes = [];
+		else if ((event?.shiftKey || event?.evt?.shiftKey) && !this.selectedShapes.includes(selectedShapeId)) {
+			this.selectedShapes = [...this.selectedShapes, selectedShapeId];
+			this.selectedShapeId = null;
+		}
 		else this.selectedShapes = [selectedShapeId];
 	}
 
-    setStage(stage) {
-        this.stage = stage;
-    }
+	setStage(stage) {
+		this.stage = stage;
+	}
 
 	setProject(projectData) {
 		this.project = projectData;
 	}
 
-    setProjectJSON(json) {
-        this.projectJSON = json;
-    }
+	setProjectJSON(json) {
+		this.projectJSON = json;
+	}
 
 	updateProject(updates) {
 		if (!this.project) return;
@@ -63,26 +66,26 @@ class EditorStore {
 		this.selectedColor = color;
 	}
 
-    setWidth(width) {
-        this.width = width;
-    }
+	setWidth(width) {
+		this.width = width;
+	}
 
-    setHeight(height) {
-        this.height = height;
-    }
+	setHeight(height) {
+		this.height = height;
+	}
 
-    setCurrentHistoryIndex(index) {
-        this.currentHistoryIndex = index;
-    }
+	setCurrentHistoryIndex(index) {
+		this.currentHistoryIndex = index;
+	}
 
-    setProjectHistory(history) {
-        this.projectHistory = history;
-        this.currentHistoryIndex = history.length - 1;
-    }
-    
-    setRedo(redo) {
-        this.redo = redo;
-    }
+	setProjectHistory(history) {
+		this.projectHistory = history;
+		this.currentHistoryIndex = history.length - 1;
+	}
+
+	setRedo(redo) {
+		this.redo = redo;
+	}
 }
 
 export const editorStore = new EditorStore();

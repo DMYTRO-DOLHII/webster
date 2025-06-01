@@ -35,13 +35,14 @@ const ProjectCard = ({ project, onDelete }) => {
         >
             {/* Three Dots Button */}
             <button
-                className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity
+             bg-white/80 dark:bg-black/50 backdrop-blur-sm rounded-full p-1 shadow-md"
                 onClick={(e) => {
                     e.stopPropagation();
                     setIsDropdownOpen(!isDropdownOpen);
                 }}
             >
-                <MoreHorizontal className="text-white w-5 h-5" />
+                <MoreHorizontal className="text-pink-500 w-5 h-5" />
             </button>
 
             {/* Preview Image */}

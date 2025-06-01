@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Eye, EyeOff, Trash2 } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
@@ -7,10 +7,12 @@ import { editorStore } from "../../../../store/editorStore";
 const Layers = ({ layers, setShapes }) => {
     const [editingLayerId, setEditingLayerId] = useState(null);
     const [nameInputValue, setNameInputValue] = useState("");
+    const [contextMenu, setContextMenu] = useState({ open: false, x: 0, y: 0, layerId: null });
+
     layers = layers.filter(l => l.type !== "transformer").reverse();
 
     useEffect(() => {
-        if (editorStore.selectedShapeId == null) {
+        if (editorStore.selectedShapeId === null && editorStore.selectedShapes.length === 0) {
             const backgroundLayer = layers.find(layer => layer.name?.toLowerCase() === 'background');
             if (backgroundLayer) {
                 editorStore.setShape(backgroundLayer.id);
@@ -19,6 +21,16 @@ const Layers = ({ layers, setShapes }) => {
             }
         }
     }, [layers]);
+
+    useEffect(() => {
+        const handleClickOutside = () => {
+            setContextMenu({ open: false, x: 0, y: 0, layerId: null });
+        };
+        document.addEventListener("click", handleClickOutside);
+        return () => {
+            document.removeEventListener("click", handleClickOutside);
+        };
+    }, []);
 
     const handleDeleteLayer = id => {
         setShapes(prev => prev.filter(shape => shape.id !== id));
@@ -63,17 +75,30 @@ const Layers = ({ layers, setShapes }) => {
 
     const LayerItem = observer(({ layer, index }) => {
         const selectedIds = editorStore.selectedShapes;
+        const isSelected = selectedIds.includes(layer.id);
+
+        const handleContextMenu = (e) => {
+            e.preventDefault();
+            setContextMenu({
+                open: true,
+                x: e.clientX,
+                y: e.clientY,
+                layerId: layer.id
+            });
+        };
+
         return (
-            <Draggable draggableId={layer.id} index={index} >
+            <Draggable draggableId={layer.id} index={index}>
                 {(provided) => (
                     <div
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
                         className={`flex justify-between items-center text-xs mb-1 px-2 py-2 rounded cursor-pointer 
-                        ${selectedIds.includes(layer.id) ? 'bg-blue-600' : 'opacity-70 hover:bg-[#2a2a2a]'}`}
+                        ${isSelected ? 'bg-blue-600' : 'opacity-70 hover:bg-[#2a2a2a]'}`}
                         onDoubleClick={() => startEditing(layer.id, layer.name)}
                         onClick={(e) => editorStore.setShape(layer.id, e)}
+                        onContextMenu={handleContextMenu}
                         title={layer.name}
                     >
                         {editingLayerId === layer.id ? (
@@ -113,18 +138,55 @@ const Layers = ({ layers, setShapes }) => {
                                 <Trash2 size={16} />
                             </button>
                         </div>
+
+                        {contextMenu.open && contextMenu.layerId === layer.id && (
+                            <div
+                                className="absolute z-20 w-24 bg-[#1f1f1f] border border-[#333] rounded shadow"
+                                style={{ top: contextMenu.y, left: contextMenu.x }}
+                            >
+                                <button
+                                    disabled={editorStore.selectedShapes.length === 0}
+                                    className="w-full text-left px-3 py-1 text-xs 
+                                                           hover:bg-[#2a2a2a] hover:text-purple-400 
+                                                           disabled:cursor-not-allowed disabled:opacity-50
+                                                         disabled:hover:text-gray-400"
+                                    onClick={() => {
+                                        console.log("Duplicate", layer.id);
+                                        setContextMenu({ open: false, x: 0, y: 0, layerId: null });
+                                    }}
+                                >
+                                    Duplicate
+                                </button>
+                                <button
+                                    disabled={editorStore.selectedShapes.length <= 1}
+                                    className="w-full text-left px-3 py-1 text-xs 
+                                                           hover:bg-[#2a2a2a] hover:text-purple-400 
+                                                           disabled:cursor-not-allowed disabled:opacity-50
+                                                         disabled:hover:text-gray-400"
+                                    onClick={() => {
+                                        console.log("Group", layer.id);
+                                        setContextMenu({ open: false, x: 0, y: 0, layerId: null });
+                                    }}
+                                >
+                                    Group
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
-            </Draggable >)
+            </Draggable>
+        );
     });
 
-    // Отрисовать слои без reverse — порядок должен быть сохранён в исходном массиве
     return (
         <DragDropContext onDragEnd={onDragEnd}>
             <Droppable droppableId="layers">
                 {(provided) => (
                     <div ref={provided.innerRef} {...provided.droppableProps}>
-                        <h2 className="text-sm font-semibold mb-2 border-b border-[#333] pb-1">Layers</h2>
+                        <div className="flex justify-between items-center mb-2 border-b border-[#333] pb-1">
+                            <h2 className="text-sm font-semibold">Layers</h2>
+                        </div>
+
                         {layers && layers.length > 0 ? (
                             layers.map((layer, index) => (
                                 <LayerItem key={layer.id} layer={layer} index={index} />
