@@ -171,6 +171,7 @@ const Header = ({ onSave }) => {
                 await api.patch(`/projects/${projectId}`, {
 					info: JSON.parse(json),
 				});
+                window.location.reload();
 			}
 		}
     }
