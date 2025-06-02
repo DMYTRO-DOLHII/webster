@@ -20,29 +20,29 @@ const ImageWithFilters = forwardRef(({ shapeObject, ...props }, ref) => {
         }
     }, [shapeObject.filters, shapeObject.image]);
 
-	// Всегда применяем фильтры
-	const activeFilters = [Konva.Filters.Blur, Konva.Filters.Brighten, Konva.Filters.Contrast];
+    // Всегда применяем фильтры
+    const activeFilters = [Konva.Filters.Blur, Konva.Filters.Brighten, Konva.Filters.Contrast];
 
-	const { image, filters, ...imageProps } = shapeObject;
+    const { image, filters, ...imageProps } = shapeObject;
 
-	return (
-		<SHAPE_COMPONENTS.image
-			ref={node => {
-				imageRef.current = node;
-				if (typeof ref === 'function') ref(node);
-				else if (ref) ref.current = node;
-			}}
-			id={shapeObject.id}
-			name={shapeObject.name}
-			image={image}
-			filters={activeFilters}
-			blurRadius={filters?.blur?.value || 0}
-			brightness={filters?.brightness?.value || 0}
-			contrast={filters?.contrast?.value || 0}
-			{...imageProps}
-			{...props}
-		/>
-	);
+    return (
+        <SHAPE_COMPONENTS.image
+            ref={node => {
+                imageRef.current = node;
+                if (typeof ref === 'function') ref(node);
+                else if (ref) ref.current = node;
+            }}
+            id={shapeObject.id}
+            name={shapeObject.name}
+            image={image}
+            filters={activeFilters}
+            blurRadius={filters?.blur?.value || 0}
+            brightness={filters?.brightness?.value || 0}
+            contrast={filters?.contrast?.value || 0}
+            {...imageProps}
+            {...props}
+        />
+    );
 });
 
 const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef, setZoom, setShapes }) => {
@@ -192,24 +192,33 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                     visible: shape.visible !== false,
                     ...shape.attrs,
                 })) || [];
-            const shapedFromJSON = loadedShapes.map(shape => {
-                if (shape.type === 'image' && shape.img64) {
-                    const img = new window.Image();
-                    img.src = shape.img64;
+            const shapedFromJSON = await Promise.all(
+                loadedShapes.map(async (shape) => {
+                    if (shape.type === 'image' && shape.img64) {
+                        const img = new window.Image();
+                        img.src = shape.img64;
 
-                    return {
-						...shape,
-						image: img,
-						filters: shape.filters || {
-							blur: { value: 0 },
-							brightness: { value: 0 },
-							contrast: { value: 0 },
-						},
-					};
-                }
+                        // Wait until image is loaded
+                        await new Promise((resolve) => {
+                            img.onload = resolve;
+                            img.onerror = resolve; // Prevent hanging on error
+                        });
 
-                return shape;
-            })
+                        return {
+                            ...shape,
+                            image: img,
+                            filters: shape.filters || {
+                                blur: { value: 0 },
+                                brightness: { value: 0 },
+                                contrast: { value: 0 },
+                            },
+                        };
+                    }
+
+                    return shape;
+                })
+            );
+
             console.log(shapedFromJSON);
 
             setShapes(shapedFromJSON);
@@ -435,23 +444,23 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                 const stage = stageRef.current.getStage();
                 const point = stage.getPointerPosition();
                 const newImage = {
-					id: `image-${Date.now()}`,
-					type: 'image',
-					name: file.name,
-					image: img,
-					x: point.x, // Центрирование относительно курсора
-					y: point.y / zoom,
-					width: img.width * scale,
-					height: img.height * scale,
-					draggable: true,
-					img64: event.target.result,
-					opacity: 1,
-					filters: {
-						blur: { value: 0 },
-						brightness: { value: 0 },
-						contrast: { value: 0 },
-					},
-				};
+                    id: `image-${Date.now()}`,
+                    type: 'image',
+                    name: file.name,
+                    image: img,
+                    x: point.x, // Центрирование относительно курсора
+                    y: point.y / zoom,
+                    width: img.width * scale,
+                    height: img.height * scale,
+                    draggable: true,
+                    img64: event.target.result,
+                    opacity: 1,
+                    filters: {
+                        blur: { value: 0 },
+                        brightness: { value: 0 },
+                        contrast: { value: 0 },
+                    },
+                };
 
                 handleShapesChange(prev => [...prev, newImage]);
                 setContextMenu({ ...contextMenu, visible: false });
