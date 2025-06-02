@@ -221,7 +221,6 @@ const Properties = observer(({ layers, setShapes }) => {
 							</>
 						)}
 						{selectedLayer?.type === 'image' && (
-							// В секции Image Filters
 							<div className='mt-4'>
 								<h3 className='text-sm font-medium mb-2 border-b border-[#333] pb-1'>Image Filters</h3>
 								<div className='space-y-3'>
@@ -230,24 +229,24 @@ const Properties = observer(({ layers, setShapes }) => {
 										min={0}
 										max={100}
 										step={1}
-										filters={selectedLayer.filters}
-										setFilters={newFilters => updateShape('filters', newFilters, selectedLayer)}
+										value={selectedLayer.blurRadius ?? 0}
+										onChange={newValue => updateShape('blurRadius', newValue, selectedLayer)}
 									/>
 									<FilterControl
 										name='brightness'
 										min={-1}
 										max={1}
 										step={0.1}
-										filters={selectedLayer.filters}
-										setFilters={newFilters => updateShape('filters', newFilters, selectedLayer)}
+										value={selectedLayer.brightness ?? 0}
+										onChange={newValue => updateShape('brightness', newValue, selectedLayer)}
 									/>
 									<FilterControl
 										name='contrast'
 										min={-100}
 										max={100}
 										step={1}
-										filters={selectedLayer.filters}
-										setFilters={newFilters => updateShape('filters', newFilters, selectedLayer)}
+										value={selectedLayer.contrast ?? 0}
+										onChange={newValue => updateShape('contrast', newValue, selectedLayer)}
 									/>
 								</div>
 							</div>
