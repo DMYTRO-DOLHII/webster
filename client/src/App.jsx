@@ -22,6 +22,8 @@ import ScrollToTop from './components/ScrollToTop';
 import WithLayout from './components/WithLayout'
 import Pricing from './pages/Main/components/Pricing';
 import EmailConfirmation from './pages/Register/EmailConfirmation';
+import EmailSentPasswordReset from './pages/Workspace/components/EmailSentPasswordReset';
+import ResetPassword from './pages/Workspace/components/PasswordReset';
 
 import { userStore } from './store/userStore';
 
@@ -78,15 +80,16 @@ function AppContent() {
                 <Route path='/login' element={<Login />} />
                 <Route path='/register' element={<Register />} />
 
-                <Route path='/confirm-email/:token' element={<EmailConfirmation />} />
-                <Route path='/workspace' element={<Workspace />} />
-                <Route path='/canvas/:projectId' element={<Canvas />} />
-
-                {/* Catch-all for 404 */}
-                <Route path='*' element={<Error404 />} />
-            </Routes>
-        </div>
-    );
+				<Route path='/confirm-email/:token' element={<EmailConfirmation />} />
+				<Route path='/workspace' element={<Workspace />} />
+				<Route path='/canvas/:projectId' element={<Canvas />} />
+				<Route path='/password-reset' element={<EmailSentPasswordReset />} />
+				<Route path='/password-reset/:token' element={<ResetPassword />} />
+				{/* Catch-all for 404 */}
+				<Route path='*' element={<Error404 />} />
+			</Routes>
+		</div>
+	);
 }
 
 function App() {
