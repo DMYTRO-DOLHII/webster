@@ -12,18 +12,21 @@ import isEqual from 'lodash.isequal';
 
 const ImageWithFilters = forwardRef(({ shapeObject, ...props }, ref) => {
     const imageRef = useRef(null);
+    const [loaded, setLoaded] = useState(false);
 
-    useEffect(() => {
-        if (imageRef.current) {
-            imageRef.current.cache();
-            imageRef.current.getLayer().batchDraw();
-        }
-    }, [shapeObject.filters, shapeObject.image]);
+    const { image, filters, ...imageProps } = shapeObject;
 
     // Всегда применяем фильтры
     const activeFilters = [Konva.Filters.Blur, Konva.Filters.Brighten, Konva.Filters.Contrast];
 
-    const { image, filters, ...imageProps } = shapeObject;
+    useEffect(() => {
+        if (image && imageRef.current) {
+            // Только после загрузки
+            imageRef.current.cache();
+            imageRef.current.getLayer()?.batchDraw();
+            setLoaded(true);
+        }
+    }, [image]);
 
     return (
         <SHAPE_COMPONENTS.image
@@ -39,6 +42,7 @@ const ImageWithFilters = forwardRef(({ shapeObject, ...props }, ref) => {
             blurRadius={filters?.blur?.value || 0}
             brightness={filters?.brightness?.value || 0}
             contrast={filters?.contrast?.value || 0}
+            visible={!!image && loaded}
             {...imageProps}
             {...props}
         />
@@ -215,11 +219,40 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                         };
                     }
 
+                    if (shape.type === 'group') {
+                        const shps = [];
+                        for (const sh of shape.layers) {
+                            if (sh.type === 'image' && sh.img64) {
+                                const img = new window.Image();
+                                img.src = sh.img64;
+
+                                // Wait until image is loaded
+                                await new Promise((resolve) => {
+                                    img.onload = resolve;
+                                    img.onerror = resolve; // Prevent hanging on error
+                                });
+
+                                shps.push({
+                                    ...sh,
+                                    image: img,
+                                    filters: sh.filters || {
+                                        blur: { value: 0 },
+                                        brightness: { value: 0 },
+                                        contrast: { value: 0 },
+                                    },
+                                });
+                                continue;
+                            }
+                            shps.push(sh);
+                        }
+                        return {
+                            ...shape,
+                            layers: shps
+                        };
+                    }
                     return shape;
                 })
             );
-
-            console.log(shapedFromJSON);
 
             setShapes(shapedFromJSON);
         } catch (err) {
@@ -275,6 +308,17 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                                 const originalShape = shapes.find(s => s.id === shape.attrs.id);
                                 if (originalShape && originalShape.img64) {
                                     shape.attrs.img64 = originalShape.img64;
+                                }
+                            }
+                            if (shape.className === 'Group') {
+                                for (const sh of shape.attrs.layers) {
+                                    if (sh.className === 'Image') {
+                                        const originalGroup = shapes.find(s => s.id === shape.attrs.id);
+                                        const originalShape = originalGroup.layers.find(s => s.id === sh.attrs.id);
+                                        if (originalShape && originalShape.img64) {
+                                            sh.attrs.img64 = originalShape.img64;
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -577,6 +621,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
             }, 0);
         } else {
             const clickedId = e.target.attrs.id || e.target._id;
+            console.log(clickedId);
             if (clickedId) {
                 const groupShape = shapes.find(shape =>
                     shape.type === 'group' &&
@@ -587,6 +632,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                     if (!e.evt.shiftKey) editorStore.setShape(null);
                     e.shiftKey = true;
                     groupShape.layers.map(s => s.id).forEach(element => {
+                        console.log(element);
                         editorStore.setShape(element, e);
                     });
                     editorStore.setShape(groupShape.id, e);
@@ -595,7 +641,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                     editorStore.setShape(clickedId, e);
                 }
                 editorStore.setTool('move');
-                // console.log({ ...editorStore.selectedShapes });
             }
         }
     };
