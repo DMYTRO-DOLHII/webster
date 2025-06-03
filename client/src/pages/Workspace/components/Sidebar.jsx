@@ -55,7 +55,7 @@ const Sidebar = ({ activeTab, setActiveTab, onOpenSettings }) => {
                 </button>
                 <button onClick={() => setActiveTab("templates")} className={`flex items-center gap-2 px-4 py-3 ${activeTab === 'templates' ? 'bg-[#3a1a5a] text-white' : 'hover:bg-[#222222]'} transition-colors`}>
                     <FaFileAlt className="text-[10px]" />
-                    Templates
+                    Available templates
                 </button>
             </nav>
 

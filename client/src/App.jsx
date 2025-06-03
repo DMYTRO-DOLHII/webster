@@ -12,6 +12,7 @@ import Editor from './pages/Canvas/Canvas'
 import Canvas from './pages/Canvas/Canvas'
 import Success from './pages/Success/Success'
 import Error404 from './pages/404/404';
+import SomethingInteresting from './pages/SomethingInteresting';
 
 // Components import
 import Header from './components/Header';
@@ -60,31 +61,32 @@ function AppContent() {
     }
 
     return (
-		<div className='flex flex-col h-screen scroll-smooth'>
-			<div>
-				<Toaster position='top-right' />
-			</div>
-			<Routes>
-				<Route element={<WithLayout />}>
-					<Route path='/' element={<Main />} />
-					<Route path='/pricing' element={<Pricing />} />
-					<Route path='/subscription/success' element={<Success />} />
+        <div className='flex flex-col h-screen scroll-smooth'>
+            <div>
+                <Toaster position='top-right' />
+            </div>
+            <Routes>
+                <Route element={<WithLayout />}>
+                    <Route path='/' element={<Main />} />
+                    <Route path='/pricing' element={<Pricing />} />
+                    <Route path='/subscription/success' element={<Success />} />
+                    <Route path='/pashalka' element={<SomethingInteresting />} />
 
-					{/* Add other pages here that need Header/Footer */}
-				</Route>
+                    {/* Add other pages here that need Header/Footer */}
+                </Route>
 
-				<Route path='/login' element={<Login />} />
-				<Route path='/register' element={<Register />} />
+                <Route path='/login' element={<Login />} />
+                <Route path='/register' element={<Register />} />
 
-				<Route path='/confirm-email/:token' element={<EmailConfirmation />} />
-				<Route path='/workspace' element={<Workspace />} />
-				<Route path='/canvas/:projectId' element={<Canvas />} />
+                <Route path='/confirm-email/:token' element={<EmailConfirmation />} />
+                <Route path='/workspace' element={<Workspace />} />
+                <Route path='/canvas/:projectId' element={<Canvas />} />
 
-				{/* Catch-all for 404 */}
-				<Route path='*' element={<Error404 />} />
-			</Routes>
-		</div>
-	);
+                {/* Catch-all for 404 */}
+                <Route path='*' element={<Error404 />} />
+            </Routes>
+        </div>
+    );
 }
 
 function App() {

@@ -12,7 +12,7 @@ const Footer = () => {
     };
 
     return (
-        <footer className=" overflow-clip relative bg-[#0e0e0e] text-white text-sm pt-10 pb-6 px-4 md:px-10 mt-20 border-t border-white/10">
+        <footer className="overflow-clip relative bg-[#0e0e0e] text-white text-sm pt-10 pb-6 px-4 md:px-10 mt-20 border-t border-white/10">
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
 
                 {/* Background shapes */}
@@ -32,7 +32,7 @@ const Footer = () => {
                     <h4 className="font-semibold text-white">Quick Links</h4>
                     <Link to="/" className="hover:text-[#9b34ba] transition">Home</Link>
                     <span onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: 'smooth' })} className="cursor-pointer hover:text-[#9b34ba] transition">Pricing</span>
-                    <span onClick={() => document.getElementById("testimonials")?.scrollIntoView({ behavior: 'smooth' })} className="cursor-pointer hover:text-[#9b34ba] transition">Testimonials</span>
+                    <span onClick={() => window.open('/pashalka', '_blank')} className="cursor-pointer hover:text-[#9b34ba] transition">Testimonials</span>
                     <span onClick={() => document.getElementById("faqs")?.scrollIntoView({ behavior: 'smooth' })} className="cursor-pointer hover:text-[#9b34ba] transition">FAQs</span>
                 </div>
 
