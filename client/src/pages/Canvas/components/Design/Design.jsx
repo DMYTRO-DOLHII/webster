@@ -605,7 +605,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
         }
 
         if (e.target === stage) {
-            if (!SHAPE_DEFAULTS[tool] || tool === 'brush' || tool === 'marker' || tool === 'pencil') {
+            if (!SHAPE_DEFAULTS[tool] || tool === 'brush' || tool === 'marker' || tool === 'pencil' || tool === 'eraser') {
                 editorStore.setShape(null);
                 return;
             }
@@ -663,7 +663,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
     const handleMouseDown = e => {
         const { selectedTool } = editorStore;
 
-        if (!['brush', 'marker', 'pencil'].includes(selectedTool)) return;
+        if (!['brush', 'marker', 'pencil', 'eraser'].includes(selectedTool)) return;
 
         isDrawing.current = true;
         const stage = stageRef.current.getStage();
@@ -689,7 +689,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 
     const handleMouseMove = e => {
         const { selectedTool } = editorStore;
-        if (!isDrawing.current || !['brush', 'marker', 'pencil'].includes(selectedTool)) return;
+        if (!isDrawing.current || !['brush', 'marker', 'pencil', 'eraser'].includes(selectedTool)) return;
 
         const stage = stageRef.current.getStage();
         const point = stage.getPointerPosition();
@@ -709,7 +709,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 
     const handleMouseUp = () => {
         const { selectedTool } = editorStore;
-        if (!['brush', 'marker', 'pencil'].includes(selectedTool)) return;
+        if (!['brush', 'marker', 'pencil', 'eraser'].includes(selectedTool)) return;
 
         isDrawing.current = false;
         setCurrentLineId(null);

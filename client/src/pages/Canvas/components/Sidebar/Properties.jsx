@@ -186,8 +186,7 @@ const Properties = observer(({ layers, setShapes }) => {
 
 				{isShape(selectedLayer.type) && (
 					<div className='space-y-2'>
-						{selectedLayer.type !== 'line' ||
-							(selectedLayer.type !== 'image' && (
+						{selectedLayer.type !== 'line' && selectedLayer.type !== 'image' && (
 								<div className='flex items-center justify-between'>
 									<label className='text-xs font-medium text-gray-300'>Color</label>
 									<input
@@ -197,7 +196,7 @@ const Properties = observer(({ layers, setShapes }) => {
 										onChange={e => updateShape('fill', e.target.value, selectedLayer)}
 									/>
 								</div>
-							))}
+							)}
 						{selectedLayer.type === 'image' && (
 							<>
 								<div>

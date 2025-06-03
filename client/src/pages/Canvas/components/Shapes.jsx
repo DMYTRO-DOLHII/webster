@@ -12,6 +12,7 @@ export const SHAPE_COMPONENTS = {
 	brush: Line,
 	marker: Line,
 	pencil: Line,
+	eraser: Line,
 	image: Image,
 	ellipse: Ellipse,
 	group: Group
@@ -95,6 +96,15 @@ export const SHAPE_DEFAULTS = {
 		globalCompositeOperation: 'source-over',
 		draggable: false,
 		opacity: 0.9,
+	},
+	eraser: {
+		strokeWidth: 20, // толщина ластика (можно регулировать)
+		tension: 0.5,
+		lineCap: 'round',
+		globalCompositeOperation: 'destination-out', // этот режим "стирать"
+		draggable: false,
+		stroke: 'black',
+		opacity: 1,
 	},
 };
 
