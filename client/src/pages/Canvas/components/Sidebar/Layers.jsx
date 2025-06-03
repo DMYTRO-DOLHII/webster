@@ -11,20 +11,8 @@ const Layers = ({ layers, setShapes }) => {
     const contextMenuRef = useRef(null);
 
     layers = layers.filter(l => l.type !== "transformer").reverse();
-    // console.log(layers);
-    // useEffect(() => {
-    //     if (editorStore.selectedShapeId === null && editorStore.selectedShapes.length === 0) {
-    //         const backgroundLayer = layers.find(layer => layer.name?.toLowerCase() === 'background');
-    //         if (backgroundLayer) {
-    //             editorStore.setShape(backgroundLayer.id);
-    //         } else {
-    //             editorStore.setShape(null);
-    //         }
-    //     }
-    // }, [layers]);    
     useEffect(() => {
         const handleClickOutside = (e) => {
-            // Проверяем, был ли клик вне контекстного меню
             if (contextMenuRef.current && !contextMenuRef.current.contains(e.target)) {
                 setContextMenu({ open: false, x: 0, y: 0, layerId: null });
             }
@@ -89,7 +77,6 @@ const Layers = ({ layers, setShapes }) => {
                 const newName = `${shape.name || "Untitled"} copy`;
 
                 if (shape.type === 'group' && Array.isArray(shape.layers)) {
-                    // Дублируем каждую вложенную фигуру рекурсивно
                     const duplicatedLayers = shape.layers.map(layer => duplicateShape(layer));
                     return {
                         ...shape,
@@ -123,28 +110,22 @@ const Layers = ({ layers, setShapes }) => {
         if (selectedIds.length <= 1) return;
 
         setShapes(prev => {
-            // Найти выбранные фигуры по id
             const selectedShapes = prev.filter(shape => selectedIds.includes(shape.id));
             if (selectedShapes.length <= 1) return prev;
 
-            // Функция для рекурсивного раскрытия фигур внутри групп
             const flattenShapes = (shapes) => {
                 return shapes.flatMap(shape => {
                     if (shape.type === 'group' && Array.isArray(shape.layers)) {
-                        // Рекурсивно раскрываем вложенные группы
                         return flattenShapes(shape.layers);
                     }
                     return shape;
                 });
             };
 
-            // Получить все фигуры для новой группы, раскрывая вложенные группы
             const allShapesForGroup = flattenShapes(selectedShapes);
 
-            // Оставшиеся фигуры - все, кроме выбранных (группы и не-группы)
             const remainingShapes = prev.filter(shape => !selectedIds.includes(shape.id));
 
-            // Создаем новую группу, состоящую из всех раскрытых фигур
             const groupLayer = {
                 id: `group-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
                 name: `Group of ${allShapesForGroup.length} layers`,
@@ -159,14 +140,31 @@ const Layers = ({ layers, setShapes }) => {
         editorStore.setShape(null);
     };
 
+    const handleUngroup = () => {
+        const selectedId = editorStore.selectedShapes[0];
+        if (!selectedId) return;
+
+        setShapes(prev => {
+            const groupShape = prev.find(shape => shape.type === 'group' && shape.id === selectedId);
+            if (!groupShape) return prev;
+
+            const layers = groupShape.layers;
+
+            const remainingShapes = prev.filter(shape => shape.id !== selectedId);
+
+            return [...remainingShapes, ...layers];
+        });
+
+        editorStore.setShape(null);
+    };
+
+
     const LayerItem = observer(({ layer, index }) => {
         const selectedIds = editorStore.selectedShapes;
-        // const isSelected = selectedIds.includes(layer.id);
-        // console.log(selectedIds, isSelected);
         const handleContextMenu = (e) => {
             e.preventDefault();
-            if(!editorStore.selectedShapes.includes(layer.id)) handleLayerClick()
-            // if (editorStore.selectedShapes.length <= 1) handleLayerClick();
+            if (!editorStore.selectedShapes.includes(layer.id)) handleLayerClick(e);
+            console.log(layers.some(shape => shape.id === editorStore.selectedShapes[0] && shape.type === 'group'));
             setContextMenu({
                 open: true,
                 x: e.clientX,
@@ -183,10 +181,10 @@ const Layers = ({ layers, setShapes }) => {
             if (groupShape) {
                 if (!e.shiftKey) editorStore.setShape(null);
                 e.shiftKey = true;
+                editorStore.setShape(groupShape.id, e);
                 groupShape.layers.map(s => s.id).forEach(element => {
                     editorStore.setShape(element, e);
                 });
-                editorStore.setShape(groupShape.id, e);
             } else {
                 editorStore.setShape(layer.id, e);
             }
@@ -253,9 +251,9 @@ const Layers = ({ layers, setShapes }) => {
                                 <button
                                     disabled={editorStore.selectedShapes.length === 0}
                                     className="w-full text-left px-3 py-1 text-xs 
-                                                            hover:bg-[#2a2a2a] hover:text-purple-400 
-                                                            disabled:cursor-not-allowed disabled:opacity-50
-                                                            disabled:hover:text-gray-400"
+                hover:bg-[#2a2a2a] hover:text-purple-400 
+                disabled:cursor-not-allowed disabled:opacity-50
+                disabled:hover:text-gray-400"
                                     onClick={() => {
                                         handleDuplicate();
                                         setContextMenu({ open: false, x: 0, y: 0, layerId: null });
@@ -263,19 +261,35 @@ const Layers = ({ layers, setShapes }) => {
                                 >
                                     Duplicate
                                 </button>
-                                <button
-                                    disabled={editorStore.selectedShapes.length <= 1}
-                                    className="w-full text-left px-3 py-1 text-xs 
-                                                            hover:bg-[#2a2a2a] hover:text-purple-400 
-                                                            disabled:cursor-not-allowed disabled:opacity-50
-                                                            disabled:hover:text-gray-400"
-                                    onClick={() => {
-                                        handleGroup();
-                                        setContextMenu({ open: false, x: 0, y: 0, layerId: null });
-                                    }}
-                                >
-                                    Group
-                                </button>
+
+                                {layers.some(shape => shape.id === editorStore.selectedShapes[0] && shape.type === 'group' && editorStore.selectedShapes.length === shape.layers.length + 1)
+                                    ? (
+                                        <button
+                                            className="w-full text-left px-3 py-1 text-xs 
+                    hover:bg-[#2a2a2a] hover:text-purple-400"
+                                            onClick={() => {
+                                                handleUngroup();
+                                                setContextMenu({ open: false, x: 0, y: 0, layerId: null });
+                                            }}
+                                        >
+                                            Ungroup
+                                        </button>
+                                    ) : (
+                                        <button
+                                            disabled={editorStore.selectedShapes.length <= 1}
+                                            className="w-full text-left px-3 py-1 text-xs 
+                    hover:bg-[#2a2a2a] hover:text-purple-400 
+                    disabled:cursor-not-allowed disabled:opacity-50
+                    disabled:hover:text-gray-400"
+                                            onClick={() => {
+                                                handleGroup();
+                                                setContextMenu({ open: false, x: 0, y: 0, layerId: null });
+                                            }}
+                                        >
+                                            Group
+                                        </button>
+                                    )}
+
                             </div>
                         )}
                     </div>

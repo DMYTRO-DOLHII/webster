@@ -16,12 +16,10 @@ const ImageWithFilters = forwardRef(({ shapeObject, ...props }, ref) => {
 
     const { image, filters, ...imageProps } = shapeObject;
 
-    // Всегда применяем фильтры
     const activeFilters = [Konva.Filters.Blur, Konva.Filters.Brighten, Konva.Filters.Contrast];
 
     useEffect(() => {
         if (image && imageRef.current) {
-            // Только после загрузки
             imageRef.current.cache();
             imageRef.current.getLayer()?.batchDraw();
             setLoaded(true);
@@ -202,10 +200,9 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                         const img = new window.Image();
                         img.src = shape.img64;
 
-                        // Wait until image is loaded
                         await new Promise((resolve) => {
                             img.onload = resolve;
-                            img.onerror = resolve; // Prevent hanging on error
+                            img.onerror = resolve;
                         });
 
                         return {
@@ -226,10 +223,9 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                                 const img = new window.Image();
                                 img.src = sh.img64;
 
-                                // Wait until image is loaded
                                 await new Promise((resolve) => {
                                     img.onload = resolve;
-                                    img.onerror = resolve; // Prevent hanging on error
+                                    img.onerror = resolve;
                                 });
 
                                 shps.push({
@@ -465,10 +461,32 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
         });
     };
 
-    const handleDeleteShape = () => {
+    const handleDeleteShape = (wholeGroup = false) => {
         if (!contextMenu.shapeId) return;
-        setShapes(prev => prev.filter(shape => shape.id !== contextMenu.shapeId));
-        if (editorStore.selectedShapeId === contextMenu.shapeId) editorStore.setShape(null);
+        const shapeIdToDelete = contextMenu.shapeId;
+        const groupShape = shapes.find(shape =>
+            shape.type === 'group' &&
+            shape.layers?.some(child => child.id === shapeIdToDelete)
+        );
+        if (groupShape) {
+            setShapes(prev => {
+                if (wholeGroup) {
+                    return prev.filter(shape => shape.id !== groupShape.id);
+                }
+                return prev.map(shape => {
+                    if (shape.id === groupShape.id) {
+                        const filteredLayers = shape.layers.filter(layer => layer.id !== shapeIdToDelete);
+                        return { ...shape, layers: filteredLayers };
+                    }
+                    return shape;
+                });
+            });
+        } else {
+            setShapes(prev => prev.filter(shape => shape.id !== shapeIdToDelete));
+        }
+        if (editorStore.selectedShapeId === shapeIdToDelete) {
+            editorStore.setShape(null);
+        }
         setContextMenu({ visible: false, x: 0, y: 0, stageX: 0, stageY: 0, shapeId: null });
     };
 
@@ -492,7 +510,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                     type: 'image',
                     name: file.name,
                     image: img,
-                    x: point.x, // Центрирование относительно курсора
+                    x: point.x,
                     y: point.y / zoom,
                     width: img.width * scale,
                     height: img.height * scale,
@@ -621,7 +639,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
             }, 0);
         } else {
             const clickedId = e.target.attrs.id || e.target._id;
-            console.log(clickedId);
             if (clickedId) {
                 const groupShape = shapes.find(shape =>
                     shape.type === 'group' &&
@@ -631,11 +648,10 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                 if (groupShape) {
                     if (!e.evt.shiftKey) editorStore.setShape(null);
                     e.shiftKey = true;
+                    editorStore.setShape(groupShape.id, e);
                     groupShape.layers.map(s => s.id).forEach(element => {
-                        console.log(element);
                         editorStore.setShape(element, e);
                     });
-                    editorStore.setShape(groupShape.id, e);
                 }
                 else {
                     editorStore.setShape(clickedId, e);
@@ -751,8 +767,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
         if (!Component) return null;
 
         if (shape.type === 'image') {
-            // Для изображений внутри группы делаем draggable false,
-            // а если это не внутри группы (т.е. нет свойства parentGroup), draggable по shape.draggable
             return (
                 <ImageWithFilters
                     key={shape.id}
@@ -765,7 +779,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                     onTransformEnd={debouncedSave}
                     onMouseUp={debouncedSave}
                     onDblClick={() => handleDoubleClick(shape.id)}
-                    // Запретить перетаскивание если есть родительская группа
                     draggable={!!shape.parentGroup ? false : shape.draggable}
                 />
             );
@@ -777,7 +790,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                     key={shape.id}
                     {...shape}
                     visible={shape.visible !== false}
-                    draggable={true} // Группа draggable
+                    draggable={true}
                     onDragEnd={debouncedSave}
                     onTransformEnd={debouncedSave}
                     onMouseUp={debouncedSave}
@@ -787,14 +800,12 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                     }}
                 >
                     {shape.layers.map(layer => {
-                        // Помечаем у вложенных фигур что они внутри группы
                         return renderShape({ ...layer, parentGroup: shape.id });
                     })}
                 </Component>
             );
         }
 
-        // Для остальных фигур
         return (
             <Component
                 key={shape.id}
@@ -805,7 +816,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                 onMouseUp={debouncedSave}
                 onDblClick={() => handleDoubleClick(shape.id)}
                 visible={shape.visible !== false}
-                draggable={!!shape.parentGroup ? false : shape.draggable} // Запрет drag если внутри группы
+                draggable={!!shape.parentGroup ? false : shape.draggable}
                 ref={el => {
                     if (el) shapeRefs.current[shape.id] = el;
                 }}
@@ -956,8 +967,13 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                     }}
                 >
                     {contextMenu.shapeId ? (
-                        <div style={{ padding: '8px 16px', cursor: 'pointer', color: 'red' }} onClick={handleDeleteShape}>
-                            Delete
+                        <div>
+                            <div style={{ padding: '8px 16px', cursor: 'pointer', color: 'red' }} onClick={handleDeleteShape}>
+                                Delete element
+                            </div>
+                            <div style={{ padding: '8px 16px', cursor: 'pointer', color: 'red' }} onClick={() => { handleDeleteShape(true) }}>
+                                Delete group
+                            </div>
                         </div>
                     ) : (
                         <div style={{ padding: '8px 16px', cursor: 'pointer' }} onClick={() => fileInputRef.current.click()}>
