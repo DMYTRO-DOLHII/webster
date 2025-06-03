@@ -605,7 +605,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
         }
 
         if (e.target === stage) {
-            if (!SHAPE_DEFAULTS[tool] || tool === 'brush') {
+            if (!SHAPE_DEFAULTS[tool] || tool === 'brush' || tool === 'marker' || tool === 'pencil') {
                 editorStore.setShape(null);
                 return;
             }
@@ -660,23 +660,27 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
             }
         }
     };
-
     const handleMouseDown = e => {
-        if (editorStore.selectedTool !== 'brush') return;
+        const { selectedTool } = editorStore;
+
+        if (!['brush', 'marker', 'pencil'].includes(selectedTool)) return;
 
         isDrawing.current = true;
         const stage = stageRef.current.getStage();
         const point = stage.getPointerPosition();
-        const currentColor = editorStore.selectedColor ?? 'black';
+
+        const toolDefaults = SHAPE_DEFAULTS[selectedTool];
+
+        const currentColor = editorStore.selectedColor ?? toolDefaults.stroke;
 
         const newLine = {
-            id: `brush-${Date.now()}`,
-            type: 'brush',
+            id: `${selectedTool}-${Date.now()}`,
+            type: selectedTool,
             points: [point.x / zoom, point.y / zoom],
-            ...SHAPE_DEFAULTS.brush,
+            ...toolDefaults,
             stroke: currentColor,
-            opacity: 1,
-            name: 'Bruh',
+            opacity: toolDefaults.opacity || 1,
+            name: selectedTool.charAt(0).toUpperCase() + selectedTool.slice(1),
         };
 
         handleShapesChange(prev => [...prev, newLine]);
@@ -684,7 +688,8 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
     };
 
     const handleMouseMove = e => {
-        if (!isDrawing.current || editorStore.selectedTool !== 'brush') return;
+        const { selectedTool } = editorStore;
+        if (!isDrawing.current || !['brush', 'marker', 'pencil'].includes(selectedTool)) return;
 
         const stage = stageRef.current.getStage();
         const point = stage.getPointerPosition();
@@ -703,7 +708,9 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
     };
 
     const handleMouseUp = () => {
-        if (editorStore.selectedTool !== 'brush') return;
+        const { selectedTool } = editorStore;
+        if (!['brush', 'marker', 'pencil'].includes(selectedTool)) return;
+
         isDrawing.current = false;
         setCurrentLineId(null);
     };

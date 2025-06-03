@@ -10,6 +10,7 @@ import { BiSolidEyedropper } from 'react-icons/bi';
 import { LuSearch } from "react-icons/lu";
 import { observer } from 'mobx-react-lite';
 import { IoIosSwap } from "react-icons/io";
+import { Pencil, Highlighter } from 'lucide-react';
 
 const shapeOptions = [
     { id: 'circle', icon: <TbCircle />, label: 'Circle' },
@@ -24,7 +25,7 @@ const shapeOptions = [
 
 const staticTools = [
     { id: 'move', icon: <LuMousePointer2 size={15} />, label: 'Move Tool' },
-    { id: 'brush', icon: <LuBrush size={16} />, label: 'Brush Tool' },
+    // { id: 'brush', icon: <LuBrush size={16} />, label: 'Brush Tool' },
     { id: 'eraser', icon: <LuEraser size={17} />, label: 'Eraser Tool' },
     { id: 'crop', icon: <LuCrop size={17} />, label: 'Crop Tool' },
     { id: 'text', icon: <RiFontFamily size={15} />, label: 'Text Tool' },
@@ -32,12 +33,21 @@ const staticTools = [
     { id: 'zoom', icon: <LuSearch size={18} />, label: 'Zoom Tool' },
 ];
 
+const drawingTools = [
+    { id: 'brush', icon: <LuBrush size={16} />, label: 'Brush' },
+    { id: 'pencil', icon: <Pencil size={16} />, label: 'Pencil' },
+    { id: 'marker', icon: <Highlighter size={16} />, label: 'Marker' },
+];
+
 const LeftSidebar = observer(() => {
     const [activeShapeTool, setActiveShapeTool] = useState('circle');
+    const [activeBrushTool, setActiveBrushTool] = useState('brush');
     const [showShapeMenu, setShowShapeMenu] = useState(false);
+    const [showBrushMenu, setShowBrushMenu] = useState(false);
     const [color, setColor] = useState(editorStore.selectedColor || '#000000');
     const [secondColor, setSecondColor] = useState('#aaaaaa');
     const shapeBtnRef = useRef(null);
+    const brushBtnRef = useRef(null);
 
     useEffect(() => {
         const handleClickOutside = e => {
@@ -49,6 +59,20 @@ const LeftSidebar = observer(() => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    useEffect(() => {
+        const handleClickOutside = e => {
+            if (shapeBtnRef.current && !shapeBtnRef.current.contains(e.target)) {
+                setShowShapeMenu(false);
+            }
+            if (brushBtnRef.current && !brushBtnRef.current.contains(e.target)) {
+                setShowBrushMenu(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+
     // Если editorStore.selectedColor может обновляться извне,
     // синхронизируем локальный стейт с ним
     useEffect(() => {
@@ -56,6 +80,17 @@ const LeftSidebar = observer(() => {
     }, [editorStore.selectedColor]);
 
     const shapeToolIcon = shapeOptions.find(opt => opt.id === activeShapeTool)?.icon;
+    const brushToolIcon = drawingTools.find(opt => opt.id === activeBrushTool)?.icon;
+
+    const handleBrushDoubleClick = () => {
+        setShowBrushMenu(prev => !prev);
+    };
+
+    const handleBrushSelect = id => {
+        setActiveBrushTool(id);
+        setShowBrushMenu(false);
+        editorStore.setTool(id);
+    };
 
     const handleShapeDoubleClick = () => {
         setShowShapeMenu(prev => !prev);
@@ -105,6 +140,47 @@ const LeftSidebar = observer(() => {
                                 )}
                             </div>
 
+                            <button
+                                title={tool.label}
+                                className={`p-3 mb-1 rounded-md hover:text-[#df75ff] transition-colors text-[1.1rem] ${tool.id === editorStore.selectedTool ? 'text-[#9B34BA] bg-white/10' : 'text-white'}`}
+                                onClick={() => editorStore.setTool(tool.id)}
+                            >
+                                {tool.icon}
+                            </button>
+                        </React.Fragment>
+                    );
+                }
+
+                if (tool.id === 'eraser') {
+                    return (
+                        <React.Fragment key='brush-tools'>
+                            <div className='relative m-0' ref={brushBtnRef}>
+                                <button
+                                    onClick={() => editorStore.setTool(activeBrushTool)}
+                                    onDoubleClick={handleBrushDoubleClick}
+                                    className={`p-3 mb-1 rounded-md hover:text-[#df75ff] transition-colors text-[1.1rem] ${editorStore.selectedTool === activeBrushTool ? 'text-[#9B34BA] bg-white/10' : 'text-white'}`}
+                                    title='Brush Tool (Double-click to change)'
+                                >
+                                    {brushToolIcon}
+                                </button>
+
+                                {showBrushMenu && (
+                                    <div className='absolute left-10 top-0 bg-[#2a2a2a] border border-[#444] rounded z-50 shadow-lg'>
+                                        {drawingTools.map(tool => (
+                                            <button
+                                                key={tool.id}
+                                                onClick={() => handleBrushSelect(tool.id)}
+                                                className='flex items-center w-full gap-2 px-2 py-1 text-sm text-white hover:bg-blue-500'
+                                            >
+                                                {tool.icon}
+                                                {tool.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Отрисовываем обычную кнопку Eraser Tool */}
                             <button
                                 title={tool.label}
                                 className={`p-3 mb-1 rounded-md hover:text-[#df75ff] transition-colors text-[1.1rem] ${tool.id === editorStore.selectedTool ? 'text-[#9B34BA] bg-white/10' : 'text-white'}`}

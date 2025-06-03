@@ -1,17 +1,19 @@
 import { Circle, Rect, Line, Text, RegularPolygon, Star, Arrow, Image, Ellipse, Group } from 'react-konva';
 export const SHAPE_COMPONENTS = {
-    circle: Circle,
-    rect: Rect,
-    text: Text,
-    line: Line,
-    triangle: RegularPolygon,
-    pentagon: RegularPolygon,
-    hexagon: RegularPolygon,
-    star: Star,
-    arrow: Arrow,
-    brush: Line,
-    image: Image,
-    ellipse: Ellipse,
+	circle: Circle,
+	rect: Rect,
+	text: Text,
+	line: Line,
+	triangle: RegularPolygon,
+	pentagon: RegularPolygon,
+	hexagon: RegularPolygon,
+	star: Star,
+	arrow: Arrow,
+	brush: Line,
+	marker: Line,
+	pencil: Line,
+	image: Image,
+	ellipse: Ellipse,
 	group: Group
 };
 
@@ -70,26 +72,44 @@ export const SHAPE_DEFAULTS = {
 	},
 	brush: {
 		stroke: 'black',
-		strokeWidth: 3,
+		strokeWidth: 4,
 		tension: 0.5,
 		lineCap: 'round',
 		globalCompositeOperation: 'source-over',
 		draggable: false,
+	},
+	marker: {
+		stroke: 'black',
+		strokeWidth: 10,
+		tension: 0.5,
+		lineCap: 'round',
+		globalCompositeOperation: 'source-over',
+		draggable: false,
+		opacity: 0.4,
+	},
+	pencil: {
+		stroke: 'black',
+		strokeWidth: 1.5,
+		tension: 0.2,
+		lineCap: 'butt',
+		globalCompositeOperation: 'source-over',
+		draggable: false,
+		opacity: 0.9,
 	},
 };
 
 export const isText = (name) => name === "text";
 
 export const isShape = (name) => [
-    "circle",
-    "rect",
-    "line",
-    "triangle",
-    "pentagon",
-    "hexagon",
-    "star",
-    "arrow",
-    "image"
+	"circle",
+	"rect",
+	"line",
+	"triangle",
+	"pentagon",
+	"hexagon",
+	"star",
+	"arrow",
+	"image"
 ].includes(name);
 
 
