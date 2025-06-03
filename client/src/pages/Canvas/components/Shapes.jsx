@@ -80,17 +80,7 @@ export const SHAPE_DEFAULTS = {
 
 export const isText = (name) => name === "text";
 
-export const isShape = (name) => [
-    "circle",
-    "rect",
-    "line",
-    "triangle",
-    "pentagon",
-    "hexagon",
-    "star",
-    "arrow",
-    "image"
-].includes(name);
+export const isShape = name => ['circle', 'rect', 'line', 'triangle', 'pentagon', 'hexagon', 'star', 'arrow', 'image', 'Background', "background"].includes(name);
 
 
 
