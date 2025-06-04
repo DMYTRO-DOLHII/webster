@@ -25,7 +25,7 @@ const Title = () => {
         <div className='typewriter'>
             <h2 className="text-6xl font-bold text-center text-white">
                 <span className="text-[#9b34ba]">McOkster</span>
-                <span className="text-white"> - Build visuals 10× faster</span>
+                <span className="text-white"> - Build visuals</span>
             </h2>
         </div>
     );

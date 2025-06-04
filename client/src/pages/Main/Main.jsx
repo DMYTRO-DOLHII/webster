@@ -51,7 +51,7 @@ const DraggableEditable = ({ id, content, position, onUpdate, centered = false }
                 cursor: 'move',
             }}
             onMouseDown={handleMouseDown}
-            className="group p-1 border border-transparent hover:border-white/50"
+            className="p-1 border border-transparent group hover:border-white/50"
         >
             <div
                 contentEditable
@@ -67,7 +67,7 @@ const DraggableEditable = ({ id, content, position, onUpdate, centered = false }
 
 const Main = () => {
     const [positions, setPositions] = useState({
-        title: { top: '35%', left: '20%' },
+        title: { top: '35%', left: '30%' },
         slogan: { top: '50%', left: '35%' },
     })
 
@@ -78,7 +78,7 @@ const Main = () => {
     return (
         <div className="w-full h-full select-none">
             {/* Section 1: Hero Section */}
-            <section className="w-full h-screen relative overflow-clip">
+            <section className="relative w-full h-screen overflow-clip">
                 {/* Blurred shapes */}
                 <div
                     className="absolute rounded-full pointer-events-none bg-gradient-to-br from-[#9B34BA] to-[#4ab021]"
@@ -130,7 +130,7 @@ const Main = () => {
                 <DraggableEditable
                     id="slogan"
                     content={
-                        <p className="text-2xl text-white/70 text-center">
+                        <p className="text-2xl text-center text-white/70">
                             Create, move, and shine without design skills.
                         </p>
                     }
