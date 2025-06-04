@@ -43,7 +43,6 @@ class UserStore {
 
         try {
             const response = await createFullUser(fullName, email, password, login, profilePicture, isAdmin, isShowName, rating, isEmailConfirmed);
-
             // Если регистрация успешна, сохраняем пользователя
             runInAction(() => {
                 // this.user = response.data.user; // Предполагается, что сервер возвращает объект пользователя
@@ -167,6 +166,7 @@ class UserStore {
                 status = "NEOK";
             }
             else if (error.response.status === 400) {
+                console.log('pizdes');
                 switch (type) {
                     case "google":
                         await this.createOauthUser(data.name, data.email, this.#passwordPrikol(data.id), data.email, data.picture, false, true, 0, data.verified_email);

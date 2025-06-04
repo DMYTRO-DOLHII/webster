@@ -24,7 +24,7 @@ const ImageWithFilters = forwardRef(({ shapeObject, ...props }, ref) => {
             imageRef.current.getLayer()?.batchDraw();
             setLoaded(true);
         }
-    }, [image]);
+    }, [image, shapeObject.filters, shapeObject.image]);
 
     return (
         <SHAPE_COMPONENTS.image
@@ -451,6 +451,8 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 
         const clickedOnShape = e.target !== stage;
 
+        console.log(clickedOnShape);
+
         setContextMenu({
             visible: true,
             x: e.evt.clientX,
@@ -505,26 +507,30 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
                 const scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
                 const stage = stageRef.current.getStage();
                 const point = stage.getPointerPosition();
-                const newImage = {
-                    id: `image-${Date.now()}`,
-                    type: 'image',
-                    name: file.name,
-                    image: img,
-                    x: point.x,
-                    y: point.y / zoom,
-                    width: img.width * scale,
-                    height: img.height * scale,
-                    draggable: true,
-                    img64: event.target.result,
-                    opacity: 1,
-                    filters: {
-                        blur: { value: 0 },
-                        brightness: { value: 0 },
-                        contrast: { value: 0 },
-                    },
-                };
 
-                handleShapesChange(prev => [...prev, newImage]);
+                // handleShapesChange(prev => [...prev, newImage]);
+
+                setTimeout(() => {
+                    const newImage = {
+                        id: `image-${Date.now()}`,
+                        type: 'image',
+                        name: file.name,
+                        image: img,
+                        x: point.x,
+                        y: point.y / zoom,
+                        width: img.width * scale,
+                        height: img.height * scale,
+                        draggable: true,
+                        img64: event.target.result,
+                        opacity: 1,
+                        filters: {
+                            blur: { value: 0 },
+                            brightness: { value: 0 },
+                            contrast: { value: 0 },
+                        },
+                    };
+                    handleShapesChange(prev => [...prev, newImage]);
+                }, 30); // чуть позже вставляем
                 setContextMenu({ ...contextMenu, visible: false });
             };
         };
@@ -584,7 +590,9 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
         const pointerPosition = stage.getPointerPosition();
         const baseProps = { ...SHAPE_DEFAULTS };
         const tool = editorStore.selectedTool;
+        const clickedOnShape = e.target !== stage;
 
+        console.log(clickedOnShape);
         if (tool === 'picker') {
             const clickedShape = e.target;
             if (clickedShape && clickedShape !== stage) {

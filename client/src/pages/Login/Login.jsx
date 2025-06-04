@@ -128,19 +128,19 @@ const Login = () => {
 
                 <div className="flex justify-center gap-4 mt-6">
                     <button
-                        onClick={() => handleOAuth('google')}
+                        onClick={() => googleLogin()}
                         className="cursor-pointer w-full p-3 bg-white text-gray-800 rounded-lg transition duration-200 flex justify-center items-center hover:bg-gray-100 hover:shadow-[0_2px_5px_rgba(234,67,53,0.5)]"
                     >
                         <FaGoogle size={25} />
                     </button>
                     <button
-                        onClick={() => handleOAuth('github')}
+                        onClick={() => loginWithGitHub()}
                         className="cursor-pointer w-full p-3 bg-white text-gray-800 rounded-lg transition duration-200 flex justify-center items-center hover:bg-gray-100 hover:shadow-[0_2px_5px_rgba(51,51,51,0.5)]"
                     >
                         <FaGithub size={25} />
                     </button>
                     <button
-                        onClick={() => handleOAuth('discord')}
+                        onClick={() => loginWithDiscord()}
                         className="cursor-pointer w-full p-3 bg-white text-gray-800 rounded-lg transition duration-200 flex justify-center items-center hover:bg-gray-100 hover:shadow-[0_2px_5px_rgba(88,101,242,0.5)]"
                     >
                         <FaDiscord size={25} />

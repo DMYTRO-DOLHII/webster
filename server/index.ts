@@ -6,6 +6,7 @@ import authRouter from './src/routes/auth.route'
 import projectRouter from './src/routes/project.route'
 import userRouter from './src/routes/user.route'
 import stripeRouter from './src/routes/stripe.route'
+import callBackRoutes from './src/routes/callback.routes';
 
 // Import stripeWebhookRouter (but apply raw body below)
 import stripeWebhookRouter from './src/utils/stripeWebhook'
@@ -52,6 +53,7 @@ app.use('/api/auth', authRouter)
 app.use('/api/users', userRouter)
 app.use('/api/projects', projectRouter)
 app.use('/api/stripe', stripeRouter)
+app.use('/auth', callBackRoutes);
 
 createUserAndDatabase()
     .then(() => {

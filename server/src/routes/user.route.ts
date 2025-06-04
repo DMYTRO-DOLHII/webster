@@ -34,6 +34,7 @@ const upload = multer({
 
 router.post('/:id/avatar', upload.single('avatar'), UserController.uploadAvatar.bind(UserController));
 router.get('/', UserController.getAll.bind(UserController));
+router.post('/', UserController.create.bind(UserController));
 router.get('/:id', UserController.getOne.bind(UserController));
 router.get('/:id/projects', UserController.getUserProjects.bind(UserController));
 router.get('/:id/templates', UserController.getUserTemplates.bind(UserController));
