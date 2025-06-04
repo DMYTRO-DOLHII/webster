@@ -12,19 +12,17 @@ import isEqual from 'lodash.isequal';
 
 const ImageWithFilters = forwardRef(({ shapeObject, ...props }, ref) => {
 	const imageRef = useRef(null);
-	const [loaded, setLoaded] = useState(false);
 
-	const { image, filters, ...imageProps } = shapeObject;
+	useEffect(() => {
+		if (imageRef.current) {
+			imageRef.current.cache();
+			imageRef.current.getLayer().batchDraw();
+		}
+	}, [shapeObject.filters, shapeObject.image]);
 
 	const activeFilters = [Konva.Filters.Blur, Konva.Filters.Brighten, Konva.Filters.Contrast];
 
-	useEffect(() => {
-		if (image && imageRef.current) {
-			imageRef.current.cache();
-			imageRef.current.getLayer()?.batchDraw();
-			setLoaded(true);
-		}
-	}, [image]);
+	const { image, filters, ...imageProps } = shapeObject;
 
 	return (
 		<SHAPE_COMPONENTS.image
@@ -40,7 +38,6 @@ const ImageWithFilters = forwardRef(({ shapeObject, ...props }, ref) => {
 			blurRadius={filters?.blur?.value || 0}
 			brightness={filters?.brightness?.value || 0}
 			contrast={filters?.contrast?.value || 0}
-			visible={!!image && loaded}
 			{...imageProps}
 			{...props}
 		/>
