@@ -81,14 +81,14 @@ const UserDropdown = () => {
                         <div className="truncate">{userStore?.user.email}</div>
                     </div>
                     <ul className="py-2 text-sm text-gray-700">
-                        <li>
+                        {/* <li>
                             <a
                                 href='/account'
                                 className="block px-4 py-2 hover:bg-gray-100"
                             >
                                 Account
                             </a>
-                        </li>
+                        </li> */}
                         {/* {
               userStore?.user?.isAdmin && (
                 <li>
@@ -101,14 +101,14 @@ const UserDropdown = () => {
                 </li>
               )
             } */}
-                        <li>
+                        {/* <li>
                             <a
                                 href='/account?section=settings'
                                 className="block px-4 py-2 hover:bg-gray-100"
                             >
                                 Settings
                             </a>
-                        </li>
+                        </li> */}
                         <li>
                             <a
                                 href="/workspace"

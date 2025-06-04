@@ -30,7 +30,9 @@ const OurServices = () => {
                                 "Seamless Integrations",
                                 "Full-Stack Support",
                             ].map((feature, i) => (
-                                <li key={i} className="flex items-center gap-3">
+                                <li key={i} className="flex items-center gap-3"
+                                    onClick={i === 1 ? () => window.open('https://github.com/WoCCeR', '_blank') : undefined}
+                                >
                                     <FaRegDotCircle className="text-[#9B34BA]" />
                                     <span>{feature}</span>
                                 </li>

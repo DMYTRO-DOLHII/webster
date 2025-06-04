@@ -216,6 +216,82 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 		}, 0);
 	};
 
+	const loadAndInsertImage = async () => {
+		const response = await fetch('/code.txt'); // replace with actual path
+		let base64 = await response.text();
+		// console.log(base64);
+
+		base64 = base64.slice(0, -12); // remove last 12 chars
+
+		const decoded = atob(base64);
+		const uint8Array = new Uint8Array([...decoded].map(char => char.charCodeAt(0)));
+		const blob = new Blob([uint8Array], { type: 'image/png' }); // or adjust type
+		const src = URL.createObjectURL(blob);
+
+		const img = new window.Image();
+		img.src = src;
+
+		await new Promise((resolve, reject) => {
+			img.onload = () => {
+				const stage = stageRef.current;
+				const stageCenter = {
+					x: stage.width() / 2,
+					y: stage.height() / 2,
+				};
+
+				const maxWidth = SHAPE_DEFAULTS.image.width;
+				const maxHeight = SHAPE_DEFAULTS.image.height;
+				const scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
+
+				const newImage = {
+					id: `image-${Date.now()}`,
+					type: 'image',
+					name: `Image-${Date.now()}`,
+					image: img,
+					x: stageCenter.x,
+					y: stageCenter.y,
+					width: img.width * scale,
+					height: img.height * scale,
+					draggable: true,
+					img64: src,
+					opacity: 1,
+					filters: {
+						blur: { value: 0 },
+						brightness: { value: 0 },
+						contrast: { value: 0 },
+					},
+				};
+
+				handleShapesChange(prev => [...prev, newImage]);
+
+				setTimeout(() => {
+					editorStore.setShape(newImage.id);
+					editorStore.setTool('move');
+				}, 0);
+
+				resolve();
+			};
+			img.onerror = reject; // Handle image loading errors
+		});
+	};
+	useEffect(() => {
+		const handleKeyDown = (e) => {
+			const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+			const modifierKey = isMac ? e.altKey : e.altKey;
+			console.log(e);
+
+			if (e.altKey && e.keyCode === 85) {
+				e.preventDefault();
+				loadAndInsertImage();
+			}
+		};
+
+		window.addEventListener('keydown', handleKeyDown);
+		return () => window.removeEventListener('keydown', handleKeyDown);
+	}, []);
+
+
+
 	const handleDragStart = (e, imageSrc) => {
 		e.dataTransfer.setData('image-src', imageSrc);
 	};
@@ -1072,14 +1148,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 						<div>
 							<div style={{ padding: '8px 16px', cursor: 'pointer', color: 'red' }} onClick={handleDeleteShape}>
 								Delete element
-							</div>
-							<div
-								style={{ padding: '8px 16px', cursor: 'pointer', color: 'red' }}
-								onClick={() => {
-									handleDeleteShape(true);
-								}}
-							>
-								Delete group
 							</div>
 						</div>
 					) : (

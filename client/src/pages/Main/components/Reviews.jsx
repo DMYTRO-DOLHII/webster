@@ -138,6 +138,7 @@ const Reviews = () => {
                     <div
                         key={i}
                         className={`bg-[#2A2A2A] rounded-xl shadow-lg p-5 text-white flex flex-col gap-4 ${i % 2 == 0 ? 'purpleGlow' : 'greenGlow'} transform transition duration-300 hover:scale-[1.05]`}
+                        onClick={i === 1 ? () => window.open('https://github.com/kitska', '_blank') : undefined}
                     >
                         <p className="text-sm leading-relaxed italic">"{t.feedback}"</p>
                         <div className="flex items-center gap-4 mt-auto">

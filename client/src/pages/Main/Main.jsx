@@ -141,13 +141,14 @@ const Main = () => {
 
                 {/* Static buttons below slogan */}
                 <div className="absolute left-1/2 top-[62%] transform -translate-x-1/2 flex gap-4">
-                    <Link>
+                    <Link
+                    to='/workspace'>
                         <Button
                             className="font-code-pro"
                             variant="contained"
                             color="primary"
-                            style={{ backgroundColor: '#9b34ba', padding: '10px  25px', fontFamily: '"Source Code Pro", monospace', fontWeight: '300' }}>
-
+                            style={{ backgroundColor: '#9b34ba', padding: '10px  25px', fontFamily: '"Source Code Pro", monospace', fontWeight: '300' }}
+                            >
                             Get Started
                         </Button>
                     </Link>

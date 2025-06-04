@@ -20,7 +20,7 @@
     "@syncfusion/ej2-react-image-editor": "^29.1.38",
     "@tailwindcss/vite": "^4.1.5",
     "axios": "^1.9.0",
-    "framer-motion": "^12.10.0",
+    "framer-motion": "^12.16.0",
     "hex2ascii": "^0.0.3",
     "jspdf": "^3.0.1",
     "jwt-decode": "^4.0.0",
