@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 const Title = () => {
     const [text, setText] = useState('');
-    const fullText = 'McOkster - Build visuals faster';
+    const fullText = 'McOkster - Build visuals';
 
     // useEffect(() => {
     //     let index = 0;
@@ -25,7 +25,7 @@ const Title = () => {
         <div className='typewriter'>
             <h2 className="text-6xl font-bold text-center text-white">
                 <span className="text-[#9b34ba]">McOkster</span>
-                <span className="text-white"> - Build visuals faster</span>
+                <span className="text-white"> - Build visuals</span>
             </h2>
         </div>
     );

@@ -158,7 +158,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 		loadProjectFromJSON();
 	}, [editorStore.projectJSON, containerSize, setShapes]);
 
-    useEffect(() => {
+	useEffect(() => {
 		const loadImages = async () => {
 			const imageModules = import.meta.glob('../../../../assets/png/*.{png,jpg,jpeg,svg}', {
 				eager: true,
@@ -710,7 +710,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 			}, 0);
 		} else {
 			const clickedId = e.target.attrs.id || e.target._id;
-            console.log(clickedId)
+			console.log(clickedId)
 			if (clickedId) {
 				const groupShape = shapes.find(shape => shape.type === 'group' && shape.layers?.some(child => child.id === clickedId));
 
@@ -750,6 +750,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 			...toolDefaults,
 			stroke: currentColor,
 			opacity: toolDefaults.opacity || 1,
+			draggable: true,
 			name: selectedTool.charAt(0).toUpperCase() + selectedTool.slice(1),
 		};
 
@@ -803,7 +804,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 				};
 			})
 			.filter(Boolean);
-
+		console.log(croppedShapes);
 		setShapes(croppedShapes);
 		setWidth(cropRect.width);
 		setHeight(cropRect.height);
@@ -964,7 +965,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 				scaleY={zoom}
 				className='border-0 border-white shadow-[0px_0px_20px_0px_#9B34BA70]'
 				onClick={handleStageClick}
-				onDblClick={e => {}}
+				onDblClick={e => { }}
 				onMouseDown={handleMouseDown}
 				onMouseMove={handleMouseMove}
 				onMouseUp={handleMouseUp}
@@ -982,6 +983,7 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 					/>
 				</Layer>
 				<Layer>
+					{shapes.map(shape => renderShape(shape))}
 					{editorStore.selectedTool === 'crop' && cropRect && (
 						<>
 							<Rect x={0} y={0} width={width} height={cropRect.y} fill='rgba(0, 0, 0, 0.5)' />
@@ -1038,8 +1040,6 @@ const Design = observer(({ shapes, onSaveRef, zoom, containerSize, containerRef,
 							}}
 						/>
 					)}
-					{shapes.map(shape => renderShape(shape))}
-
 					{editorStore.selectedShapes.length > 0 && (
 						<Transformer
 							nodes={editorStore.selectedShapes.map(id => shapeRefs.current[id]).filter(Boolean)}

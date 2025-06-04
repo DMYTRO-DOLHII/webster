@@ -153,7 +153,7 @@ const LeftSidebar = observer(() => {
                     );
                 }
 
-                if (tool.id === 'eraser') {
+                if (tool.id === 'imgpicker') {
                     return (
                         <React.Fragment key='brush-tools'>
                             <div className='relative m-0' ref={brushBtnRef}>

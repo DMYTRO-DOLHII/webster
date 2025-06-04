@@ -10,7 +10,7 @@ const Layers = ({ layers, setShapes }) => {
     const [contextMenu, setContextMenu] = useState({ open: false, x: 0, y: 0, layerId: null });
     const contextMenuRef = useRef(null);
 
-    layers = layers.filter(l => l.type !== "transformer").reverse();
+    layers = layers.filter(l => l.type !== "transformer" && l.type !== undefined).reverse();
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (contextMenuRef.current && !contextMenuRef.current.contains(e.target)) {
