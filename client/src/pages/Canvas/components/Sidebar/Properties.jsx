@@ -187,16 +187,58 @@ const Properties = observer(({ layers, setShapes }) => {
 				{isShape(selectedLayer.type) && (
 					<div className='space-y-2'>
 						{selectedLayer.type !== 'line' && selectedLayer.type !== 'image' && (
-								<div className='flex items-center justify-between'>
-									<label className='text-xs font-medium text-gray-300'>Color</label>
-									<input
-										type='color'
-										className='w-10 h-6 border-none rounded'
-										value={selectedLayer.fill === 'white' ? '#ffffff' : selectedLayer.fill || '#000000'}
-										onChange={e => updateShape('fill', e.target.value, selectedLayer)}
-									/>
-								</div>
-							)}
+							<div className='flex items-center justify-between'>
+								<label className='text-xs font-medium text-gray-300'>Color</label>
+								<input
+									type='color'
+									className='w-10 h-6 border-none rounded'
+									value={
+										selectedLayer.fill === 'white'
+											? '#FFFFFF'
+											: selectedLayer.fill === 'transparent'
+											? 'transparent'
+											: selectedLayer.fill === 'black'
+											? '#000000'
+											: selectedLayer.fill === 'lightgray'
+											? '#D3D3D3'
+											: selectedLayer.fill === 'darkgray'
+											? '#4F4F4F'
+											: selectedLayer.fill === 'beige'
+											? '#F5F5DC'
+											: selectedLayer.fill === 'ivory'
+											? '#FFFFF0'
+											: selectedLayer.fill === 'red'
+											? '#FF0000'
+											: selectedLayer.fill === 'darkred'
+											? '#8B0000'
+											: selectedLayer.fill === 'orange'
+											? '#FFA500'
+											: selectedLayer.fill === 'gold'
+											? '#FFD700'
+											: selectedLayer.fill === 'yellow'
+											? '#FFFF00'
+											: selectedLayer.fill === 'green'
+											? '#00FF00'
+											: selectedLayer.fill === 'darkgreen'
+											? '#006400'
+											: selectedLayer.fill === 'teal'
+											? '#008080'
+											: selectedLayer.fill === 'cyan'
+											? '#00FFFF'
+											: selectedLayer.fill === 'blue'
+											? '#0000FF'
+											: selectedLayer.fill === 'darkblue'
+											? '#00008B'
+											: selectedLayer.fill === 'purple'
+											? '#800080'
+											: selectedLayer.fill === 'pink'
+											? '#FFC0CB'
+											: selectedLayer.fill || '#000000'
+									}
+									onChange={e => updateShape('fill', e.target.value, selectedLayer)}
+								/>
+							</div>
+						)}
 						{selectedLayer.type === 'image' && (
 							<>
 								<div>

@@ -11,7 +11,28 @@ const defaultTemplates = [
 ];
 
 const colorModes = ['RGB', 'CMYK', 'Grayscale'];
-const backgrounds = ['White', 'Transparent', 'Black'];
+const backgrounds = [
+	'White',
+	'Transparent',
+	'Black',
+	'LightGray',
+	'DarkGray',
+	'Beige',
+	'Ivory',
+	'Red',
+	'DarkRed',
+	'Orange',
+	'Gold',
+	'Yellow',
+	'Green',
+	'DarkGreen',
+	'Teal',
+	'Cyan',
+	'Blue',
+	'DarkBlue',
+	'Purple',
+	'Pink',
+];
 
 const NewProjectModal = ({ onClose, onCreate }) => {
 	const userId = userStore.user.id;
