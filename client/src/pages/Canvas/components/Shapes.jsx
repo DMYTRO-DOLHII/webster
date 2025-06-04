@@ -23,8 +23,8 @@ export const SHAPE_DEFAULTS = {
 	rect: { width: 80, height: 40, fill: 'green', draggable: true },
 	text: { text: 'Text', fontSize: 20, fill: 'white', draggable: true },
 	image: {
-		width: 200,
-		height: 200,
+		width: 1000,
+		height: 1000,
 		draggable: true,
 		filters: {
 			blur: { value: 0 },

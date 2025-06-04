@@ -11,6 +11,7 @@ import { LuSearch } from "react-icons/lu";
 import { observer } from 'mobx-react-lite';
 import { IoIosSwap } from "react-icons/io";
 import { Pencil, Highlighter } from 'lucide-react';
+import { CiImageOn } from 'react-icons/ci';
 
 const shapeOptions = [
     { id: 'circle', icon: <TbCircle />, label: 'Circle' },
@@ -24,13 +25,14 @@ const shapeOptions = [
 ];
 
 const staticTools = [
-    { id: 'move', icon: <LuMousePointer2 size={15} />, label: 'Move Tool' },
-    // { id: 'brush', icon: <LuBrush size={16} />, label: 'Brush Tool' },
-    // { id: 'eraser', icon: <LuEraser size={17} />, label: 'Eraser Tool' },
-    { id: 'crop', icon: <LuCrop size={17} />, label: 'Crop Tool' },
-    { id: 'text', icon: <RiFontFamily size={15} />, label: 'Text Tool' },
-    { id: 'picker', icon: <BiSolidEyedropper size={17} />, label: 'Color Picker' },
-    { id: 'zoom', icon: <LuSearch size={18} />, label: 'Zoom Tool' },
+	{ id: 'move', icon: <LuMousePointer2 size={15} />, label: 'Move Tool' },
+	// { id: 'brush', icon: <LuBrush size={16} />, label: 'Brush Tool' },
+	// { id: 'eraser', icon: <LuEraser size={17} />, label: 'Eraser Tool' },
+	{ id: 'imgpicker', icon: <CiImageOn size={17}/>, label: 'Image Tool'},
+	{ id: 'crop', icon: <LuCrop size={17} />, label: 'Crop Tool' },
+	{ id: 'text', icon: <RiFontFamily size={15} />, label: 'Text Tool' },
+	{ id: 'picker', icon: <BiSolidEyedropper size={17} />, label: 'Color Picker' },
+	{ id: 'zoom', icon: <LuSearch size={18} />, label: 'Zoom Tool' },
 ];
 
 const drawingTools = [
