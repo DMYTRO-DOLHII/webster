@@ -9,8 +9,14 @@ const Layers = ({ layers, setShapes }) => {
     const [nameInputValue, setNameInputValue] = useState("");
     const [contextMenu, setContextMenu] = useState({ open: false, x: 0, y: 0, layerId: null });
     const contextMenuRef = useRef(null);
+    const [showDrawing, setShowDrawing] = useState(false); // New state for showing drawing layers
 
-    layers = layers.filter(l => l.type !== "transformer" && l.type !== undefined).reverse();
+    // Filter layers based on the showDrawing state
+    const filteredLayers = layers.filter(l => {
+        const isDrawingLayer = l.type === "brush" || l.type === "marker" || l.type === "pencil";
+        return l.type !== "transformer" && l.type !== undefined && (showDrawing || !isDrawingLayer);
+    }).reverse();
+
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (contextMenuRef.current && !contextMenuRef.current.contains(e.target)) {
@@ -45,9 +51,8 @@ const Layers = ({ layers, setShapes }) => {
     };
 
     const onDragEnd = (result) => {
-        console.log(result.source.index, result.destination.index)
         if (!result.destination) return;
-        const reorderedLayers = Array.from(layers);
+        const reorderedLayers = Array.from(filteredLayers);
         const [movedLayer] = reorderedLayers.splice(result.source.index, 1);
         reorderedLayers.splice(result.destination.index, 0, movedLayer);
         setShapes(reorderedLayers.reverse());
@@ -158,13 +163,11 @@ const Layers = ({ layers, setShapes }) => {
         editorStore.setShape(null);
     };
 
-
     const LayerItem = observer(({ layer, index }) => {
         const selectedIds = editorStore.selectedShapes;
         const handleContextMenu = (e) => {
             e.preventDefault();
             if (!editorStore.selectedShapes.includes(layer.id)) handleLayerClick(e);
-            console.log(layers.some(shape => shape.id === editorStore.selectedShapes[0] && shape.type === 'group'));
             setContextMenu({
                 open: true,
                 x: e.clientX,
@@ -305,10 +308,19 @@ const Layers = ({ layers, setShapes }) => {
                     <div ref={provided.innerRef} {...provided.droppableProps}>
                         <div className="flex justify-between items-center mb-2 border-b border-[#333] pb-1">
                             <h2 className="text-sm font-semibold">Layers</h2>
+                            <label className="flex items-center text-xs opacity-75">
+                                Drawings
+                                <input
+                                    type="checkbox"
+                                    checked={showDrawing}
+                                    onChange={() => setShowDrawing(prev => !prev)}
+                                    className="ml-1"
+                                />
+                            </label>
                         </div>
 
-                        {layers && layers.length > 0 ? (
-                            layers.map((layer, index) => (
+                        {filteredLayers && filteredLayers.length > 0 ? (
+                            filteredLayers.map((layer, index) => (
                                 <LayerItem key={layer.id} layer={layer} index={index} />
                             ))
                         ) : (
@@ -323,4 +335,3 @@ const Layers = ({ layers, setShapes }) => {
 };
 
 export default Layers;
-
